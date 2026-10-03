@@ -59,6 +59,14 @@ Totype 常驻菜单栏。光标停在任意应用的输入框里，按一下右 
 
 **下载 dmg（推荐）。** 到 [GitHub Releases](https://github.com/Towow-ai/totype/releases/latest) 下载 `Totype-<版本>-arm64.dmg`，打开后把 Totype 拖进“应用程序”。它是不含语音模型的精简版，模型在应用里下载（约 246 MB）；同页的 `SHA256SUMS` 用来核对文件（`shasum -a 256 -c SHA256SUMS`）。
 
+**用 Homebrew 安装。**
+
+```bash
+brew install --cask towow-ai/tap/totype
+```
+
+安装后第一次打开同样要按下面的步骤放行。
+
 应用未经 Apple 公证，第一次打开会被 Gatekeeper 拦下：双击一次，点“完成”；打开 系统设置 → 隐私与安全性，滚到底部，点 Totype 提示旁的“仍要打开”，输入登录密码。也可以运行 `xattr -dr com.apple.quarantine /Applications/Totype.app` 后直接打开。详见[安装](docs/manual/zh-CN/01-install.md)。
 
 **或者从源码构建。** 需要通过命令行工具（`xcode-select --install`）安装 macOS 15.4 或更高 SDK，不要求完整的 Xcode。

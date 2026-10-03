@@ -8,6 +8,8 @@ You can install a prebuilt dmg or build from source. The dmg is a lite build wit
 
 The dmg is published on GitHub Releases (`https://github.com/Towow-ai/totype/releases`) as `Totype-<version>-arm64.dmg`, together with a `SHA256SUMS` file. It is the lite build, which does not include the local model: you download it from the `本地模型` (Local model) row under `设置` → `识别` (Recognition), or from the first-run guide. It is about 246 MB from Hugging Face, checked against checksums, and stored in `~/Library/Application Support/Totype/models/`.
 
+You can also install it with Homebrew: `brew install --cask towow-ai/tap/totype`. It downloads the same dmg, and the first launch needs the same approval described below.
+
 1. Download the dmg and `SHA256SUMS`, and run `shasum -a 256 -c SHA256SUMS` in the download folder (`OK` is what you want; if you only downloaded the dmg, the complaint about other missing files can be ignored).
 2. Open the dmg and drag Totype into the Applications folder.
 3. Double-click Totype in Applications. macOS shows a message that it cannot open or verify the developer. Click Done.

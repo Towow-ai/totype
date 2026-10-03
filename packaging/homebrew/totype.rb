@@ -1,8 +1,5 @@
-# Draft Homebrew cask for Totype. Not published anywhere yet.
-#
-# To use it, put it in a tap repository as Casks/totype.rb (the tap does not
-# exist yet; create it as Towow-ai/homebrew-totype, then `brew install --cask
-# towow-ai/totype/totype`).
+# Homebrew cask for Totype, published in the Towow-ai/homebrew-tap repository
+# as Casks/totype.rb: `brew install --cask towow-ai/tap/totype`.
 #
 # Before each release:
 #   1. Set `version` to the released version.
@@ -15,7 +12,7 @@
 # launch (see the caveats).
 cask "totype" do
   version "0.4.0"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000" # PLACEHOLDER: replace with the dmg's SHA-256 from SHA256SUMS
+  sha256 "0e06401f3ef86157cd34a235a840e188d9a442ea7de0f3e889a3c54eeec746b2"
 
   url "https://github.com/Towow-ai/totype/releases/download/v#{version}/Totype-#{version}-arm64.dmg"
   name "Totype"
@@ -28,13 +25,12 @@ cask "totype" do
   end
 
   depends_on arch: :arm64
-  depends_on macos: ">= :sequoia"
+  depends_on macos: :sequoia
 
   app "Totype.app"
 
   zap trash: [
     "~/Library/Application Support/Totype",
-    "~/Library/Application Support/VerbatimVoice",
     "~/Library/Preferences/ai.towow.totype.plist",
   ]
 

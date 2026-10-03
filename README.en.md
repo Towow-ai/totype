@@ -59,6 +59,14 @@ By default you get every word, including repetitions, fillers and self-correctio
 
 **Download the dmg (recommended).** Get `Totype-<version>-arm64.dmg` from [GitHub Releases](https://github.com/Towow-ai/totype/releases/latest), open it and drag Totype into Applications. It is a lite build without the speech model, which the app downloads (about 246 MB). Check the file against `SHA256SUMS` on the same page (`shasum -a 256 -c SHA256SUMS`).
 
+**Install with Homebrew.**
+
+```bash
+brew install --cask towow-ai/tap/totype
+```
+
+The first launch needs the same approval described below.
+
 The app is not notarized by Apple, so Gatekeeper blocks the first launch: double-click it once and click Done, then open System Settings → Privacy & Security, scroll to the bottom and click Open Anyway next to the Totype message, and enter your login password. Alternatively run `xattr -dr com.apple.quarantine /Applications/Totype.app` and open the app. See [Install](docs/manual/en/01-install.md).
 
 **Or build from source.** You need the macOS 15.4 SDK or later through the Command Line Tools (`xcode-select --install`). Full Xcode is not required.

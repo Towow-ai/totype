@@ -8,6 +8,8 @@
 
 dmg 发布在 GitHub Releases（`https://github.com/Towow-ai/totype/releases`），文件名是 `Totype-<版本>-arm64.dmg`，同页附带 `SHA256SUMS`。它是精简版，不含本地模型：在入门引导，或 设置 → 识别 的“本地模型”一行里下载，约 246 MB，来自 Hugging Face，下载后校验，保存在 `~/Library/Application Support/Totype/models/`。
 
+也可以用 Homebrew 安装：`brew install --cask towow-ai/tap/totype`。它下载的是同一个 dmg，第一次打开时同样要按下文放行。
+
 1. 下载 dmg 和 `SHA256SUMS`，在下载目录运行 `shasum -a 256 -c SHA256SUMS` 核对（提示 `OK` 即可；只下载了 dmg 时，会提示找不到其他文件，可忽略）。
 2. 打开 dmg，把 Totype 拖进“应用程序”文件夹。
 3. 在“应用程序”里双击 Totype 。系统会弹出“无法打开”或“无法验证开发者”的提示，点“完成”关闭。
