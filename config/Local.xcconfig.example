@@ -1,0 +1,22 @@
+// Copy to config/Local.xcconfig and edit. Every line is optional.
+
+// Bundle identifier: macOS ties Accessibility / Input Monitoring grants and
+// Keychain items to it. Pick one that is yours.
+VERBATIM_BUNDLE_ID = ai.towow.totype
+
+// Product name: the .app, executable and the name shown in the interface.
+VERBATIM_APP_NAME = Totype
+
+// Folder under ~/Library/Application Support for history, audio, lexicon and
+// downloaded models.
+VERBATIM_DATA_DIR_NAME = Totype
+
+// 1 packs the SenseVoice runtime and models (about 246 MB) into the app; 0 builds
+// the lite app, which downloads them on first use.
+// VERBATIM_BUNDLE_MODEL = 1
+
+// Starting value of "observe manual edits after insertion" for new users: 0 or 1.
+// VERBATIM_LEARN_FROM_EDITS_DEFAULT = 1
+
+// Signing: leave unset for Xcode's default, or name your team / identity.
+// DEVELOPMENT_TEAM = ABCDE12345

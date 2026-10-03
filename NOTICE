@@ -1,0 +1,28 @@
+Totype
+Copyright 2026 Towow-ai
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The Apache-2.0 license does not grant permission to use the names, logos or
+trademarks of the project or its contributors, except as needed to describe
+the origin of the work.
+
+This product can run speech recognition locally with the following third-party
+components, which are not covered by the license above:
+
+  * SenseVoiceSmall speech recognition model (GGUF conversion, file
+    "sensevoice-small-q8.gguf"), by FunASR / FunAudioLLM (Alibaba Group).
+    Model license: FunASR Model Open Source License Agreement v1.1.
+    https://github.com/modelscope/FunASR/blob/main/MODEL_LICENSE
+    Model card: https://huggingface.co/FunAudioLLM/SenseVoiceSmall
+
+  * FSMN-VAD voice activity detection model (GGUF conversion, file
+    "fsmn-vad.gguf"), by FunASR (Alibaba Group), Apache License 2.0.
+    https://huggingface.co/FunAudioLLM/fsmn-vad-GGUF
+
+  * "llama-funasr-sensevoice" runtime, from the FunASR llama.cpp runtime
+    (SenseVoice project, MIT License), statically linking ggml / llama.cpp
+    (MIT License, Copyright (c) The ggml authors).
+    https://github.com/QwenAudio/SenseVoice
+
+Full notices and license texts: THIRD_PARTY_NOTICES.md

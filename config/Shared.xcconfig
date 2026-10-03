@@ -1,0 +1,17 @@
+// Build settings for the Xcode project. Defaults are the public identity; to use
+// your own, copy Local.xcconfig.example to config/Local.xcconfig (git-ignored).
+// scripts/build.sh does not read this file: it takes the same names from
+// config/local.env (see scripts/lib/env.sh).
+
+VERBATIM_BUNDLE_ID = ai.towow.totype
+VERBATIM_APP_NAME = Totype
+VERBATIM_DATA_DIR_NAME = Totype
+
+// 1: pack the SenseVoice runtime and models into the app. 0: lite build, the app
+// downloads them on first use.
+VERBATIM_BUNDLE_MODEL = 1
+
+// Starting value of the "observe manual edits" setting: 0 off, 1 on.
+VERBATIM_LEARN_FROM_EDITS_DEFAULT = 1
+
+#include? "Local.xcconfig"

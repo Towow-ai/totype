@@ -1,0 +1,13 @@
+.build/
+*/.build/
+.DS_Store
+xcuserdata/
+build/
+*.dmg
+config/local.env
+VerbatimVoiceMobile/Config/Local.xcconfig
+VerbatimVoiceMobile/Seed/*
+!VerbatimVoiceMobile/Seed/.gitkeep
+Probes/
+scripts/fixtures/literal-repetition.wav
+config/Local.xcconfig
