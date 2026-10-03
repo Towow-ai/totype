@@ -44,7 +44,7 @@ WHITELIST=(
     NOTICE
     THIRD_PARTY_NOTICES.md
     README.md
-    README.zh-CN.md
+    README.en.md
     .gitignore
     VerbatimVoice
     VerbatimVoiceCore

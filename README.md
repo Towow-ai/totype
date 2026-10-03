@@ -1,110 +1,110 @@
 # Totype
 
-[简体中文](README.zh-CN.md) · English
+简体中文 · [English](README.en.md)
 
-**Totype is a voice input method for macOS. It connects to the best speech recognition models: tap Right Option, speak, and the text lands in whatever field you are typing in. How much your words get changed is up to you.**
+**Totype 是 macOS 语音输入法：接最好的识别模型，按一下说话，文字直接打进任何输入框；改不改你的原话，由你决定。**
 
 ![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Platform: macOS 15+ · Apple Silicon](https://img.shields.io/badge/platform-macOS%2015%2B%20%C2%B7%20Apple%20Silicon-lightgrey)
 
-[Build from source](#quick-start) · [Prebuilt dmg: coming soon](https://github.com/Towow-ai/totype/releases) · [Manual](docs/manual/en/00-overview.md)
+[从源码安装](#快速开始) · [预编译 dmg：即将提供](https://github.com/Towow-ai/totype/releases) · [使用说明书](docs/manual/zh-CN/00-overview.md)
 
-<!-- TODO: record the demo GIF and save it as docs/images/demo.gif, then uncomment the line below.
-     Content: in Notes or a terminal, tap Right Option, say one sentence mixing Chinese and English, tap again, text appears. Under 10 seconds.
-![Demo](docs/images/demo.gif)
+<!-- 待录制：演示 GIF，放到 docs/images/demo.gif，录好后取消下面一行的注释。
+     内容：在备忘录或终端里按右 Option，说一句中英文夹杂的话，再按一下，文字出现。10 秒以内。
+![演示](docs/images/demo.gif)
 -->
-![The recording overlay in light and dark](docs/images/overlay-listening.png)
+![浅色与深色下的录音浮窗](docs/images/overlay-listening.png)
 
-![History window](docs/images/history-window.png)
+![历史窗口](docs/images/history-window.png)
 
-Totype lives in the menu bar. Put the cursor in any app, tap Right Option to start recording, tap again, and the recognized text is inserted at the cursor. It handles Chinese, English and the two mixed in one sentence. For the cloud engine you can use the real-time models from Soniox or Alibaba Cloud Bailian and see the text as you speak; to stay offline, use the local SenseVoice engine.
+Totype 常驻菜单栏。光标停在任意应用的输入框里，按一下右 Option 开始录音，再按一下，识别出的文字就插入光标处。它支持中文、英文和中英文夹杂。云端引擎可以接 Soniox 和阿里云百炼的实时识别模型，边说边出字；不想联网，就用本地的 SenseVoice。
 
-## Features
+## 功能
 
-- **Types into any app.** Right Option to start, again to stop and insert, Esc to cancel. A small overlay at the bottom of the screen shows the state. In a terminal it types the text and never presses Return.
-- **Top recognition models.** Connect Soniox (`stt-rt-v5`) or Alibaba Cloud Bailian's Qwen real-time recognition (`qwen-audio-3.0-asr-flash-streaming`) and the text appears as you speak. Accuracy on mixed Chinese and English was our first criterion when choosing them, and cloud engines cope with embedded English terms better than the local one does.
-- **You decide how much changes.** By default the text is inserted as the engine heard it: no LLM rewriting, and repetitions, filler words and self-corrections stay. If you want it tidier, you set the level yourself: the transcription prompt (sent with the recording to a cloud engine; write down your punctuation and filler-word preferences, which the engine treats as a hint, not a command), the glossary and speaker background (help the engine spell your names and terms), mishearing aliases, dropping the final period in chat apps, a trailing space after English, and learning from your manual edits. One utterance is inserted at most once.
-- **Free local engine, optional cloud engines.** A bundled SenseVoice model runs offline with no account. For live captions, add your own Soniox or Alibaba Cloud Bailian key and pay the provider by usage.
-- **Hot standby and fallback.** With two cloud keys, one engine is primary and the other listens in the background; if the primary errors out or is slow, its result is used. If the cloud fails altogether, the saved audio is transcribed locally. The overlay says which engine produced the text, and Totype never silently switches to macOS dictation.
-- **A failed recognition does not lose the recording.** Audio is written to disk before recognition starts. If recognition fails, you cancel, or you switch apps, the recording stays in history and can be transcribed again.
-- **Personal dictionary.** Glossary, speaker background, a starter word pack, and mishearing aliases: register a word an engine keeps getting wrong, and it is corrected only when a second engine heard exactly the right spelling at that spot. Export and import the whole profile as JSON, without keys, history or recordings.
-- **History.** Search past entries, replay the original audio, and re-transcribe with another engine; the result is saved as a new version.
-- **Undo.** After a cancel you have five seconds to undo and resume transcription.
+- **任意应用里直接输入。** 右 Option 开始，再按一下结束并插入，Esc 取消。屏幕底部的浮窗显示状态。在终端里只输入文字，不替你按回车。
+- **接一流的识别模型。** 云端接入 Soniox（`stt-rt-v5`）和阿里云百炼的 Qwen 实时识别（`qwen-audio-3.0-asr-flash-streaming`），边说边出字。中英混说的识别准确率是我们选型的首要标准；一句话里夹英文术语，云端引擎比本地引擎更准。
+- **你决定改多少。** 默认逐字输出，不用大模型改写，重复、口头语、自我修正都留着。想要整理得更干净，由你自己调：转写提示词（随录音发给云端引擎，可以写下你对标点、口头语的要求，引擎把它当作提示而不是命令）、术语表与说话人背景（帮引擎写对你的专有名词）、误听别名、聊天应用里去掉句末句号、英文结尾补空格，以及自动学习你的人工修改。一次说话最多插入一次。
+- **本地离线，免费可用。** 内置本地 SenseVoice 模型，不需要账号和网络。想要边说边出字，可以接 Soniox 或阿里云百炼的实时识别，用自己的 Key，按量向服务商付费。
+- **热备与自动回退。** 配置两个云端时，一个主用，另一个同时在后台热备；主引擎出错或太慢，就用热备的结果。云端都失败时，自动用保留的音频在本地转写。浮窗会说明这次由哪个引擎完成，从不静默改用系统听写。
+- **失败不丢录音。** 音频先写入磁盘，再识别。识别失败、被取消，或你切换了应用，录音都在历史里，可以再转写。
+- **个人词库。** 术语表、说话人背景、入门词包，以及误听别名：你登记常被听错的词，只有另一个引擎听到的正是正确写法时，才替换。配置可导出和导入为 JSON，不含 Key、历史和录音。
+- **历史记录。** 搜索过去的记录，回放原始音频，用另一个引擎重新转写，结果作为新版本保存。
+- **撤销。** 取消录音后有 5 秒可以撤销，恢复并继续转写。
 
-Requires an Apple silicon Mac on macOS 15 or later. The interface is currently in Simplified Chinese only.
+需要 Apple 芯片的 Mac 和 macOS 15 或更高版本。应用界面目前只有简体中文。
 
-## Quick start
+## 快速开始
 
-### 1. Install
+### 1. 安装
 
-A prebuilt dmg is coming to [GitHub Releases](https://github.com/Towow-ai/totype/releases); until then, build from source. You need the macOS 15.4 SDK or later through the Command Line Tools (`xcode-select --install`). Full Xcode is not required.
+预编译 dmg 即将在 [GitHub Releases](https://github.com/Towow-ai/totype/releases) 提供，目前请从源码构建。需要通过命令行工具（`xcode-select --install`）安装 macOS 15.4 或更高 SDK，不要求完整的 Xcode。
 
 ```bash
 git clone https://github.com/Towow-ai/totype.git
 cd totype
-scripts/install.sh      # builds, installs to /Applications/Totype.app, backs up an existing copy
+scripts/install.sh      # 构建并安装到 /Applications/Totype.app，已有版本先备份
 ```
 
-The first build downloads about 246 MB of model files and verifies their checksums. Run `scripts/install_local_signing_identity.sh` once to create a stable local signing identity so permissions survive rebuilds. `scripts/build.sh` builds without installing; `config/local.env.example` lists the settings. See [Install](docs/manual/en/01-install.md).
+首次构建会下载约 246 MB 的模型文件并校验。`scripts/install_local_signing_identity.sh` 创建稳定的本机签名身份，授权就能跨构建保留。`scripts/build.sh` 只构建不安装，配置项见 `config/local.env.example`。详见[安装](docs/manual/zh-CN/01-install.md)。
 
-### 2. Grant three permissions
+### 2. 授予三项权限
 
-In System Settings → Privacy & Security:
+在 系统设置 → 隐私与安全性 里授予：
 
-- **Microphone**: to record.
-- **Accessibility**: to insert text into other apps.
-- **Input Monitoring**: to listen for Right Option and Esc. Quit and reopen the app after granting it.
+- **麦克风**：录音。
+- **辅助功能**：向其他应用的输入框插入文字。
+- **输入监控**：监听右 Option 和 Esc。授权后退出应用再打开。
 
-The app is not notarized, so an update can invalidate the grants. If that happens, delete the old Totype entries from the three lists and add it again. See [First run](docs/manual/en/02-first-run.md).
+应用未经 Apple 公证，更新后三项权限可能需要重新授予：删掉列表里 Totype 的旧条目，再加一次。详见[首次运行与授权](docs/manual/zh-CN/02-first-run.md)。
 
-### 3. Say your first sentence
+### 3. 说第一句话
 
-Click into any text field, tap Right Option, speak, and tap again. The overlay shows "已插入 N 字" (inserted N characters) and the text is at your cursor. The local engine is the default, so no account is needed.
+把光标放进任何输入框，按一下右 Option，说话，再按一下。浮窗显示“已插入 N 字”，文字就在光标处。默认使用本地引擎，不需要任何账号。
 
-## Choosing an engine
+## 选哪个引擎
 
-| | Local (SenseVoice) | Soniox | Alibaba Cloud Bailian |
+| | 本地（SenseVoice） | Soniox | 阿里云百炼 |
 |---|---|---|---|
-| Model | SenseVoiceSmall | `stt-rt-v5` | `qwen-audio-3.0-asr-flash-streaming` |
-| Network | Not needed | Required | Required |
-| API key | None | Your own | Your own |
-| Live captions | No; the result appears after you stop | Yes | Yes |
-| Personal dictionary | Not used | Glossary, speaker background, prompt | Hot words, prompt |
-| Cost | Free | Pay Soniox by usage | Pay Alibaba Cloud by usage |
-| Good for | Offline use, privacy, trying it out | Live captions, plus glossary and speaker background for accuracy | Live captions if you already have an Alibaba Cloud account |
+| 模型 | SenseVoiceSmall | `stt-rt-v5` | `qwen-audio-3.0-asr-flash-streaming` |
+| 联网 | 不需要 | 需要 | 需要 |
+| API Key | 不需要 | 需要，自己申请 | 需要，自己申请 |
+| 实时字幕 | 没有，结束后一次出结果 | 有 | 有 |
+| 个人词库 | 不使用 | 术语表、说话人背景、提示词 | 热词、提示词 |
+| 费用 | 免费 | 按量向 Soniox 付费 | 按量向阿里云付费 |
+| 适合 | 离线、隐私优先、先试用 | 想边说边看，并用术语表和说话人背景提高准确度 | 想边说边看，已有阿里云账号 |
 
-With both cloud keys saved, the two engines back each other up, and alias correction becomes available. Prices and free quotas change; check each provider's price page and set a spending cap before you start. See [Engines and API keys](docs/manual/en/04-engines-and-keys.md).
+两个云端都配置时，可以互为热备，也才能启用误听别名恢复。云端价格和免费额度以服务商价格页为准，使用前建议在服务商控制台设置额度上限。详见[引擎与 API Key](docs/manual/zh-CN/04-engines-and-keys.md)。
 
-## Privacy
+## 隐私
 
-With the local engine nothing leaves your Mac. With a cloud engine, your audio, glossary and transcription prompt go to the provider you chose, and to both providers if you save two keys. Totype has no server of its own. API keys are stored in a local JSON file (folder mode 0700, file mode 0600), not in the Keychain. See [Data and privacy](docs/manual/en/07-data-and-privacy.md).
+用本地引擎时，没有任何内容离开你的 Mac。用云端引擎时，音频、术语表和转写提示词发给你选的服务商；配置两个云端时，音频会同时发给两家。 Totype 没有自己的服务器。API Key 保存在本机的 JSON 文件里（目录权限 0700、文件权限 0600），不进 Keychain。详见[数据与隐私](docs/manual/zh-CN/07-data-and-privacy.md)。
 
-## FAQ
+## 常见问题
 
-**Does it need the internet?** No. The default local engine is fully offline; the model is downloaded once during the first build. Only the cloud engines use the network.
+**需要联网吗？** 不需要。默认的本地引擎完全离线，首次构建时下载一次模型。云端引擎才需要网络。
 
-**Does it rewrite what I say?** Not by default: the text is inserted as the engine recognized it, and no language model touches it. How much to change is your decision; the transcription prompt, glossary, aliases and insertion preferences are described in [Personalization](docs/manual/en/05-personalization.md) and [How much to change](docs/manual/en/06-literal-rules.md).
+**会改写我说的话吗？** 默认不会：识别出什么就插入什么，没有大模型参与。改多少由你决定，转写提示词、术语表、别名和插入偏好见[个性化](docs/manual/zh-CN/05-personalization.md)与[改多少](docs/manual/zh-CN/06-literal-rules.md)。
 
-**Is it free?** The app and the local engine are free. Cloud engines are billed by their providers according to your usage; Totype does not handle or charge for that.
+**要花钱吗？** 应用和本地引擎免费。云端引擎由服务商按用量向你收费，Totype 不经手也不收费。
 
-**macOS says it cannot verify the developer.** The app is not notarized. Double-click it once, then open System Settings → Privacy & Security and click Open Anyway, or run `xattr -dr com.apple.quarantine /Applications/Totype.app`.
+**第一次打开提示无法验证开发者？** 应用未经公证。双击一次，再到 系统设置 → 隐私与安全性 点“仍要打开”；或者运行 `xattr -dr com.apple.quarantine /Applications/Totype.app`。
 
-**Right Option does nothing.** Check that Input Monitoring is granted and that you restarted the app afterwards. The hotkey pauses in password fields and whenever another app holds macOS Secure Input. See [Troubleshooting](docs/manual/en/08-troubleshooting.md).
+**按右 Option 没反应？** 先确认“输入监控”已授权，并且授权后重启过应用。在密码框里，或有其他应用占用了系统的 Secure Input 时，热键会暂停。排查步骤见[故障排查](docs/manual/zh-CN/08-troubleshooting.md)。
 
-**Does it run on Intel Macs or Windows?** Not at the moment. It needs Apple silicon and macOS 15 or later.
+**能在 Intel Mac 或 Windows 上用吗？** 目前不能，只支持 Apple 芯片和 macOS 15 或更高版本。
 
-The full list of known limits is in [Glossary and limits](docs/manual/en/10-glossary-and-limits.md).
+已知限制的完整列表见[名词与限制](docs/manual/zh-CN/10-glossary-and-limits.md)。
 
-## Documentation
+## 文档
 
-[Manual](docs/manual/en/00-overview.md): install, first run, daily use, engines and keys, personalization, insertion rules, data and privacy, troubleshooting, build and contribute.
+[使用说明书](docs/manual/zh-CN/00-overview.md)：安装、首次运行、日常使用、引擎与 Key、个性化、插入规则、数据与隐私、故障排查、构建与贡献。
 
-## Contributing
+## 参与贡献
 
-Build, test, configuration and repository layout are in [Build and contribute](docs/manual/en/09-build-and-contribute.md). Bug reports and ideas are welcome as issues.
+构建、测试、配置和仓库结构见[构建与贡献](docs/manual/zh-CN/09-build-and-contribute.md)。发现问题或有想法，欢迎提 issue。
 
-## License and third-party notices
+## 许可证与第三方署名
 
-Totype is released under the [Apache License 2.0](LICENSE); see also [NOTICE](NOTICE).
+Totype 以 [Apache License 2.0](LICENSE) 发布，另见 [NOTICE](NOTICE)。
 
-The local engine uses **SenseVoiceSmall** by FunASR / FunAudioLLM (Alibaba Group), run through `llama-funasr-sensevoice` (MIT) and ggml / llama.cpp (MIT), with the FSMN-VAD model (Apache-2.0). The SenseVoiceSmall weights are covered by the FunASR Model Open Source License v1.1, which requires attribution to the source and author and keeping the model name; the model name and file name are kept unchanged. Read the license before using the weights, in particular its terms on use, and if you plan commercial use, note that the upstream project's answer on commercial use is still marked as not final. Full texts and versions are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The repository does not contain the model weights; the build and the lite app download them from their original sources.
+本地引擎使用 FunASR / FunAudioLLM（Alibaba Group）的 **SenseVoiceSmall** 模型，经 `llama-funasr-sensevoice`（MIT）和 ggml / llama.cpp（MIT）运行，并使用 FSMN-VAD 模型（Apache-2.0）。SenseVoiceSmall 权重适用 FunASR Model Open Source License v1.1，要求注明出处与作者并保留模型名称，我们保持模型名与文件名不变。使用权重前请阅读该协议，特别是关于用途的条款；打算商用的话请注意，上游项目对商用问题的答复目前仍标注为非最终确认。各许可证全文与版本见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。仓库本身不包含模型权重，构建和精简版应用会从原始来源下载。
