@@ -106,7 +106,7 @@ if 'selectedReason: "user_cancelled_retained_draft"' not in app:
 print('ok  retained cancellation never destroys the archive')
 PY
 
-for script in scripts/install.sh scripts/build.sh scripts/lib/env.sh scripts/oss-scan.sh scripts/export-public.sh scripts/fixtures/make-fixture.sh \
+for script in scripts/make-dmg.sh scripts/publish-public.sh scripts/changelog-section.sh scripts/ci-select-xcode.sh scripts/install.sh scripts/build.sh scripts/lib/env.sh scripts/oss-scan.sh scripts/export-public.sh scripts/fixtures/make-fixture.sh \
     scripts/install_personal.sh scripts/build_personal.sh scripts/install-state-policy.sh; do
   [[ -f "$script" ]] && bash -n "$script"
 done

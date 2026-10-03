@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 报告安全漏洞 · Report a vulnerability
+    url: https://github.com/Towow-ai/totype/security/advisories/new
+    about: 安全问题请私下报告，不要开公开 issue。 Please report security problems privately, not in a public issue.
+  - name: 使用说明书 · Manual
+    url: https://github.com/Towow-ai/totype/blob/main/docs/manual/zh-CN/08-troubleshooting.md
+    about: 热键没反应、授权失效等常见问题的排查步骤。 Troubleshooting steps for the hotkey, permissions and more.

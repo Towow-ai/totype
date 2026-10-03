@@ -7,7 +7,7 @@
 ![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Platform: macOS 15+ · Apple Silicon](https://img.shields.io/badge/platform-macOS%2015%2B%20%C2%B7%20Apple%20Silicon-lightgrey)
 
-[Build from source](#quick-start) · [Prebuilt dmg: coming soon](https://github.com/Towow-ai/totype/releases) · [Manual](docs/manual/en/00-overview.md)
+[Build from source](#quick-start) · [Download the dmg](https://github.com/Towow-ai/totype/releases/latest) · [Manual](docs/manual/en/00-overview.md)
 
 <p align="center"><img src="docs/images/demo-en.gif" width="800" alt="Tap Right Option, speak, tap again: the text lands at the cursor."></p>
 
@@ -57,7 +57,11 @@ By default you get every word, including repetitions, fillers and self-correctio
 
 ### 1. Install
 
-A prebuilt dmg is coming to [GitHub Releases](https://github.com/Towow-ai/totype/releases); until then, build from source. You need the macOS 15.4 SDK or later through the Command Line Tools (`xcode-select --install`). Full Xcode is not required.
+**Download the dmg (recommended).** Get `Totype-<version>-arm64.dmg` from [GitHub Releases](https://github.com/Towow-ai/totype/releases/latest), open it and drag Totype into Applications. It is a lite build without the speech model, which the app downloads (about 246 MB). Check the file against `SHA256SUMS` on the same page (`shasum -a 256 -c SHA256SUMS`).
+
+The app is not notarized by Apple, so Gatekeeper blocks the first launch: double-click it once and click Done, then open System Settings → Privacy & Security, scroll to the bottom and click Open Anyway next to the Totype message, and enter your login password. Alternatively run `xattr -dr com.apple.quarantine /Applications/Totype.app` and open the app. See [Install](docs/manual/en/01-install.md).
+
+**Or build from source.** You need the macOS 15.4 SDK or later through the Command Line Tools (`xcode-select --install`). Full Xcode is not required.
 
 ```bash
 git clone https://github.com/Towow-ai/totype.git
@@ -121,7 +125,7 @@ The full list of known limits is in [Glossary and limits](docs/manual/en/10-glos
 
 ## Contributing
 
-Build, test, configuration and repository layout are in [Build and contribute](docs/manual/en/09-build-and-contribute.md). Bug reports and ideas are welcome as issues.
+Build, test, configuration and repository layout are in [Build and contribute](docs/manual/en/09-build-and-contribute.md). Bug reports and ideas are welcome as issues. Please read the [contributing guide](CONTRIBUTING.md) first, and report security problems privately as described in the [security policy](SECURITY.md). Release history is in the [changelog](CHANGELOG.md).
 
 ## License and third-party notices
 

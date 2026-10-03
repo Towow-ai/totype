@@ -2,13 +2,13 @@
 
 [简体中文](../zh-CN/01-install.md)
 
-You can build from source today. A prebuilt dmg is coming: it is a lite build without the speech model, which downloads on first run. The lite build already works from source (see Option 2). Because the app is not notarized by Apple, the first launch needs one extra manual approval.
+You can install a prebuilt dmg or build from source. The dmg is a lite build without the speech model, which downloads on first run; the lite build also works from source (see Option 2). Because the app is not notarized by Apple, the first launch needs one extra manual approval.
 
-## Option 1: prebuilt dmg (coming soon)
+## Option 1: prebuilt dmg
 
-The dmg will be published on GitHub Releases (`https://github.com/Towow-ai/totype/releases`) together with a `SHA256SUMS` file. It will be the lite build, which does not include the local model: you download it from the `本地模型` (Local model) row under `设置` → `识别` (Recognition), or from the first-run guide. It is about 246 MB from Hugging Face, checked against checksums, and stored in `~/Library/Application Support/Totype/models/`.
+The dmg is published on GitHub Releases (`https://github.com/Towow-ai/totype/releases`) as `Totype-<version>-arm64.dmg`, together with a `SHA256SUMS` file. It is the lite build, which does not include the local model: you download it from the `本地模型` (Local model) row under `设置` → `识别` (Recognition), or from the first-run guide. It is about 246 MB from Hugging Face, checked against checksums, and stored in `~/Library/Application Support/Totype/models/`.
 
-1. Download the dmg. You can compare `shasum -a 256 <file>` with `SHA256SUMS`.
+1. Download the dmg and `SHA256SUMS`, and run `shasum -a 256 -c SHA256SUMS` in the download folder (`OK` is what you want; if you only downloaded the dmg, the complaint about other missing files can be ignored).
 2. Open the dmg and drag Totype into the Applications folder.
 3. Double-click Totype in Applications. macOS shows a message that it cannot open or verify the developer. Click Done.
 4. Open System Settings → Privacy & Security, scroll to the bottom, find the message about Totype, click Open Anyway, and enter your login password.
@@ -41,7 +41,7 @@ macOS ties Microphone, Accessibility and Input Monitoring grants to the app's co
 ## Updating
 
 - Source build: pull the new code and run `scripts/install.sh` again.
-- dmg (once published): download the new version and replace the one in Applications.
+- dmg: download the new version and replace the one in Applications.
 
 After an update of a non-notarized build, macOS may invalidate the three grants. Typical symptoms are a dead hotkey, or the menu panel showing `Esc 取消不可用：需要重新授权输入监控` (Esc cancel unavailable: Input Monitoring must be granted again). Fix: open System Settings → Privacy & Security, delete the old Totype entries from Microphone, Accessibility and Input Monitoring, grant them again, and restart the app.
 

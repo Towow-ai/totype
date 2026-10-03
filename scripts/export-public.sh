@@ -45,7 +45,13 @@ WHITELIST=(
     THIRD_PARTY_NOTICES.md
     README.md
     README.en.md
+    CHANGELOG.md
+    CONTRIBUTING.md
+    SECURITY.md
+    CODE_OF_CONDUCT.md
     .gitignore
+    .github
+    packaging/homebrew/totype.rb
     VerbatimVoice
     VerbatimVoiceCore
     VerbatimVoice.xcodeproj

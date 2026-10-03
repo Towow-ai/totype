@@ -7,7 +7,7 @@
 ![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Platform: macOS 15+ · Apple Silicon](https://img.shields.io/badge/platform-macOS%2015%2B%20%C2%B7%20Apple%20Silicon-lightgrey)
 
-[从源码安装](#快速开始) · [预编译 dmg：即将提供](https://github.com/Towow-ai/totype/releases) · [使用说明书](docs/manual/zh-CN/00-overview.md)
+[从源码安装](#快速开始) · [下载 dmg](https://github.com/Towow-ai/totype/releases/latest) · [使用说明书](docs/manual/zh-CN/00-overview.md)
 
 <p align="center"><img src="docs/images/demo.gif" width="800" alt="按一下右 Option，开口说，再按一下：原话插进光标处。"></p>
 
@@ -57,7 +57,11 @@ Totype 常驻菜单栏。光标停在任意应用的输入框里，按一下右 
 
 ### 1. 安装
 
-预编译 dmg 即将在 [GitHub Releases](https://github.com/Towow-ai/totype/releases) 提供，目前请从源码构建。需要通过命令行工具（`xcode-select --install`）安装 macOS 15.4 或更高 SDK，不要求完整的 Xcode。
+**下载 dmg（推荐）。** 到 [GitHub Releases](https://github.com/Towow-ai/totype/releases/latest) 下载 `Totype-<版本>-arm64.dmg`，打开后把 Totype 拖进“应用程序”。它是不含语音模型的精简版，模型在应用里下载（约 246 MB）；同页的 `SHA256SUMS` 用来核对文件（`shasum -a 256 -c SHA256SUMS`）。
+
+应用未经 Apple 公证，第一次打开会被 Gatekeeper 拦下：双击一次，点“完成”；打开 系统设置 → 隐私与安全性，滚到底部，点 Totype 提示旁的“仍要打开”，输入登录密码。也可以运行 `xattr -dr com.apple.quarantine /Applications/Totype.app` 后直接打开。详见[安装](docs/manual/zh-CN/01-install.md)。
+
+**或者从源码构建。** 需要通过命令行工具（`xcode-select --install`）安装 macOS 15.4 或更高 SDK，不要求完整的 Xcode。
 
 ```bash
 git clone https://github.com/Towow-ai/totype.git
@@ -121,7 +125,7 @@ scripts/install.sh      # 构建并安装到 /Applications/Totype.app，已有�
 
 ## 参与贡献
 
-构建、测试、配置和仓库结构见[构建与贡献](docs/manual/zh-CN/09-build-and-contribute.md)。发现问题或有想法，欢迎提 issue。
+构建、测试、配置和仓库结构见[构建与贡献](docs/manual/zh-CN/09-build-and-contribute.md)。发现问题或有想法，欢迎提 issue。提交前请读[贡献指南](CONTRIBUTING.md)；安全问题请按[安全政策](SECURITY.md)私下报告。更新历史见[更新日志](CHANGELOG.md)。
 
 ## 许可证与第三方署名
 

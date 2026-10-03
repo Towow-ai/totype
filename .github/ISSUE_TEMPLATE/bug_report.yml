@@ -1,0 +1,95 @@
+name: 问题报告 · Bug report
+description: 报告一个故障。 Report something that does not work.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先看一眼[故障排查](https://github.com/Towow-ai/totype/blob/main/docs/manual/zh-CN/08-troubleshooting.md)。热键没反应时，多半是“输入监控”没授权，或授权后没有重启应用。
+
+        **请不要贴转写原文、录音，也不要贴 API Key。** 描述现象就够了。安全问题请改用私密漏洞报告。
+
+        Please check the troubleshooting chapter first. **Do not paste transcript text, recordings or API keys.** Describe what happened instead.
+  - type: input
+    id: macos
+    attributes:
+      label: macOS 版本 · macOS version
+      description: 苹果菜单 → 关于本机。 Apple menu → About This Mac.
+      placeholder: 例如 15.4 · e.g. 15.4
+    validations:
+      required: true
+  - type: dropdown
+    id: chip
+    attributes:
+      label: 芯片 · Chip
+      options:
+        - M1 系列 · M1 family
+        - M2 系列 · M2 family
+        - M3 系列 · M3 family
+        - M4 系列 · M4 family
+        - M5 或更新 · M5 or newer
+        - 其他 · Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Totype 版本 · App version
+      description: 设置里的“版本”一行，或 Totype.app 的“显示简介”。 The "版本" row in Settings, or Get Info on Totype.app.
+      placeholder: 例如 0.4.0 · e.g. 0.4.0
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: 安装方式 · How you installed it
+      options:
+        - 预编译 dmg · Prebuilt dmg
+        - 从源码构建 · Built from source
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: 识别引擎 · Engine
+      description: 出问题时的主引擎。 The primary engine when it happened.
+      options:
+        - 本地 SenseVoice · Local SenseVoice
+        - Soniox
+        - 阿里云百炼 · Alibaba Cloud Bailian
+        - 两个云端互为热备 · Two cloud engines as backup
+        - 不确定 · Not sure
+    validations:
+      required: true
+  - type: checkboxes
+    id: permissions
+    attributes:
+      label: 权限状态 · Permissions
+      description: 系统设置 → 隐私与安全性。勾选已授权的项目，并在授权后重启过应用。 System Settings → Privacy & Security. Tick what is granted, and the app was restarted after granting.
+      options:
+        - label: 麦克风已授权 · Microphone granted
+        - label: 辅助功能已授权 · Accessibility granted
+        - label: 输入监控已授权 · Input Monitoring granted
+        - label: 授权后重启过应用 · Restarted the app after granting
+  - type: textarea
+    id: what
+    attributes:
+      label: 发生了什么 · What happened
+      description: 你预期会怎样，实际怎样。出问题的应用（如浏览器、终端、微信）也请写上。 What you expected and what you got. Name the app you were typing into, if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 · Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: 其他信息 · Anything else
+      description: 浮窗上的提示文字、菜单面板顶部的警告、截图（先遮住个人内容）。 Text shown in the panel, warnings at the top of the menu panel, screenshots with personal content hidden.

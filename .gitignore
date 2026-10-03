@@ -11,3 +11,4 @@ VerbatimVoiceMobile/Seed/*
 Probes/
 scripts/fixtures/literal-repetition.wav
 config/Local.xcconfig
+dist/

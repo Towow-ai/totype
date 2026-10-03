@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      # Public default identity: ignore any local config.
+      VERBATIM_LOCAL_ENV: /nonexistent
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: scripts/ci-select-xcode.sh
+
+      # setup_local_sensevoice.sh downloads about 246 MB and checks pinned
+      # SHA-256 digests, so a stale or corrupt cache entry is re-downloaded.
+      - name: Cache SenseVoice downloads
+        uses: actions/cache@v4
+        with:
+          path: .build/downloads
+          key: sensevoice-${{ hashFiles('scripts/setup_local_sensevoice.sh') }}
+
+      - name: Voices available to the smoke test
+        run: say -v '?' | grep -i 'zh_' || echo "no zh voice preinstalled"
+
+      - name: Verify
+        run: scripts/verify.sh

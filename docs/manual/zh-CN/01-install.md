@@ -2,13 +2,13 @@
 
 [English](../en/01-install.md)
 
-目前可以从源码构建安装。预编译的 dmg 即将提供：它是不含语音模型的精简版（lite），模型在应用里下载；精简版现在就能从源码构建，见方式二。因为应用没有经过 Apple 公证，第一次打开需要多一步手动放行。
+可以下载预编译的 dmg 安装，也可以从源码构建。dmg 是不含语音模型的精简版（lite），模型在应用里下载；精简版同样能从源码构建，见方式二。因为应用没有经过 Apple 公证，第一次打开需要多一步手动放行。
 
-## 方式一：预编译 dmg（即将提供）
+## 方式一：预编译 dmg
 
-dmg 会发布在 GitHub Releases（`https://github.com/Towow-ai/totype/releases`），同时附带 `SHA256SUMS`。它是精简版，不含本地模型：在入门引导，或 设置 → 识别 的“本地模型”一行里下载，约 246 MB，来自 Hugging Face，下载后校验，保存在 `~/Library/Application Support/Totype/models/`。
+dmg 发布在 GitHub Releases（`https://github.com/Towow-ai/totype/releases`），文件名是 `Totype-<版本>-arm64.dmg`，同页附带 `SHA256SUMS`。它是精简版，不含本地模型：在入门引导，或 设置 → 识别 的“本地模型”一行里下载，约 246 MB，来自 Hugging Face，下载后校验，保存在 `~/Library/Application Support/Totype/models/`。
 
-1. 下载 dmg，可用 `shasum -a 256 <文件名>` 与 `SHA256SUMS` 核对。
+1. 下载 dmg 和 `SHA256SUMS`，在下载目录运行 `shasum -a 256 -c SHA256SUMS` 核对（提示 `OK` 即可；只下载了 dmg 时，会提示找不到其他文件，可忽略）。
 2. 打开 dmg，把 Totype 拖进“应用程序”文件夹。
 3. 在“应用程序”里双击 Totype 。系统会弹出“无法打开”或“无法验证开发者”的提示，点“完成”关闭。
 4. 打开 系统设置 → 隐私与安全性，滚到底部，找到关于 Totype 的提示，点“仍要打开”，输入登录密码。
@@ -41,7 +41,7 @@ macOS 把麦克风、辅助功能和输入监控的授权绑定在应用的代�
 ## 更新
 
 - 源码构建：拉取新代码后再次运行 `scripts/install.sh`。
-- dmg（发布后）：下载新版本，覆盖“应用程序”里的旧版本。
+- dmg：下载新版本，覆盖“应用程序”里的旧版本。
 
 未经公证的构建在更新之后，系统可能让三项授权失效。症状是热键没反应，或菜单面板顶部出现“Esc 取消不可用：需要重新授权输入监控”。处理方法：打开 系统设置 → 隐私与安全性，在“麦克风”“辅助功能”“输入监控”三个列表里删掉 Totype 的旧条目，重新添加或重新授权，再重启应用。
 

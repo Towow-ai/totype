@@ -32,4 +32,4 @@
 - A single recording lasts 180 seconds by default.
 - The history window shows only the latest 20 entries; older ones remain in the data folder.
 - Whether an app counts as chat-type comes from a fixed list of app identities, and browsers are all treated as chat-type.
-- The prebuilt dmg on GitHub Releases is coming soon; until then, build from source (`VERBATIM_BUNDLE_MODEL=0` gives the lite build).
+- The prebuilt dmg on GitHub Releases is a lite build that is not notarized, so the first launch needs a manual approval. For the full build with the model bundled, build from source (the default; `VERBATIM_BUNDLE_MODEL=0` gives the lite build).

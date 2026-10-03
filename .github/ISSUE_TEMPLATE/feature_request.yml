@@ -1,0 +1,42 @@
+name: 功能建议 · Feature request
+description: 提一个想法。 Suggest an idea.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Totype 不改你说的话。需要大模型改写、润色或补全的建议，和这条原则冲突，通常不会采纳；如果你的想法是可选的、默认关闭的，请说明它如何不改变默认行为。
+
+        Totype does not change what you said. Ideas that need LLM rewriting, polishing or completion conflict with that, and are usually declined. If yours is optional and off by default, say how the default behavior stays untouched.
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你想解决什么问题 · The problem
+      description: 你现在遇到了什么，在什么场景下。 What you run into today, and in which situation.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: 你希望怎么做 · What you would like
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 考虑过的其他办法 · Alternatives you considered
+  - type: dropdown
+    id: area
+    attributes:
+      label: 涉及哪一块 · Area
+      options:
+        - 热键与录音 · Hotkey and recording
+        - 文字插入 · Text insertion
+        - 识别引擎 · Engines
+        - 个人词库 · Personal lexicon
+        - 历史记录 · History
+        - 界面 · Interface
+        - 文档 · Documentation
+        - 其他 · Other
+    validations:
+      required: true
