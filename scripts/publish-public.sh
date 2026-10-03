@@ -43,6 +43,13 @@ fi
 [[ -d "$PUBLIC_DIR/.git" ]] || { echo "not a git working copy: $PUBLIC_DIR" >&2; exit 2; }
 PUBLIC_DIR="$(cd "$PUBLIC_DIR" && pwd)"
 [[ "$PUBLIC_DIR" != "$ROOT" ]] || { echo "refusing to sync into the source repository" >&2; exit 2; }
+# Every commit in the public copy must come from this script: refuse when it
+# carries local commits or edits nobody reviewed (they would be pushed as-is).
+if git -C "$PUBLIC_DIR" rev-parse -q --verify '@{upstream}' >/dev/null; then
+    ahead="$(git -C "$PUBLIC_DIR" rev-list --count '@{upstream}..HEAD')"
+    [[ "$ahead" == 0 ]] || { echo "public copy has $ahead unpushed commit(s); review them first" >&2; exit 2; }
+fi
+[[ -z "$(git -C "$PUBLIC_DIR" status --porcelain)" ]] || { echo "public copy has uncommitted changes; review them first" >&2; exit 2; }
 
 TMP="$(mktemp -d /private/tmp/totype-public-export.XXXXXX)"
 trap 'rm -rf "$TMP"' EXIT
