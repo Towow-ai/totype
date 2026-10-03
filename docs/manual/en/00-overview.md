@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/00-overview.md)
 
-Totype is a voice input method for the macOS menu bar. It connects to top-tier recognition models: Soniox and Alibaba Cloud Bailian for live captions, or the local SenseVoice engine fully offline. Tap Right Option to start talking, tap it again, and the text lands in the field you are typing in. By default the text is exactly what the engine heard, with no LLM polishing; how much it gets tidied is up to you. It needs a Mac with Apple silicon and macOS 15 or later.
+Totype is a voice input method for the macOS menu bar. It connects to top-tier recognition models: Soniox and Alibaba Cloud Bailian for real-time recognition, or the local SenseVoice engine fully offline. Tap Right Option to start talking, tap it again, and the text lands in the field you are typing in. By default the text is exactly what the engine heard, with no LLM polishing; how much it gets tidied is up to you. It needs a Mac with Apple silicon and macOS 15 or later.
 
 ## Contents
 

@@ -2,7 +2,7 @@
 
 [English](../en/04-engines-and-keys.md)
 
-Totype 有三个识别引擎：本地 SenseVoice 离线运行、不需要 Key；Soniox 和阿里云百炼是云端引擎，需要你自己的 API Key，并按量向服务商付费。默认主引擎是本地。想要边说边出字，选云端引擎。
+Totype 有三个识别引擎：本地 SenseVoice 离线运行、不需要 Key；Soniox 和阿里云百炼是云端引擎，需要你自己的 API Key，并按量向服务商付费。默认主引擎是本地。想要实时识别、说完立刻出结果，选云端引擎。
 
 ## 三个引擎
 

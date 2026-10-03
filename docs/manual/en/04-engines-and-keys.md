@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/04-engines-and-keys.md)
 
-Totype has three recognition engines. The local SenseVoice engine runs offline and needs no key. Soniox and Alibaba Cloud Bailian are cloud engines: they need your own API key and bill you by usage. The default primary engine is the local one. Pick a cloud engine if you want text to appear while you speak.
+Totype has three recognition engines. The local SenseVoice engine runs offline and needs no key. Soniox and Alibaba Cloud Bailian are cloud engines: they need your own API key and bill you by usage. The default primary engine is the local one. Pick a cloud engine if you want real-time recognition, with the text ready almost as soon as you stop.
 
 ## The three engines
 
