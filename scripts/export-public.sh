@@ -56,6 +56,7 @@ WHITELIST=(
     docs/DESIGN.md
     docs/design
     docs/manual
+    docs/images
     scripts
     tools/history_report.py
 )
