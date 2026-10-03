@@ -27,6 +27,32 @@ Totype lives in the menu bar. Put the cursor in any app, tap Right Option to sta
 
 Requires an Apple silicon Mac on macOS 15 or later. The interface is currently in Simplified Chinese only.
 
+## See it work
+
+### Switch engines, bring your own key
+
+<p align="center"><img src="docs/images/feature-engines.gif" width="720" alt="Local, Alibaba Cloud or Soniox with your own key; two clouds back each other up."></p>
+
+Pick the local engine, Alibaba Cloud Bailian or Soniox as the primary model; cloud engines use your own API key. With both clouds configured, each is the other's hot standby: if the primary errors out or is too slow, the other one's result is used, and if both fail, the saved recording is transcribed locally. The overlay tells you which engine finished the job.
+
+### Mishearing correction
+
+<p align="center"><img src="docs/images/feature-alias.gif" width="720" alt="Register the right spelling and how it gets misheard; replaced only when the other engine heard the right word."></p>
+
+On the Profile page, register a word's correct spelling and the ways it gets misheard. It is replaced only when the other engine heard exactly the correct spelling at the same spot, so what you actually said is never overwritten.
+
+### Learns from your edits
+
+<p align="center"><img src="docs/images/feature-learn.gif" width="720" alt="Fix a word by hand twice after insertion and it joins your glossary."></p>
+
+If you fix a word by hand after it is inserted and the same fix happens twice, the word joins your personal lexicon and is sent to the cloud engines as a hotword from then on. It only helps future recognition; text already inserted is never rewritten. You can turn it off in Settings.
+
+### You set how tidy it gets
+
+<p align="center"><img src="docs/images/feature-tidy.gif" width="720" alt="Verbatim by default; a transcription prompt goes to the engine as a hint."></p>
+
+By default you get every word, including repetitions, fillers and self-corrections, with no LLM rewriting. For tidier text, write your wishes in the transcription prompt (for example, "add punctuation, drop the ums"); it goes to the cloud engine as a hint. Combine it with the glossary, speaker background, and the "remove the final period in chat apps" and "add a space after English" switches.
+
 ## Quick start
 
 ### 1. Install
