@@ -20,8 +20,6 @@ Since macOS 15, right-clicking and choosing Open no longer bypasses the check, s
 xattr -dr com.apple.quarantine /Applications/Totype.app
 ```
 
-Screenshot placeholder: ![Open Anyway](../../images/gatekeeper-open-anyway.png)
-
 ## Option 2: build from source
 
 A source build bundles the local model into the app, so it behaves like a full build. You need the Xcode Command Line Tools; full Xcode is not required. The SDK must be macOS 15.4 or later.

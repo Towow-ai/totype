@@ -13,7 +13,9 @@
      Content: in Notes or a terminal, tap Right Option, say one sentence mixing Chinese and English, tap again, text appears. Under 10 seconds.
 ![Demo](docs/images/demo.gif)
 -->
-![Overlay states](docs/design/mac-overlay-extra.png)
+![The recording overlay in light and dark](docs/images/overlay-listening.png)
+
+![History window](docs/images/history-window.png)
 
 Totype lives in the menu bar. Put the cursor in any app, tap Right Option to start recording, tap again, and the recognized text is inserted at the cursor. It handles Chinese, English and the two mixed in one sentence. For the cloud engine you can use the real-time models from Soniox or Alibaba Cloud Bailian and see the text as you speak; to stay offline, use the local SenseVoice engine.
 

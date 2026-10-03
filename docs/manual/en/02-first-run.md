@@ -8,6 +8,8 @@ Totype needs three system permissions: Microphone to record, Accessibility to in
 
 On the first launch Totype opens a window titled `开始之前` (Before you start) with five steps: Microphone, Accessibility, Input Monitoring, Local model, and a test sentence. Each step shows a check mark once it is done, and the next step that needs you has the filled button. Input Monitoring may show `立即重启` (Restart now), because the hotkey only works after a restart. The local model step has a `下载` (Download) button; if you have already saved a cloud key, it says the local model can be installed later. In the last step, click the box, tap Right Option, speak, and tap again. When everything is done the button reads `完成` (Done); otherwise `稍后再说` (Later) closes the window.
 
+![First-run guide](../../images/onboarding.png)
+
 The window does not open if all three permissions are already granted and a local model or cloud key is available. You can reopen it any time: menu bar icon → `⋯` → `打开入门引导…` (Open the first-run guide…). If you skip it, do the same things by hand as described below.
 
 ## Granting permissions by hand
@@ -18,8 +20,6 @@ The app lives only in the menu bar and has no Dock icon. After launch, look for 
 2. **Accessibility.** Click the menu bar icon to open the menu panel, click `⋯` at the bottom right, and choose `检查辅助功能` (Check Accessibility). macOS takes you toward System Settings → Privacy & Security → Accessibility. Switch Totype on; if it is not in the list, click "+" and add `/Applications/Totype.app`. When the `插入` (Insertion) column of the menu panel reads `辅助功能 · 可用` (Accessibility · available), it worked.
 3. **Input Monitoring.** In the same `⋯` menu choose `检查输入监控` (Check Input Monitoring), then switch Totype on under System Settings → Privacy & Security → Input Monitoring. Quit the app and open it again.
 4. **Say a test sentence.** Click into any text field, tap Right Option, say a sentence, and tap Right Option again. If the text appears at the cursor and the overlay shows `已插入 N 字` (Inserted N characters), the whole chain works.
-
-Screenshot placeholders: ![Microphone](../../images/permission-microphone.png) ![Accessibility](../../images/permission-accessibility.png) ![Input Monitoring](../../images/permission-input-monitoring.png)
 
 ## When a grant stops working
 

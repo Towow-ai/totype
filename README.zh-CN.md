@@ -13,7 +13,9 @@
      内容：在备忘录或终端里按右 Option，说一句中英文夹杂的话，再按一下，文字出现。10 秒以内。
 ![演示](docs/images/demo.gif)
 -->
-![浮窗状态](docs/design/mac-overlay-extra.png)
+![浅色与深色下的录音浮窗](docs/images/overlay-listening.png)
+
+![历史窗口](docs/images/history-window.png)
 
 Totype 常驻菜单栏。光标停在任意应用的输入框里，按一下右 Option 开始录音，再按一下，识别出的文字就插入光标处。它支持中文、英文和中英文夹杂。云端引擎可以接 Soniox 和阿里云百炼的实时识别模型，边说边出字；不想联网，就用本地的 SenseVoice。
 

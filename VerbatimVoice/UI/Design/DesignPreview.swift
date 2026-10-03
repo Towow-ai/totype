@@ -5,7 +5,8 @@ import SwiftUI
 /// Design snapshots for comparing the implementation with the design screens (see docs/DESIGN.md).
 ///
 /// Inert unless the process is started by hand with `VERBATIM_DESIGN_PREVIEW` set
-/// (`all`, or a comma list of `overlay,desktop,type,menu,history,profile,onboarding,menubar`). `desktop` composites
+/// (`all`, or a comma list of `overlay,desktop,type,menu,history,profile,onboarding,menubar`;
+/// `docs` renders the README and manual screenshots with neutral sample data). `desktop` composites
 /// the pill over wallpaper bands given in `VERBATIM_DESIGN_PREVIEW_DESKTOPS=light.png,dark.png`
 /// (1100×420 @2x each); `type` renders the digit treatments next to Chinese text. In that case it renders the
 /// real views with fixed fake data into PNGs (`VERBATIM_DESIGN_PREVIEW_OUT`, default
@@ -35,6 +36,8 @@ enum DesignPreview {
             if all || targets.contains("onboarding") { try onboarding(to: output) }
             if all || targets.contains("menubar") { try menuBarIcons(to: output) }
             if all || targets.contains("sizing") { sizingCheck() }
+            // Public documentation screenshots (docs/images); not part of `all`.
+            if targets.contains("docs") { try docScreenshots(to: output) }
             print("design preview written to \(output.path)")
         } catch {
             FileHandle.standardError.write(Data("design preview failed: \(error)\n".utf8))
@@ -457,12 +460,12 @@ enum DesignPreview {
             calendar.date(byAdding: DateComponents(day: dayOffset, hour: hour, minute: minute), to: today) ?? today
         }
         let items: [(String, Date, String, Double)] = [
-            ("我觉得这个方案可以，先不要改我的原话，然后那个会议记录都要保留。呃，还有一个，就是 iPhone 那边的键盘，录音中要能看到音波和时长，不然我不知道它到底在不在听。", at(0, 15, 24), "Claude Code", 9.2),
-            ("那个 PR 我晚点再看，先把 Soniox 的 context 结构化那块跑一下评测，呃，跑完把 P50 发我。", at(0, 15, 2), "微信", 11.1),
-            ("明天下午三点开会，记得带上季度报表。", at(0, 14, 37), "ChatGPT", 7.0),
-            ("上个月的转化率是 4.2%，先别下结论，等完整数据出来再说。", at(0, 11, 15), "Terminal", 12.0),
-            ("这个 skill 的触发词再收一收，现在太宽了。", at(0, 10, 48), "Cursor", 5.0),
-            ("把退款流程的三个状态写成表，别加解释。", at(-1, 22, 40), "ChatGPT", 6.0),
+            ("明天下午三点和设计团队过一下 onboarding 的流程，呃，还有一个，就是 Figma 里那版新的 dashboard 也一起看，先把上个月的 NPS 数据准备好。", at(0, 15, 24), "Notes", 9.2),
+            ("把这个 PR merge 一下，然后跑一遍 CI，呃，跑完把结果发到群里。", at(0, 15, 2), "微信", 11.1),
+            ("明天下午三点开会，记得带上季度报表。", at(0, 14, 37), "Mail", 7.0),
+            ("上个月的转化率是 4.2%，先别下结论，等完整数据出来再说。", at(0, 11, 15), "Notion", 12.0),
+            ("这个接口的 timeout 再调长一点，现在 retry 太频繁了。", at(0, 10, 48), "Terminal", 5.0),
+            ("把退款流程的三个状态写成表，别加解释。", at(-1, 22, 40), "Notes", 6.0),
         ]
         return items.map { text, start, app, seconds in
             let stopNanos = Int64(seconds * 1_000_000_000)
@@ -499,6 +502,217 @@ enum DesignPreview {
                 audioState: .available
             )
         }
+    }
+
+    // MARK: - Documentation screenshots (docs/images, fictional sample data)
+
+    private static let shotShadowPad: CGFloat = 30
+
+    private static func docScreenshots(to dir: URL) throws {
+        let light = false
+        // 1. Menu-bar panel, recording.
+        do {
+            let now = Date()
+            let state = MenuPanelState(
+                phase: .capturing, title: "正在听", detail: "再按一次右 Option 结束 · Esc 取消",
+                recordingStartedAt: now.addingTimeInterval(-7.2),
+                provisionalText: "把这个 PR merge 一下，然后跑一遍 CI…",
+                engine: "Soniox", insertion: "辅助功能 · 可用", microphone: "录音中", error: nil)
+            let actions = MenuPanelActions(end: {}, cancel: {}, undoCancel: {}, start: {}, showHistory: {},
+                                           checkAccessibility: {}, checkInputMonitoring: {}, openDataFolder: {}, quit: {})
+            let panel = MenuPanelContent(state: state, actions: actions, frozenNow: now)
+            let size = NSHostingView(rootView: panel).fittingSize
+            try shot(panel.background(VVColor.bgCanvas), size: size, dark: light, name: "menubar-panel.png", dir: dir)
+        }
+        // 2. Overlay, light and dark side by side on solid near-white / near-black.
+        try overlayShot(to: dir.appendingPathComponent("overlay-listening.png"))
+        // 3. History window.
+        let records = sampleRecords()
+        func console<P: View>(destination: SettingsDestination, selected: UUID?, @ViewBuilder pane: @escaping () -> P) -> some View {
+            HistoryWindowContent(
+                records: records, destination: .constant(destination), selectedRecordID: .constant(selected),
+                searchText: .constant(""), expandedHistoryIDs: [], retranscribingIDs: [], operationStatus: "",
+                overview: HistoryOverviewState(title: "待命", hint: "", actionTitle: "开始录音", actionEnabled: true, error: nil),
+                copyLabel: { _ in "复制" }, providerSelection: { _ in .constant(.automatic) },
+                onActivate: { _ in }, onCopy: { _ in }, onToggleDetails: { _ in },
+                onPlay: { _ in }, onRetranscribe: { _ in }, onPrimaryAction: {}, settingsPane: pane)
+        }
+        try shot(console(destination: .history, selected: records.first?.id) { EmptyView() }
+                    .frame(width: 780, height: 560),
+                 size: CGSize(width: 780, height: 560), dark: light, name: "history-window.png", dir: dir, trafficLights: true)
+        // 4. Profile.
+        let defaults = UserDefaults(suiteName: "verbatim-design-preview")!
+        defaults.removePersistentDomain(forName: "verbatim-design-preview")
+        let settings = AppSettings(defaults: defaults)
+        settings.speakerBackground = "说话人是一名产品经理，常谈用户研究、季度规划和数据看板，偶尔提到 Figma、Notion 和 OKR。"
+        settings.glossaryText = "Figma\nNotion\nOKR\nNPS\nRoadmap"
+        settings.removeChatTerminalPeriod = true
+        settings.appendTrailingSpaceAfterEnglish = false
+        let terms = [
+            PersonalTerm(canonical: "Figma", aliases: ["菲格玛", "Figure"]),
+            PersonalTerm(canonical: "OKR", aliases: ["欧克阿", "O K R"]),
+            PersonalTerm(canonical: "季度规划", aliases: ["计度规划"]),
+        ]
+        let profileSize = CGSize(width: 780, height: 896)
+        try shot(console(destination: .profile, selected: nil) {
+            ProfilePane(settings: settings, terms: terms, status: "", pendingImport: nil, starterGlossaryAvailable: true,
+                        onAddAliases: { _, _ in }, onRemoveAlias: { _, _ in },
+                        onExport: {}, onChooseImport: {}, onConfirmImport: {}, onCancelImport: {})
+        }.frame(width: profileSize.width, height: profileSize.height),
+                 size: profileSize, dark: light, name: "profile.png", dir: dir, trafficLights: true)
+        // 5. Settings, recognition section.
+        let settingsSize = CGSize(width: 780, height: 560)
+        try shot(console(destination: .settings, selected: nil) { SettingsEnginesSample(settings: settings) }
+                    .frame(width: settingsSize.width, height: settingsSize.height),
+                 size: settingsSize, dark: light, name: "settings-engines.png", dir: dir, trafficLights: true)
+        // 6. First-run window.
+        let state = OnboardingState(microphone: .granted, accessibility: true, inputMonitoring: false,
+                                    inputMonitoringNeedsRestart: false, model: .bundled,
+                                    cloudKeyConfigured: false, triedText: "")
+        let host = OnboardingPreviewHost(state: state)
+        let size = NSHostingView(rootView: host).fittingSize
+        try shot(host, size: size, dark: light, name: "onboarding.png", dir: dir, titleBar: AppIdentity.displayName)
+    }
+
+    /// The real "识别" and "云端密钥" rows of the settings pane from plain inputs
+    /// (SettingsView.configuration needs an AppModel).
+    private struct SettingsEnginesSample: View {
+        @ObservedObject var settings: AppSettings
+        @State private var sonioxKey = "sample-key-not-real"
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: 26) {
+                Text("设置").font(.system(size: 15, weight: .semibold))
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("识别").font(.system(size: 13, weight: .semibold))
+                    Picker("主模型", selection: $settings.primaryProvider) {
+                        ForEach(PrimaryTranscriptionProvider.allCases) { Text($0.shortName).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    Toggle("云端异常时自动使用本地模型", isOn: $settings.automaticLocalFallback)
+                    Toggle("保留录音与历史", isOn: $settings.saveAudio)
+                    LocalModelStatusRow(status: .bundled)
+                }
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("云端密钥").font(.system(size: 13, weight: .semibold))
+                    keyRow(title: "Soniox", configured: true, key: $sonioxKey)
+                    Hairline()
+                    Picker("阿里云区域", selection: $settings.aliyunRegion) {
+                        ForEach(AliyunRegion.allCases) { Text($0.displayName).tag($0) }
+                    }
+                    keyRow(title: "阿里云百炼", configured: false, key: .constant(""))
+                    HStack(spacing: 8) {
+                        Button("测试阿里云连接") {}.buttonStyle(VVButtonStyle()).disabled(true)
+                        Button("获取 Key") {}.buttonStyle(VVButtonStyle())
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .font(.system(size: 13))
+            .foregroundStyle(VVColor.fgPrimary)
+            .padding(.top, VVMac.detailTopInset)
+            .padding(.horizontal, 32)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+
+        private func keyRow(title: String, configured: Bool, key: Binding<String>) -> some View {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Text(title).font(.system(size: 13, weight: .medium))
+                    Text(configured ? "已配置" : "未配置").font(.system(size: 12)).foregroundStyle(VVColor.fgSecondary)
+                }
+                HStack(spacing: 8) {
+                    SecureField("API Key", text: key).textFieldStyle(.roundedBorder)
+                    Button("保存") {}.buttonStyle(VVButtonStyle())
+                }
+            }
+        }
+    }
+
+    private static func overlayShot(to url: URL) throws {
+        func panel(dark: Bool) -> some View {
+            ZStack(alignment: .bottom) {
+                Color(nsColor: VVColor.hex(dark ? 0x131415 : 0xF6F7F9))
+                overlayPill(.listening).scaleEffect(1.5).padding(.bottom, 52)
+            }
+            .frame(width: 400, height: 190)
+            .environment(\.colorScheme, dark ? .dark : .light)
+        }
+        let stage = HStack(spacing: 0) { panel(dark: false); panel(dark: true) }
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.gray.opacity(0.35), lineWidth: 0.5))
+            .padding(12)
+        try writeImage(stage, width: 824, to: url)
+    }
+
+    /// Renders `content` and wraps it in a window-like frame (rounded corners, hairline, soft shadow)
+    /// on a transparent canvas, so every screenshot in the set looks alike.
+    private static func shot<V: View>(_ content: V, size: CGSize, dark: Bool, name: String, dir: URL,
+                                      trafficLights: Bool = false, titleBar: String? = nil) throws {
+        guard let rep = capture(content, size: size, dark: dark) else { return }
+        let image = NSImage(size: size)
+        image.addRepresentation(rep)
+        let barHeight: CGFloat = titleBar == nil ? 0 : 40
+        let trim: CGFloat = titleBar == nil ? 0 : 6
+        let total = CGSize(width: size.width, height: size.height - trim + barHeight)
+        let lights = HStack(spacing: 9) {
+            ForEach([0xFF5F57, 0xFEBC2E, 0x28C840], id: \.self) { Circle().fill(Color(nsColor: VVColor.hex(UInt32($0)))).frame(width: 14, height: 14) }
+        }
+        let framed = ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                if let titleBar {
+                    ZStack {
+                        VVColor.bgCanvas
+                        Text(titleBar).font(.system(size: 13, weight: .semibold)).foregroundStyle(VVColor.fgPrimary)
+                    }
+                    .frame(height: barHeight)
+                    .overlay(alignment: .bottom) { Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 0.5) }
+                }
+                // The capture of a window without a title bar leaves a faint 4pt strip along its top edge.
+                Image(nsImage: image).resizable().frame(width: size.width, height: size.height)
+                    .frame(height: size.height - trim, alignment: .bottom).clipped()
+                    .background(VVColor.bgCanvas)
+            }
+            if trafficLights || titleBar != nil {
+                lights.padding(.leading, 19).padding(.top, (titleBar == nil ? 26 : barHeight / 2) - 7)
+            }
+        }
+        .frame(width: total.width, height: total.height)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.gray.opacity(0.4), lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.18), radius: 14, y: 6)
+        .padding(shotShadowPad)
+        .environment(\.colorScheme, dark ? .dark : .light)
+        try writeImage(framed, width: total.width + shotShadowPad * 2, to: dir.appendingPathComponent(name))
+    }
+
+    private static func writeImage<V: View>(_ view: V, width: CGFloat, to url: URL) throws {
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = min(2, 1400 / width)
+        guard let image = renderer.cgImage else { return }
+        try NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: url)
+    }
+
+    private static func capture<V: View>(_ view: V, size: CGSize, dark: Bool) -> NSBitmapImageRep? {
+        let hosting = NSHostingView(rootView: view)
+        let window = NSWindow(contentRect: CGRect(origin: CGPoint(x: -30_000, y: -30_000), size: size),
+                              styleMask: .borderless, backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        window.contentView = hosting
+        hosting.frame = CGRect(origin: .zero, size: size)
+        window.orderFrontRegardless()
+        settle()
+        hosting.layoutSubtreeIfNeeded()
+        defer { window.orderOut(nil) }
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width * 2), pixelsHigh: Int(size.height * 2),
+                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return nil }
+        rep.size = size
+        hosting.effectiveAppearance.performAsCurrentDrawingAppearance {
+            hosting.cacheDisplay(in: hosting.bounds, to: rep)
+        }
+        return rep.retagging(with: .sRGB) ?? rep
     }
 
     // MARK: - Menu-bar template (icons/menubar-16@2x.png)

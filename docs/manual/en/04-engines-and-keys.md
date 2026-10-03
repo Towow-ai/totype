@@ -14,6 +14,8 @@ Totype has three recognition engines. The local SenseVoice engine runs offline a
 
 On the `设置` (Settings) page of the history window, the `主模型` (Primary model) selector in the `识别` (Recognition) section switches between `本地`, `阿里云` and `Soniox`.
 
+![Recognition section of the Settings page](../../images/settings-engines.png)
+
 ## Getting and saving a key
 
 In the `云端密钥` (Cloud keys) section of `设置`:

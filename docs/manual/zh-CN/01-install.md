@@ -20,8 +20,6 @@ macOS 15 起，右键点“打开”绕过检查的方法已被取消，所以�
 xattr -dr com.apple.quarantine /Applications/Totype.app
 ```
 
-截图位置：![仍要打开](../../images/gatekeeper-open-anyway.png)
-
 ## 方式二：从源码构建
 
 源码构建会把本地模型一起打包进应用，等同于完整版。只需要 Xcode 命令行工具（Command Line Tools），不要求安装完整的 Xcode；SDK 需要 macOS 15.4 或更高。

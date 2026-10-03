@@ -48,4 +48,4 @@ The app interface is currently Simplified Chinese only. This manual quotes inter
 
 The "menu panel" is the small panel that opens from the menu bar icon. The "overlay" is the capsule at the bottom of the screen that shows status. The "history window" opens from `打开历史…` (Open history…) in the menu panel; it has the history list on the left and details on the right, and also holds the `设置` (Settings) and `个人资料` (Profile) pages.
 
-Screenshot placeholder: ![Menu panel](../../images/menubar-panel.png)
+![Menu panel](../../images/menubar-panel.png)
