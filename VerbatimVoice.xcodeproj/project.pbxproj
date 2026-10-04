@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A3C410040000000000000001 /* AppReopenDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C410040000000000000002 /* AppReopenDelegate.swift */; };
 		7DC903557F929646E14C9FB9 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF36BFD7FA34DBFD13E07BA /* DesignTokens.swift */; };
 		9705DD4A2DCBC843A62BA740 /* Waveform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398562F431C580D013198A3B /* Waveform.swift */; };
 		4AAB692F35C29CC23EE2ACCF /* BrandMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7110B88AD68076DEDF9001 /* BrandMark.swift */; };
@@ -76,6 +77,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A3C410040000000000000002 /* AppReopenDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppReopenDelegate.swift; sourceTree = "<group>"; };
 		5AF36BFD7FA34DBFD13E07BA /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		398562F431C580D013198A3B /* Waveform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Waveform.swift; sourceTree = "<group>"; };
 		FD7110B88AD68076DEDF9001 /* BrandMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandMark.swift; sourceTree = "<group>"; };
@@ -204,6 +206,7 @@
 				3E4D173C7AFAC790F1D97C83 /* AppIdentity.swift */,
 				B0B3020C04F2E4EE4E7A14AC /* ActiveDictationSession.swift */,
 				00361D344199A8EDAC5984B3 /* AppModel.swift */,
+				A3C410040000000000000002 /* AppReopenDelegate.swift */,
 				70D71B80419E8555DB5A8E3A /* AppSettings.swift */,
 				70D71B80419E8555DB5A8E3B /* AppSettingsProfile.swift */,
 				50C4AC1B320DDE4BF776B5FC /* VerbatimVoiceApp.swift */,
@@ -491,6 +494,7 @@
 				2A1F18118131FF41E071C75B /* AppIdentity.swift in Sources */,
 				9D4E318E6693ADC995498214 /* ActiveDictationSession.swift in Sources */,
 				D9D2EEDED960F6DD6C65AD7C /* AppModel.swift in Sources */,
+				A3C410040000000000000001 /* AppReopenDelegate.swift in Sources */,
 				E5FF79545B7BE9577EA6BF72 /* AppSettings.swift in Sources */,
 				E5FF79545B7BE9577EA6BF73 /* AppSettingsProfile.swift in Sources */,
 				BDFC43DDCB2DCA96A6D22DAC /* VerbatimVoiceApp.swift in Sources */,

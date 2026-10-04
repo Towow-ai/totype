@@ -1602,6 +1602,11 @@ final class AppModel: ObservableObject {
     }
 
     private func configureCallbacks() {
+        NotificationCenter.default.publisher(for: AppReopenDelegate.reopenRequested)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.showSettingsWindow(.settings) }
+            .store(in: &cancellables)
+
         audioEngine.onChunk = { [sessionSink] chunk in
             sessionSink.yield(chunk)
         }

@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct VerbatimVoiceApp: App {
+    @NSApplicationDelegateAdaptor(AppReopenDelegate.self) private var appDelegate
     @StateObject private var model = AppModel()
 
     init() {
