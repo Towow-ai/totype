@@ -25,7 +25,7 @@ scripts/verify.sh    # 提交前必跑
 
 `scripts/verify.sh` 依次运行核心测试、各项自测程序，构建完整应用，并用内置的 SenseVoice 模型转写一段样本音频。首次运行会下载约 246 MB 的模型，样本音频由 macOS 自带的中文语音合成，需要装有中文朗读语音（系统设置 → 辅助功能 → 朗读内容）。依赖个人资料文件的测试在文件缺失时会自动跳过，这是预期行为。
 
-测试不调用任何付费接口，也不需要 API Key。合并请求会在 GitHub Actions 里跑同一个 `scripts/verify.sh`，通过后才合并。
+测试不调用任何付费接口，也不需要 API Key。合并请求会在 GitHub Actions 里跑同一个 `scripts/verify.sh`，以及 `scripts/verify-ios.sh` 的共享行为和原生 iOS 构建，通过后才合并。完整 Xcode 环境中，共用核心、Provider 或 iOS 改动也应本地运行后者。工具版本、失败日志、发布与恢复入口见 [CI/CD 维护说明](docs/CI-CD.md)。
 
 配置项见 `config/local.env.example`。自己构建时建议换一个 `VERBATIM_BUNDLE_ID`，免得和已安装的 Totype 争用系统授权。更多细节见[构建与贡献](docs/manual/zh-CN/09-build-and-contribute.md)。
 
@@ -69,7 +69,7 @@ scripts/verify.sh    # run before every commit
 
 `scripts/verify.sh` runs the core tests and the self-test programs, builds the full app, and transcribes a sample recording with the bundled SenseVoice model. The first run downloads about 246 MB of model files. The sample is synthesized with the macOS text-to-speech, so a Chinese voice must be installed (System Settings → Accessibility → Spoken Content). Tests that need personal profile files skip themselves when the files are missing; that is expected.
 
-Tests call no paid service and need no API key. Pull requests run the same `scripts/verify.sh` in GitHub Actions and must pass before merging.
+Tests call no paid service and need no API key. Pull requests run the same `scripts/verify.sh` plus `scripts/verify-ios.sh` (shared behavior and native iOS targets) in GitHub Actions and must pass before merging. With full Xcode, also run the latter locally for shared core, provider or iOS changes. Tool versions, logs, release and recovery commands are in [CI/CD maintenance](docs/CI-CD.md).
 
 See `config/local.env.example` for settings. When you build for yourself, set your own `VERBATIM_BUNDLE_ID` so it does not compete with an installed Totype for system permissions. More in [Build and contribute](docs/manual/en/09-build-and-contribute.md).
 

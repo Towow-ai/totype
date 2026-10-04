@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: ['**'] # Tags run the release workflow, which verifies before publishing.
   pull_request:
 
 permissions:
@@ -37,3 +38,32 @@ jobs:
 
       - name: Verify
         run: scripts/verify.sh
+
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: scripts/ci-select-xcode.sh
+
+      - name: Install XcodeGen 2.46.0
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          echo "4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 -c -
+          ditto -xk "$RUNNER_TEMP/xcodegen.zip" "$RUNNER_TEMP/totype-tools"
+          echo "$RUNNER_TEMP/totype-tools/xcodegen/bin" >> "$GITHUB_PATH"
+
+      - name: Verify iOS shared behavior and native targets
+        run: scripts/verify-ios.sh
+
+      - name: Keep the native build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: VerbatimVoiceMobile/.build/ci-ios-build.log
+          if-no-files-found: ignore
+          retention-days: 7

@@ -19,6 +19,15 @@ jobs:
       - name: Select Xcode
         run: scripts/ci-select-xcode.sh
 
+      - name: Cache SenseVoice downloads
+        uses: actions/cache@v4
+        with:
+          path: .build/downloads
+          key: sensevoice-${{ hashFiles('scripts/setup_local_sensevoice.sh') }}
+
+      - name: Verify the release commit
+        run: scripts/verify.sh
+
       - name: Build dmg
         run: scripts/make-dmg.sh dist
 
@@ -31,6 +40,11 @@ jobs:
             exit 1
           fi
           echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Verify the distribution image
+        run: |
+          (cd dist && shasum -a 256 -c SHA256SUMS)
+          hdiutil verify "dist/Totype-${VERSION}-arm64.dmg"
 
       - name: Release notes from CHANGELOG.md
         run: scripts/changelog-section.sh "$VERSION" > dist/notes.md

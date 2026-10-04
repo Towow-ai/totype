@@ -63,6 +63,7 @@ WHITELIST=(
     config/Shared.xcconfig
     config/Local.xcconfig.example
     docs/ADR-0001-S0-Stability-First.md
+    docs/CI-CD.md
     docs/DESIGN.md
     docs/design
     docs/manual

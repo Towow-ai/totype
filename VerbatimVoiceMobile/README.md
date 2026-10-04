@@ -4,6 +4,8 @@ iPhone 上的语音输入。主 App 录音并调用 Soniox（主）和百炼（�
 
 安装步骤、签名和私有 API 开关的说明面向使用者，在 `../docs/manual/zh-CN/11-iphone.md`；这里写代码结构和调试方法。
 
+完整 Xcode 环境的日常检查用仓库根目录的 `scripts/verify-ios.sh`：共享行为自测 + 三个原生 iOS target 的无签名 Release 构建。GitHub CI 调用同一入口。工具版本、日志与签名安装的分工见 [CI/CD 维护说明](../docs/CI-CD.md)。
+
 ## 目录
 
 | 路径 | 内容 | 编进哪个 target |
@@ -170,7 +172,7 @@ DEBUG 构建可以不录音直接开一个会话：`xcrun devicectl device proce
 
 | 项 | 为什么没验证 | 什么时候验 |
 |---|---|---|
-| Live Activity、灵动岛、锁屏 UI | ActivityKit 不能在 Catalyst 下检查 | 第一次 iOS SDK 构建 |
+| Live Activity、灵动岛、锁屏 UI 的运行效果 | 原生 CI 编译 ActivityKit 分支，Catalyst 不覆盖；构建不证明运行效果 | 真机 UI 和录音测试 |
 | `AudioRecordingIntent` 从控制中心冷启动或后台启动能否录音 | 行为取决于系统，公开资料互相矛盾 | 真机测试 |
 | 键盘里 `Link` 打开主 App | 依赖“允许完全访问”和 iOS 版本 | 真机测试 |
 | 会话：后台引擎存活时长、Darwin 唤醒延迟、800 ms 后程序化打开 URL 是否被允许、耗电 | 只能真机测 | 第一次真机安装 |
