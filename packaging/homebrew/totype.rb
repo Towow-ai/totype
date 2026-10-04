@@ -11,8 +11,8 @@
 # ad-hoc and not notarized; macOS still asks for a manual approval on first
 # launch (see the caveats).
 cask "totype" do
-  version "0.4.0"
-  sha256 "0e06401f3ef86157cd34a235a840e188d9a442ea7de0f3e889a3c54eeec746b2"
+  version "0.5.0"
+  sha256 "8bf2cedcc5242c448ed53f93cfe5532450867feea9dfa7575c5cd4eb43d54b9c"
 
   url "https://github.com/Towow-ai/totype/releases/download/v#{version}/Totype-#{version}-arm64.dmg"
   name "Totype"
