@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Offline: builds the Soniox/Aliyun start requests from an exported profile and
 # compares them with a capture taken before personal content left the code.
-# Reads private fixtures from VERBATIM_PRIVATE_DIR (see the test source); skips
-# the parts whose files are missing. Never touches the network or API keys.
+# Reads private fixtures from VERBATIM_PRIVATE_DIR (default: ../private next to
+# the checkout; see the test source); skips the parts whose files are missing.
+# Never touches the network or API keys.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -27,4 +28,4 @@ swiftc \
   VerbatimVoice/Storage/PersonalLexiconStore.swift \
   scripts/profile-equivalence-test/main.swift \
   -o .build/self-test/profile-equivalence-test
-.build/self-test/profile-equivalence-test
+VERBATIM_PRIVATE_DIR="${VERBATIM_PRIVATE_DIR:-$ROOT/../private}" .build/self-test/profile-equivalence-test

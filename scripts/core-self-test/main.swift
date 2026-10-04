@@ -989,7 +989,7 @@ do {
         speakerBackground: "说话人是一名产品经理。",
         transcriptionPrompt: "逐字听写。",
         engine: .init(primaryProvider: "soniox", aliyunRegion: "singapore", languageHints: ["zh", "en"],
-                      comparisonModeEnabled: false, automaticLocalFallback: true),
+                      automaticLocalFallback: true),
         insertion: .init(removeChatTerminalPeriod: true, appendTrailingSpaceAfterEnglish: false),
         retention: .init(audioRetentionDays: 14, audioQuotaMegabytes: 512)
     )

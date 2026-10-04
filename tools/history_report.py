@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect Verbatim Voice JSONL history without third-party dependencies."""
+"""Inspect Totype JSONL history without third-party dependencies."""
 
 from __future__ import annotations
 

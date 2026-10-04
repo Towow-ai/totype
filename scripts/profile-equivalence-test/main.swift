@@ -3,7 +3,8 @@ import Foundation
 /// Offline check that moving personal content out of the code changed nothing
 /// for the person it was written for, and leaks nothing to anyone else.
 ///
-/// Reads, from `VERBATIM_PRIVATE_DIR` (default `~/个人项目/VerbatimVoice/private`):
+/// Reads, from `VERBATIM_PRIVATE_DIR` (default `../private` next to the checkout,
+/// set by scripts/profile_equivalence_test.sh):
 ///   golden/before-requests.json   request JSON captured before the change
 ///   golden/lexicon-snapshot.jsonl lexicon those requests were built from
 ///   owner-profile.json           the owner's exported profile
@@ -13,7 +14,7 @@ import Foundation
 enum ProfileEquivalenceTest {
     @MainActor static func main() async throws {
         let privateDir = URL(fileURLWithPath: ProcessInfo.processInfo.environment["VERBATIM_PRIVATE_DIR"]
-            ?? NSHomeDirectory() + "/个人项目/VerbatimVoice/private")
+            ?? FileManager.default.currentDirectoryPath + "/../private")
         let patterns = loadPatterns(privateDir.appendingPathComponent("oss-scan-patterns.txt"))
 
         try await testEmptyProfile(patterns: patterns)

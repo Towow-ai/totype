@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read old/new Verbatim Voice JSONL and report S0 user-path latency."""
+"""Read old/new Totype JSONL and report S0 user-path latency."""
 
 from __future__ import annotations
 

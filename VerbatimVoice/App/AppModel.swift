@@ -13,7 +13,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var state: DictationState = .idle {
         didSet {
             installStatusReporter.update(dictationState: state)
-            // Escape belongs exclusively to Verbatim Voice only while audio is
+            // Escape belongs exclusively to Totype only while audio is
             // actively starting/listening. In every other state it must reach
             // the user's foreground application untouched.
             hotkey.setCancelCaptureActive(state == .starting || state == .listening)
@@ -46,10 +46,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var secureInputStatus = String(localized: "未检测到")
     @Published private(set) var recentHistory: [HistoryRecord] = []
     @Published private(set) var launchAtLoginEnabled = false
-    @Published var correctionDraft = ""
     @Published private(set) var storageStatus = ""
     @Published private(set) var correctionCaptureStatus = String(localized: "等待下一次可观察的插入")
-    @Published private(set) var correctionSuggestions: [CorrectionSuggestion] = []
     @Published private(set) var providerContextStatus = String(localized: "尚未编译个人术语上下文")
     @Published private(set) var historyCopyStatus = ""
     @Published private(set) var retranscribingHistoryIDs: Set<UUID> = []
@@ -57,7 +55,6 @@ final class AppModel: ObservableObject {
     @Published private(set) var personalTerms: [PersonalTerm] = []
     @Published private(set) var personalLexiconStatus = String(localized: "正在读取个人词库")
     @Published private(set) var lastProviderContextReceipts: [ProviderContextReceipt] = []
-    @Published var personalTermDraft = ""
     /// A cloud provider that rejects requests (balance, key); shown at the
     /// top of the menu panel until a probe or a session proves it healthy.
     @Published private(set) var providerOutageStatus: ProviderOutageStatus?
@@ -93,10 +90,6 @@ final class AppModel: ObservableObject {
     private var pendingPreRollSnapshot: WarmPreRollSnapshot?
     private var providerPartials: [String: String] = [:]
     private var pendingStartTask: Task<Void, Never>?
-    private var pendingProviderPreparationTask: Task<Void, Error>?
-    private var pendingProviderPreparationID: String?
-    private var pendingProviderPreparationSignature: String?
-    private var pendingProviderPreparationToken: UUID?
     private var pendingStartShouldFinalize = false
     private var pendingStartPostRollElapsed = false
     private var completionTask: Task<Void, Never>?
@@ -157,7 +150,6 @@ final class AppModel: ObservableObject {
         hotkey.stop()
         secureInputTimer?.invalidate()
         pendingStartTask?.cancel()
-        pendingProviderPreparationTask?.cancel()
         completionTask?.cancel()
         cancelUndoTask?.cancel()
         maximumDurationTask?.cancel()
@@ -527,10 +519,6 @@ final class AppModel: ObservableObject {
         let preparationTask: Task<Void, Error>? = preconnect.flatMap { preconnect in
             providers.primary === preconnect.provider ? preconnect.task : nil
         }
-        pendingProviderPreparationTask = nil
-        pendingProviderPreparationID = nil
-        pendingProviderPreparationSignature = nil
-        pendingProviderPreparationToken = nil
 
         let session = ActiveDictationSession(
             token: token,
@@ -620,11 +608,6 @@ final class AppModel: ObservableObject {
         pendingTimeline = nil
         pendingStartTask?.cancel()
         pendingStartTask = nil
-        pendingProviderPreparationTask?.cancel()
-        pendingProviderPreparationTask = nil
-        pendingProviderPreparationID = nil
-        pendingProviderPreparationSignature = nil
-        pendingProviderPreparationToken = nil
         pendingStartShouldFinalize = false
         pendingStartPostRollElapsed = false
         completionTask?.cancel()
@@ -854,7 +837,6 @@ final class AppModel: ObservableObject {
         pendingStartTask?.cancel()
         pendingStartTask = nil
         releaseAudioCapture()
-        cancelPendingProviderPreparation()
         timeline?.mark(.cancelRetained)
         timeline?.mark(.userPathFinished)
         overlayController.dismiss(sessionID: token.sessionID)
@@ -1166,7 +1148,7 @@ final class AppModel: ObservableObject {
         hotkey.restart()
     }
 
-    /// 隐私与安全性 → 输入监控. A stale grant is fixed by removing Verbatim Voice
+    /// 隐私与安全性 → 输入监控. A stale grant is fixed by removing Totype
     /// there and adding it again, which records the current signing identity.
     func openInputMonitoringSettings() {
         openPrivacySettings(pane: "Privacy_ListenEvent")
@@ -1210,12 +1192,7 @@ final class AppModel: ObservableObject {
 
     func refreshHistory() async {
         let records = (try? await HistoryStore.shared.recent(limit: 20)) ?? []
-        let suggestions = (try? await HistoryStore.shared.correctionSuggestions(limit: 20)) ?? []
         recentHistory = Array(records.reversed())
-        correctionSuggestions = suggestions
-        if correctionDraft.isEmpty {
-            correctionDraft = recentHistory.first?.insertedText ?? ""
-        }
     }
 
     func playHistoryAudio(_ record: HistoryRecord) {
@@ -1459,65 +1436,6 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func addPersonalTerm() {
-        let canonical = personalTermDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !canonical.isEmpty else { return }
-        if let existing = personalTerms.first(where: {
-            $0.canonical.caseInsensitiveCompare(canonical) == .orderedSame
-        }) {
-            if existing.state != .confirmed || !existing.pinned {
-                var updated = existing
-                updated.state = .confirmed
-                updated.pinned = true
-                upsertPersonalTerm(updated, message: String(localized: "已重新启用并钉住“\(existing.canonical)”"))
-            } else {
-                personalLexiconStatus = String(localized: "“\(existing.canonical)”已在个人词库中")
-            }
-            personalTermDraft = ""
-            return
-        }
-        personalTermDraft = ""
-        upsertPersonalTerm(
-            PersonalTerm(canonical: canonical, pinned: true),
-            message: String(localized: "已加入并钉住“\(canonical)”，下次录音生效")
-        )
-    }
-
-    func togglePersonalTermPinned(_ term: PersonalTerm) {
-        var updated = term
-        updated.pinned.toggle()
-        if updated.state != .confirmed { updated.state = .confirmed }
-        upsertPersonalTerm(
-            updated,
-            message: updated.pinned ? String(localized: "已钉住“\(term.canonical)”") : String(localized: "已取消钉住“\(term.canonical)”")
-        )
-    }
-
-    func togglePersonalTermEnabled(_ term: PersonalTerm) {
-        var updated = term
-        updated.state = term.state == .confirmed ? .retired : .confirmed
-        upsertPersonalTerm(
-            updated,
-            message: updated.state == .confirmed
-                ? String(localized: "已恢复“\(term.canonical)”，下次录音生效")
-                : String(localized: "已停用“\(term.canonical)”，下次录音不再发送")
-        )
-    }
-
-    func deletePersonalTerm(_ term: PersonalTerm) {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            do {
-                self.personalTerms = try await self.personalLexiconStore.delete(termID: term.id)
-                self.personalLexiconStatus = String(localized: "已从当前个人词库删除“\(term.canonical)”")
-                self.cancelPendingProviderPreparation()
-                self.warmPrimaryCloudProviderIfUseful()
-            } catch {
-                self.personalLexiconStatus = String(localized: "删除失败：\(error.localizedDescription)")
-            }
-        }
-    }
-
     // MARK: Personal profile
 
     @Published private(set) var profileStatus = ""
@@ -1609,7 +1527,6 @@ final class AppModel: ObservableObject {
                 }
                 self.personalLexiconStatus = message
                 self.profileStatus = message
-                self.cancelPendingProviderPreparation()
                 self.warmPrimaryCloudProviderIfUseful()
             } catch {
                 self.personalLexiconStatus = String(localized: "个人词保存失败：\(error.localizedDescription)")
@@ -1624,7 +1541,6 @@ final class AppModel: ObservableObject {
             do {
                 self.personalTerms = try await self.personalLexiconStore.upsert(term)
                 self.personalLexiconStatus = message
-                self.cancelPendingProviderPreparation()
                 self.warmPrimaryCloudProviderIfUseful()
             } catch {
                 self.personalLexiconStatus = String(localized: "个人词保存失败：\(error.localizedDescription)")
@@ -1632,37 +1548,10 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func playMostRecentAudio() {
-        guard let record = recentHistory.first else {
-            statusMessage = String(localized: "还没有历史记录")
-            return
-        }
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            guard let url = try? await HistoryStore.shared.audioURL(for: record) else {
-                self.statusMessage = String(localized: "最近一条记录没有可播放的音频")
-                return
-            }
-            self.playbackSound = NSSound(contentsOf: url, byReference: true)
-            guard self.playbackSound?.play() == true else {
-                self.statusMessage = String(localized: "音频播放失败")
-                return
-            }
-            self.statusMessage = String(localized: "正在播放最近一条原始音频")
-        }
-    }
-
     func copyHistoryRecord(_ record: HistoryRecord) {
         copyHistoryText(
             record.insertedText,
             successMessage: String(localized: "已复制这条历史的完整文字（\(record.insertedText.count, format: .number.grouping(.never)) 字）")
-        )
-    }
-
-    func copyHistoryProviderOutput(_ summary: ProviderSummary) {
-        copyHistoryText(
-            summary.text,
-            successMessage: String(localized: "已复制 \(summary.model) 的完整结果（\(summary.text.count, format: .number.grouping(.never)) 字）")
         )
     }
 
@@ -1674,56 +1563,6 @@ final class AppModel: ObservableObject {
         let result = inserter.copyOnly(text)
         historyCopyStatus = result.status == .copied ? successMessage : result.message
         statusMessage = historyCopyStatus
-    }
-
-    func saveCorrection() {
-        guard let record = recentHistory.first else { return }
-        let corrected = correctionDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !corrected.isEmpty else {
-            statusMessage = String(localized: "修正文本不能为空")
-            return
-        }
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            do {
-                let replacement = CorrectionInference.replacement(
-                    from: record.insertedText,
-                    to: corrected
-                ).map {
-                    CorrectionReplacement(
-                        original: $0.original,
-                        corrected: $0.corrected,
-                        punctuationOnly: $0.punctuationOnly
-                    )
-                }
-                try await HistoryStore.shared.appendAction(
-                    sessionID: record.id,
-                    correctedText: corrected,
-                    message: String(localized: "用户人工修正"),
-                    originalText: record.insertedText,
-                    correctionSource: "manual-settings",
-                    targetBundleIdentifier: record.targetBundleIdentifier,
-                    replacements: replacement.map { [$0] }
-                )
-                self.statusMessage = String(localized: "修正已保存，可用于之后对照原始音频")
-                await self.refreshHistory()
-            } catch {
-                self.presentFailure(String(localized: "保存修正失败：\(error.localizedDescription)"))
-            }
-        }
-    }
-
-    func addCorrectionSuggestionToGlossary(_ suggestion: CorrectionSuggestion) {
-        let term = suggestion.corrected.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !term.isEmpty, !suggestion.punctuationOnly else { return }
-        let existing = Set(settings.glossaryTerms.map { $0.lowercased() })
-        guard !existing.contains(term.lowercased()) else {
-            statusMessage = String(localized: "“\(term)”已经在个人术语中")
-            return
-        }
-        let separator = settings.glossaryText.hasSuffix("\n") || settings.glossaryText.isEmpty ? "" : "\n"
-        settings.glossaryText += separator + term + "\n"
-        statusMessage = String(localized: "已将“\(term)”加入个人术语")
     }
 
     func runStorageMaintenance() async {
@@ -1744,7 +1583,6 @@ final class AppModel: ObservableObject {
     }
 
     func applyRuntimeSettings() {
-        cancelPendingProviderPreparation()
         refreshLocalModelReady()
         audioEngine.setPreRoll(milliseconds: settings.preRollMilliseconds)
         if activeSession == nil, pendingStartTask == nil {
@@ -3189,60 +3027,6 @@ final class AppModel: ObservableObject {
                   !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
             try? personalSecrets.set(value, account: account)
         }
-    }
-
-    private func providerPreparationSignature(
-        for provider: any ASRProvider,
-        context: ASRContext
-    ) -> String {
-        let terms = context.terms.joined(separator: "\u{1F}")
-        let general = context.general
-            .sorted { $0.key < $1.key }
-            .map { "\($0.key)=\($0.value)" }
-            .joined(separator: "\u{1E}")
-        return provider.id + "|" + context.languages.joined(separator: ",")
-            + "|" + terms + "|" + general + "|" + context.text
-    }
-
-    @discardableResult
-    private func providerPreparationTask(
-        for provider: any ASRProvider,
-        context: ASRContext
-    ) -> Task<Void, Error> {
-        let signature = providerPreparationSignature(for: provider, context: context)
-        if pendingProviderPreparationID == provider.id,
-           pendingProviderPreparationSignature == signature,
-           let existing = pendingProviderPreparationTask {
-            return existing
-        }
-
-        cancelPendingProviderPreparation()
-        let token = UUID()
-        let task = Task(priority: .userInitiated) {
-            try await provider.prepare(context: context)
-        }
-        pendingProviderPreparationTask = task
-        pendingProviderPreparationID = provider.id
-        pendingProviderPreparationSignature = signature
-        pendingProviderPreparationToken = token
-
-        Task { @MainActor [weak self] in
-            _ = try? await task.value
-            guard let self, self.pendingProviderPreparationToken == token else { return }
-            self.pendingProviderPreparationTask = nil
-            self.pendingProviderPreparationID = nil
-            self.pendingProviderPreparationSignature = nil
-            self.pendingProviderPreparationToken = nil
-        }
-        return task
-    }
-
-    private func cancelPendingProviderPreparation() {
-        pendingProviderPreparationTask?.cancel()
-        pendingProviderPreparationTask = nil
-        pendingProviderPreparationID = nil
-        pendingProviderPreparationSignature = nil
-        pendingProviderPreparationToken = nil
     }
 
     private func warmPrimaryCloudProviderIfUseful() {

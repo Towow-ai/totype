@@ -212,14 +212,6 @@ final class KeyboardModel: ObservableObject {
         }
     }
 
-    /// System keyboards tint these return keys blue.
-    var returnIsProminent: Bool {
-        switch returnKeyType {
-        case .send, .search, .google, .yahoo, .go, .done, .join, .route, .continue: return true
-        default: return false
-        }
-    }
-
     // MARK: Lifecycle
 
     /// `viewWillAppear`: re-read the shared files with the cached

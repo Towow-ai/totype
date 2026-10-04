@@ -29,7 +29,6 @@
 		0D9D02119BB7C5B0C21FA1A6 /* TranscriptionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D00900CB53084EA59D02E9 /* TranscriptionModels.swift */; };
 		2EB8B4D6062413B8096ACCBD /* ASRProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78A53E981EA334E83D76D77 /* ASRProvider.swift */; };
 		A7D2E1F04B3C4D5E6F700003 /* ProviderProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D2E1F04B3C4D5E6F700004 /* ProviderProbe.swift */; };
-		598EFD22D6D3636566D134D1 /* AppleSpeechAnalyzerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4CDE8F0253111F537FA180 /* AppleSpeechAnalyzerProvider.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* AppleSpeechRecognizerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5061728394A5B6C /* AppleSpeechRecognizerProvider.swift */; };
 		AA0102030405060708090A0B /* LocalSenseVoiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0B0A090807060504030201 /* LocalSenseVoiceProvider.swift */; };
 			5DD2AF1555B3671CED25E312 /* SonioxProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACE7E99ED0B9BD8E35C761F7 /* SonioxProvider.swift */; };
@@ -99,7 +98,6 @@
 		F3D00900CB53084EA59D02E9 /* TranscriptionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionModels.swift; sourceTree = "<group>"; };
 		D78A53E981EA334E83D76D77 /* ASRProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRProvider.swift; sourceTree = "<group>"; };
 		A7D2E1F04B3C4D5E6F700004 /* ProviderProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderProbe.swift; sourceTree = "<group>"; };
-		6F4CDE8F0253111F537FA180 /* AppleSpeechAnalyzerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSpeechAnalyzerProvider.swift; sourceTree = "<group>"; };
 		B1C2D3E4F5061728394A5B6C /* AppleSpeechRecognizerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSpeechRecognizerProvider.swift; sourceTree = "<group>"; };
 		AA0B0A090807060504030201 /* LocalSenseVoiceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSenseVoiceProvider.swift; sourceTree = "<group>"; };
 			ACE7E99ED0B9BD8E35C761F7 /* SonioxProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SonioxProvider.swift; sourceTree = "<group>"; };
@@ -138,7 +136,7 @@
 		C8768CF7983BEB5F5C2A1DE6 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		3A77490AB75757C24EFBB0AF /* Speech.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Speech.framework; path = System/Library/Frameworks/Speech.framework; sourceTree = SDKROOT; };
 		0618732C863380D26C567EBB /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		B6CDB6E5D160E013280D3C68 /* Verbatim Voice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Verbatim Voice.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B6CDB6E5D160E013280D3C68 /* Totype.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Totype.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3E4D173C7AFAC790F1D97C83 /* AppIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
 		628400A488C857CE23FAFC59 /* starter-glossary-developer.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "starter-glossary-developer.json"; sourceTree = "<group>"; };
 		F11EE605889B989DA239C405 /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "THIRD_PARTY_NOTICES.md"; sourceTree = "<group>"; };
@@ -251,7 +249,6 @@
 				DA24C864C47468B372352946 /* LocalModelStore.swift */,
 				D78A53E981EA334E83D76D77 /* ASRProvider.swift */,
 				A7D2E1F04B3C4D5E6F700004 /* ProviderProbe.swift */,
-				6F4CDE8F0253111F537FA180 /* AppleSpeechAnalyzerProvider.swift */,
 				B1C2D3E4F5061728394A5B6C /* AppleSpeechRecognizerProvider.swift */,
 					AA0B0A090807060504030201 /* LocalSenseVoiceProvider.swift */,
 					ACE7E99ED0B9BD8E35C761F7 /* SonioxProvider.swift */,
@@ -357,7 +354,7 @@
 		00C45FD35CB0F9C5F764F070 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B6CDB6E5D160E013280D3C68 /* Verbatim Voice.app */,
+				B6CDB6E5D160E013280D3C68 /* Totype.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -401,7 +398,7 @@
 			dependencies = (
 			);
 			name = VerbatimVoice;
-			productReference = B6CDB6E5D160E013280D3C68 /* Verbatim Voice.app */;
+			productReference = B6CDB6E5D160E013280D3C68 /* Totype.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -509,7 +506,6 @@
 				0D9D02119BB7C5B0C21FA1A6 /* TranscriptionModels.swift in Sources */,
 				2EB8B4D6062413B8096ACCBD /* ASRProvider.swift in Sources */,
 				A7D2E1F04B3C4D5E6F700003 /* ProviderProbe.swift in Sources */,
-				598EFD22D6D3636566D134D1 /* AppleSpeechAnalyzerProvider.swift in Sources */,
 				A1B2C3D4E5F60718293A4B5C /* AppleSpeechRecognizerProvider.swift in Sources */,
 					AA0102030405060708090A0B /* LocalSenseVoiceProvider.swift in Sources */,
 					5DD2AF1555B3671CED25E312 /* SonioxProvider.swift in Sources */,
@@ -665,6 +661,7 @@
 				MARKETING_VERSION = 0.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(VERBATIM_BUNDLE_ID)";
 				PRODUCT_NAME = "$(VERBATIM_APP_NAME)";
+				STRINGS_FILE_OUTPUT_ENCODING = "UTF-8";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;
@@ -688,6 +685,7 @@
 				MARKETING_VERSION = 0.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(VERBATIM_BUNDLE_ID)";
 				PRODUCT_NAME = "$(VERBATIM_APP_NAME)";
+				STRINGS_FILE_OUTPUT_ENCODING = "UTF-8";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;

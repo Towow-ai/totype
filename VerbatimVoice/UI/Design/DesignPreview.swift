@@ -123,15 +123,15 @@ enum DesignPreview {
                 let base = Text(t).font(row.tabular ? row.font.monospacedDigit() : row.font)
                 return row.baseline == 0 ? base : base.baselineOffset(row.baseline)
             }
-            let timer = Text("0:07").font(row.font.monospacedDigit())
+            let timer = Text(verbatim: "0:07").font(row.font.monospacedDigit())
             return VStack(alignment: .leading, spacing: 6) {
                 Text(row.name).font(.system(size: 11)).foregroundStyle(VVColor.fgSecondary)
                 HStack(spacing: 18) {
-                    (Text("正在听 ") + timer)
-                    (Text("已插入 ") + num("49") + Text(" 字"))
-                    (Text("已取消 · ") + num("4") + Text(" 秒内可撤销"))
-                    (Text("今天 ") + num("38") + Text(" 次 · P50 ") + num("0.55") + Text(" s"))
-                    (Text("往返 ") + num("212") + Text(" ms"))
+                    (Text(verbatim: "正在听 ") + timer)
+                    (Text(verbatim: "已插入 ") + num("49") + Text(verbatim: " 字"))
+                    (Text(verbatim: "已取消 · ") + num("4") + Text(verbatim: " 秒内可撤销"))
+                    (Text(verbatim: "今天 ") + num("38") + Text(verbatim: " 次 · P50 ") + num("0.55") + Text(verbatim: " s"))
+                    (Text(verbatim: "往返 ") + num("212") + Text(verbatim: " ms"))
                 }
                 .font(row.font)
                 .tracking(VVMac.pillTracking)
@@ -317,7 +317,7 @@ enum DesignPreview {
                         .padding(.vertical, 3)
                         .background(ink.opacity(0.14), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
                     Image(systemName: "waveform").font(.system(size: 13)).foregroundStyle(ink)
-                    Text("10月1日 周三 15:24").font(.system(size: 13)).foregroundStyle(ink)
+                    Text(verbatim: "10月1日 周三 15:24").font(.system(size: 13)).foregroundStyle(ink)
                 }
                 .padding(.horizontal, 12)
                 .frame(width: 420, height: 24, alignment: .trailing)

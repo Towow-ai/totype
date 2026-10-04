@@ -197,17 +197,6 @@ final class OverlayPanelController {
             + VVMac.pillGap + ceil(text.size().width) + 2 + VVMac.pillTrailing
     }()
 
-    func reposition(anchor: CGRect?) {
-        guard let anchor, let panel else { return }
-        currentAnchor = anchor
-        position(panel, mode: viewModel.mode, anchor: anchor)
-    }
-
-    func updateText(_ text: String, sessionID: UUID? = nil) {
-        guard accepts(sessionID) else { return }
-        viewModel.text = text
-    }
-
     func updateLevel(_ level: Float, sessionID: UUID? = nil) {
         guard accepts(sessionID) else { return }
         cachedLevel = level
@@ -233,10 +222,6 @@ final class OverlayPanelController {
     func showProviderBadge(_ label: String, sessionID: UUID? = nil) {
         guard accepts(sessionID) else { return }
         viewModel.providerBadge = label
-    }
-
-    func showSuccess(_ message: String) {
-        present(mode: .success, message: message, text: "", level: 0, anchor: nil)
     }
 
     /// 已插入 N 字. Called from the dispatch callback after the Unicode events have

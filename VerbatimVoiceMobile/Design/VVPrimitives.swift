@@ -17,13 +17,6 @@ struct HairlineDivider: View {
     }
 }
 
-extension Shape where Self == RoundedRectangle {
-    /// Continuous-curvature rounded rectangle; radii come from {7, 10, 14, 20, 44}.
-    static func vvRounded(_ radius: CGFloat) -> RoundedRectangle {
-        RoundedRectangle(cornerRadius: radius, style: .continuous)
-    }
-}
-
 /// The small drawn check used next to 15pt Medium text (DESIGN.md §6:
 /// 14pt box, 2.6 stroke in the 24-unit grid). Path from kit.js `check`.
 struct VVCheckGlyph: View {

@@ -32,7 +32,6 @@ extension AppSettings {
                 primaryProvider: primaryProvider.rawValue,
                 aliyunRegion: aliyunRegion.rawValue,
                 languageHints: ["zh", "en"],
-                comparisonModeEnabled: comparisonModeEnabled,
                 automaticLocalFallback: automaticLocalFallback
             ),
             insertion: .init(
@@ -54,7 +53,6 @@ extension AppSettings {
         if let engine = profile.engine {
             if let raw = engine.primaryProvider, let value = PrimaryTranscriptionProvider(rawValue: raw) { primaryProvider = value }
             if let raw = engine.aliyunRegion, let value = AliyunRegion(rawValue: raw) { aliyunRegion = value }
-            if let value = engine.comparisonModeEnabled { comparisonModeEnabled = value }
             if let value = engine.automaticLocalFallback { automaticLocalFallback = value }
         }
         if let insertion = profile.insertion {

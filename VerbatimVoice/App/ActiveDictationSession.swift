@@ -567,13 +567,6 @@ final class ActiveDictationSession: @unchecked Sendable {
         return LocalFallbackRun(task: bounded, work: work, provider: provider)
     }
 
-    func runLocalFallback(
-        context: ASRContext,
-        timeoutNanoseconds: UInt64
-    ) async -> ProviderRunOutcome {
-        await startLocalFallback(context: context, timeoutNanoseconds: timeoutNanoseconds).task.value
-    }
-
     private func snapshotFallbackPCM() -> Data {
         lock.lock()
         defer { lock.unlock() }

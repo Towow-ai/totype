@@ -425,11 +425,6 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
         return now >= lastFrame && now - lastFrame <= maxAgeNanoseconds
     }
 
-    func recoverIfStalled() {
-        guard wantsToRun, !hasRecentAudioFrames() else { return }
-        scheduleRecovery(reason: .noContinuousFrames)
-    }
-
     private var lastFrameUptimeNanoseconds: UInt64 = 0
 
     private func prepareForNewCapture() {

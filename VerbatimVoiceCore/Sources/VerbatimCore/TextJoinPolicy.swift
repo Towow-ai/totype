@@ -149,7 +149,7 @@ public struct TrackedTextCorrection: Equatable, Sendable {
 }
 
 /// Infers one contiguous editor mutation and maps it against the exact range
-/// inserted by Verbatim Voice. This intentionally does not behave like a
+/// inserted by Totype. This intentionally does not behave like a
 /// keylogger: edits before/after the tracked range only move or preserve the
 /// range, while only edits contained inside that range become corrections.
 public enum CorrectionInference {

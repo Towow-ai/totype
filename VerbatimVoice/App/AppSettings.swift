@@ -114,7 +114,6 @@ final class AppSettings: ObservableObject {
         static let aliyunRegion = "aliyunRegion"
         static let transcriptionPrompt = "transcriptionPrompt"
         static let automaticLocalFallback = "automaticLocalFallback"
-        static let comparisonModeEnabled = "comparisonModeEnabled"
         static let correctionCaptureEnabled = "correctionCaptureEnabled"
         static let hotwordWeight = "hotwordWeight"
         static let speakerBackground = "speakerBackground"
@@ -170,9 +169,6 @@ final class AppSettings: ObservableObject {
     @Published var automaticLocalFallback: Bool {
         didSet { defaults.set(automaticLocalFallback, forKey: Key.automaticLocalFallback) }
     }
-    @Published var comparisonModeEnabled: Bool {
-        didSet { defaults.set(comparisonModeEnabled, forKey: Key.comparisonModeEnabled) }
-    }
     @Published var correctionCaptureEnabled: Bool {
         didSet { defaults.set(correctionCaptureEnabled, forKey: Key.correctionCaptureEnabled) }
     }
@@ -206,7 +202,7 @@ final class AppSettings: ObservableObject {
         appendTrailingSpaceAfterEnglish = defaults.object(forKey: Key.appendTrailingSpaceAfterEnglish) as? Bool ?? false
         // Retire the legacy always-on microphone preference. Older builds may
         // have persisted it as true, but a session-scoped input is required so
-        // Continuity features remain available while Verbatim Voice is idle.
+        // Continuity features remain available while Totype is idle.
         defaults.set(false, forKey: "keepMicrophoneWarm")
         overlayNearFocusedControl = defaults.object(forKey: Key.overlayNearFocusedControl) as? Bool ?? false
         glossaryText = defaults.string(forKey: Key.glossaryText) ?? Self.defaultGlossary
@@ -222,7 +218,6 @@ final class AppSettings: ObservableObject {
         transcriptionPrompt = defaults.string(forKey: Key.transcriptionPrompt)
             ?? Self.defaultTranscriptionPrompt
         automaticLocalFallback = defaults.object(forKey: Key.automaticLocalFallback) as? Bool ?? true
-        comparisonModeEnabled = defaults.object(forKey: Key.comparisonModeEnabled) as? Bool ?? true
         correctionCaptureEnabled = defaults.object(forKey: Key.correctionCaptureEnabled) as? Bool ?? AppIdentity.learnFromEditsDefault
         hotwordWeight = defaults.object(forKey: Key.hotwordWeight) as? Int ?? 4
         speakerBackground = defaults.string(forKey: Key.speakerBackground) ?? ""

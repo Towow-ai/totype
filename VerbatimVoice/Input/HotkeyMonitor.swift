@@ -94,13 +94,6 @@ final class HotkeyMonitor {
         if changed { logger.notice("trigger key set to \(key.rawValue, privacy: .public)") }
     }
 
-    /// Latest Escape self-check result; false until the first check has run.
-    var isEscapeCancelAvailable: Bool {
-        escapeAvailabilityLock.lock()
-        defer { escapeAvailabilityLock.unlock() }
-        return escapeAvailability ?? false
-    }
-
     /// Re-runs the Escape self-check on the tap thread. While a recording holds
     /// the Escape tap, that tap is the live answer and the probe is skipped.
     func refreshEscapeCancelAvailability() {

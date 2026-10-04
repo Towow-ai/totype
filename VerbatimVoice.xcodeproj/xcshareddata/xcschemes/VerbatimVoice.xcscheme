@@ -3,7 +3,7 @@
    <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES" buildArchitectures="Automatic">
       <BuildActionEntries>
          <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
-            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0E8A3AD980EC179856012B7E" BuildableName="Verbatim Voice.app" BlueprintName="VerbatimVoice" ReferencedContainer="container:VerbatimVoice.xcodeproj"/>
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0E8A3AD980EC179856012B7E" BuildableName="Totype.app" BlueprintName="VerbatimVoice" ReferencedContainer="container:VerbatimVoice.xcodeproj"/>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
@@ -12,12 +12,12 @@
    </TestAction>
    <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES">
       <BuildableProductRunnable runnableDebuggingMode="0">
-         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0E8A3AD980EC179856012B7E" BuildableName="Verbatim Voice.app" BlueprintName="VerbatimVoice" ReferencedContainer="container:VerbatimVoice.xcodeproj"/>
+         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0E8A3AD980EC179856012B7E" BuildableName="Totype.app" BlueprintName="VerbatimVoice" ReferencedContainer="container:VerbatimVoice.xcodeproj"/>
       </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES">
       <BuildableProductRunnable runnableDebuggingMode="0">
-         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0E8A3AD980EC179856012B7E" BuildableName="Verbatim Voice.app" BlueprintName="VerbatimVoice" ReferencedContainer="container:VerbatimVoice.xcodeproj"/>
+         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="0E8A3AD980EC179856012B7E" BuildableName="Totype.app" BlueprintName="VerbatimVoice" ReferencedContainer="container:VerbatimVoice.xcodeproj"/>
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction buildConfiguration="Debug"/>

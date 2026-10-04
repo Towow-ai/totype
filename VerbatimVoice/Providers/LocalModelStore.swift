@@ -243,21 +243,6 @@ final class LocalModelStore: ObservableObject {
         status = .notInstalled
     }
 
-    /// Removes the downloaded copy (the bundled one is part of the app).
-    func removeDownloadedFiles() {
-        guard !isDownloading else { return }
-        try? FileManager.default.removeItem(at: modelsDirectory)
-        status = .notInstalled
-        refresh()
-        onChange?()
-    }
-
-    private var isDownloading: Bool {
-        if case .downloading = status { return true }
-        if case .verifying = status { return true }
-        return false
-    }
-
     // MARK: - Session
 
     private func activeSession() -> URLSession {

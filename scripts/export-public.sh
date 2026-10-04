@@ -9,12 +9,12 @@
 # ../private/oss-scan-patterns.txt next to the checkout.
 #
 # Publication is a whitelist: anything not listed below is not exported.
-# Deliberately left out: handoff/, planning documents in docs/, Probes/,
-# Diagnostics/ (developer probes), local config (config/local.env,
-# config/Local.xcconfig, VerbatimVoiceMobile/Config/Local.xcconfig), the iOS
-# bundle seeds (VerbatimVoiceMobile/Seed/*, which can hold a personal lexicon),
-# files XcodeGen generates (the iOS .xcodeproj, Info.plists, entitlements),
-# build output, personal wrapper scripts.
+# Deliberately left out: the rolling plan and maintainer notes in docs/, local
+# config (config/local.env, config/Local.xcconfig,
+# VerbatimVoiceMobile/Config/Local.xcconfig), the iOS bundle seeds
+# (VerbatimVoiceMobile/Seed/*, which can hold a personal lexicon), files
+# XcodeGen generates (the iOS .xcodeproj, Info.plists, entitlements),
+# build output, the maintainer's install wrapper (scripts/install_personal.sh).
 # The audio fixture is generated locally by scripts/fixtures/make-fixture.sh
 # (macOS `say`) and is never exported. docs/design/ holds only screenshots that were
 # checked for private sample text.
@@ -79,7 +79,6 @@ EXCLUDES=(
     --exclude='*.dmg'
     --exclude='*.app'
     --exclude='*.app.disabled'
-    --exclude='scripts/build_personal.sh'
     --exclude='scripts/install_personal.sh'
     --exclude='*.wav'
     --exclude='config/Local.xcconfig'
@@ -109,6 +108,6 @@ cat >&2 <<'HINT'
 To publish the snapshot as a fresh repository (local identity only, no global git config change):
   cd <dest> && git init -b main
   git add -A
-  git -c user.name="NatureBlueee" -c user.email="177429696+NatureBlueee@users.noreply.github.com" \
+  git -c user.name="<your name>" -c user.email="<your noreply email>" \
       commit -m "Initial public release"
 HINT

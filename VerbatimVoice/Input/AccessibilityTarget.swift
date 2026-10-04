@@ -246,39 +246,6 @@ struct AccessibilityTargetService {
         return AXObservedTextState(value: value, selectedRange: current.selectedRange)
     }
 
-    func performPasteMenuAction(processIdentifier: pid_t) -> Bool {
-        let applicationElement = AXUIElementCreateApplication(processIdentifier)
-        enableAccessibilityTree(applicationElement)
-        guard let menuBar: AXUIElement = copyAttribute(
-            applicationElement,
-            kAXMenuBarAttribute as CFString
-        ) else {
-            NSLog("[VerbatimVoice] paste menu unavailable: no menu bar for pid=%d", processIdentifier)
-            return false
-        }
-
-        var queue = children(of: menuBar)
-        var visited = 0
-        while !queue.isEmpty, visited < 800 {
-            let element = queue.removeFirst()
-            visited += 1
-            let role: String? = copyAttribute(element, kAXRoleAttribute as CFString)
-            if role == (kAXMenuItemRole as String), isPlainPasteMenuItem(element) {
-                let enabled: Bool = copyAttribute(element, kAXEnabledAttribute as CFString) ?? true
-                guard enabled else {
-                    NSLog("[VerbatimVoice] paste menu found but disabled for pid=%d", processIdentifier)
-                    return false
-                }
-                let error = AXUIElementPerformAction(element, kAXPressAction as CFString)
-                NSLog("[VerbatimVoice] paste menu action pid=%d error=%d", processIdentifier, error.rawValue)
-                return error == .success
-            }
-            queue.append(contentsOf: children(of: element))
-        }
-        NSLog("[VerbatimVoice] paste menu item not found for pid=%d", processIdentifier)
-        return false
-    }
-
     private func makeSnapshot(_ element: AXUIElement) -> TargetSnapshot? {
 
         var pid: pid_t = 0
@@ -288,7 +255,7 @@ struct AccessibilityTargetService {
         }
         let app = NSRunningApplication(processIdentifier: pid)
         guard app?.bundleIdentifier != Bundle.main.bundleIdentifier else {
-            // Clicking the menu-bar control must never lock Verbatim Voice's
+            // Clicking the menu-bar control must never lock Totype's
             // own button as the destination. Manual recording intentionally
             // falls back to preview/copy in this case.
             NSLog("[VerbatimVoice] target capture deferred: own menu is focused")
@@ -416,23 +383,6 @@ struct AccessibilityTargetService {
 
     private func children(of element: AXUIElement) -> [AXUIElement] {
         copyAttribute(element, kAXChildrenAttribute as CFString) ?? []
-    }
-
-    private func isPlainPasteMenuItem(_ element: AXUIElement) -> Bool {
-        let title: String = copyAttribute(element, kAXTitleAttribute as CFString) ?? ""
-        let normalizedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let exactTitles: Set<String> = ["paste", "粘贴", "貼り付け", "붙여넣기"] // l10n:ignore
-        if exactTitles.contains(normalizedTitle) { return true }
-
-        let commandCharacter: String? = copyAttribute(
-            element,
-            kAXMenuItemCmdCharAttribute as CFString
-        )
-        let modifiers: Int = copyNumberAttribute(
-            element,
-            kAXMenuItemCmdModifiersAttribute as CFString
-        ) ?? 0
-        return commandCharacter?.lowercased() == "v" && modifiers == 0
     }
 
     func verifyInsertion(_ original: TargetSnapshot, insertedText: String) -> InsertionVerification {

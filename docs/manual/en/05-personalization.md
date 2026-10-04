@@ -18,7 +18,7 @@ One term per line: product names, people, abbreviations. The glossary is sent to
 
 `加入开发者入门词包` (Add the developer starter pack) adds a general list of technical words such as GitHub, MCP, Docker and TypeScript. It is off by default. Words in your personal lexicon are sent first.
 
-Automatic learning: `观察插入后的人工修改` (Observe manual edits after insertion), under `高级与诊断` in `设置`, is on by default. When you edit inserted text in the target field and the same correction shows up at least twice, Totype adds the corrected word to your personal lexicon on its own and shows `已自动学习热词` (Hotword learned automatically). From then on it is sent to the cloud engines with your recordings. Turn the switch off if you do not want this; words already learned can be deleted from the lexicon.
+Automatic learning: `观察插入后的人工修改` (Observe manual edits after insertion), under `高级与诊断` in `设置`, is on by default. When you edit inserted text in the target field and the same correction shows up at least twice, Totype adds the corrected word to your personal lexicon on its own and shows `已自动学习热词` (Hotword learned automatically). From then on it is sent to the cloud engines with your recordings. Turn the switch off if you do not want this; Totype then stops learning new words, and words it already learned stay. The app cannot yet delete a learned word on its own; you can only remove its mishearing aliases.
 
 ## Mishearing aliases and restoration
 

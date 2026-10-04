@@ -1,14 +1,13 @@
 .build/
-*/.build/
+.swiftpm/
 .DS_Store
 xcuserdata/
 build/
+dist/
 *.dmg
 config/local.env
+config/Local.xcconfig
 VerbatimVoiceMobile/Config/Local.xcconfig
 VerbatimVoiceMobile/Seed/*
 !VerbatimVoiceMobile/Seed/.gitkeep
-Probes/
 scripts/fixtures/literal-repetition.wav
-config/Local.xcconfig
-dist/
