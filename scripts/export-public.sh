@@ -10,8 +10,11 @@
 #
 # Publication is a whitelist: anything not listed below is not exported.
 # Deliberately left out: handoff/, planning documents in docs/, Probes/,
-# Diagnostics/ (developer probes), VerbatimVoiceMobile/ (iOS is not published
-# yet), local config (config/local.env, config/Local.xcconfig), build output, personal wrapper scripts.
+# Diagnostics/ (developer probes), local config (config/local.env,
+# config/Local.xcconfig, VerbatimVoiceMobile/Config/Local.xcconfig), the iOS
+# bundle seeds (VerbatimVoiceMobile/Seed/*, which can hold a personal lexicon),
+# files XcodeGen generates (the iOS .xcodeproj, Info.plists, entitlements),
+# build output, personal wrapper scripts.
 # The audio fixture is generated locally by scripts/fixtures/make-fixture.sh
 # (macOS `say`) and is never exported. docs/design/ holds only screenshots that were
 # checked for private sample text.
@@ -55,6 +58,7 @@ WHITELIST=(
     VerbatimVoice
     VerbatimVoiceCore
     VerbatimVoice.xcodeproj
+    VerbatimVoiceMobile
     config/local.env.example
     config/Shared.xcconfig
     config/Local.xcconfig.example
@@ -79,6 +83,13 @@ EXCLUDES=(
     --exclude='scripts/install_personal.sh'
     --exclude='*.wav'
     --exclude='config/Local.xcconfig'
+    # iOS: only what is tracked in git; everything below is local or generated.
+    --exclude='VerbatimVoiceMobile/Config/Local.xcconfig'
+    --exclude='VerbatimVoiceMobile/Config/*-Info.plist'
+    --exclude='VerbatimVoiceMobile/Config/*.entitlements'
+    --exclude='VerbatimVoiceMobile/*.xcodeproj/'
+    --include='VerbatimVoiceMobile/Seed/.gitkeep'
+    --exclude='VerbatimVoiceMobile/Seed/*'
 )
 
 cd "$PROJECT_DIR"

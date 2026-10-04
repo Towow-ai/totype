@@ -29,7 +29,7 @@ A source build bundles the local model into the app, so it behaves like a full b
 1. Install the tools: `xcode-select --install`.
 2. Clone the repository: `git clone https://github.com/Towow-ai/totype.git`, then enter the directory.
 3. Optional: copy `config/local.env.example` to `config/local.env` and adjust the app name, bundle ID and signing identity (see "Signing and stable permissions" below).
-4. Run `scripts/install.sh`. It builds the app, installs it to `/Applications/Totype.app`, backs up any existing copy first, and launches it.
+4. Run `scripts/install.sh`. It builds the app, installs it to `/Applications/Totype.app`, backs up any existing copy first (only the most recent backup is kept; older ones are removed), and launches it.
 5. To build without installing, run `scripts/build.sh`. The result is in `build/`. It carries a `.disabled` suffix and cannot be launched by double-clicking; use `scripts/install.sh` to install it.
 
 The first build downloads about 246 MB of runtime and model files and verifies pinned SHA-256 checksums. Downloads are cached in `.build/downloads/`. On a slow network or behind a proxy, download the files yourself into one directory and point the environment variable `VERBATIM_SENSEVOICE_DIR` at it. The directory must contain `llama-funasr-sensevoice`, `sensevoice-small-q8.gguf` and `fsmn-vad.gguf`.

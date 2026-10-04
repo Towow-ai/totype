@@ -18,6 +18,7 @@ Totype is a voice input method for the macOS menu bar. It connects to top-tier r
 | [08 Troubleshooting](08-troubleshooting.md) | Hotkey, permissions, insertion, cloud errors |
 | [09 Build and contribute](09-build-and-contribute.md) | Building, tests, configuration, repository layout |
 | [10 Glossary and limits](10-glossary-and-limits.md) | Terms and known limitations |
+| [11 iPhone (preview)](11-iphone.md) | Source install, signing, keyboard, on-device recognition, private-API switch |
 
 ## What it does
 
@@ -48,4 +49,4 @@ The app interface is currently Simplified Chinese only. This manual quotes inter
 
 The "menu panel" is the small panel that opens from the menu bar icon. The "overlay" is the capsule at the bottom of the screen that shows status. The "history window" opens from `打开历史…` (Open history…) in the menu panel; it has the history list on the left and details on the right, and also holds the `设置` (Settings) and `个人资料` (Profile) pages.
 
-![Menu panel](../../images/menubar-panel.png)
+![Menu panel](../../images/en/menubar-panel.png)

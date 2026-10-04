@@ -1,0 +1,184 @@
+name: VerbatimVoiceMobile
+
+options:
+  # Every target sets its own PRODUCT_BUNDLE_IDENTIFIER from Config/Shared.xcconfig.
+  bundleIdPrefix: ai.towow.totype
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+
+configFiles:
+  Debug: Config/Shared.xcconfig
+  Release: Config/Shared.xcconfig
+
+settings:
+  base:
+    # The reused macOS sources are written for the Swift 5 language mode.
+    SWIFT_VERSION: "5.0"
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+targets:
+  VerbatimVoiceMobile:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Shared
+      - path: Intents
+      - path: Design
+      - path: KeyboardUI
+      - path: Assets.xcassets
+      - path: Seed
+        type: folder
+        buildPhase: resources
+      - path: ../VerbatimVoiceCore/Sources/VerbatimCore
+      # Files compiled straight from the macOS app (never edited from here).
+      # scripts/typecheck.sh reads this block, so keep one path per line.
+      # BEGIN mac-reuse
+      - path: ../VerbatimVoice/Providers/ASRProvider.swift
+      - path: ../VerbatimVoice/Providers/SonioxProvider.swift
+      - path: ../VerbatimVoice/Providers/AliyunASRProvider.swift
+      - path: ../VerbatimVoice/Providers/ProviderProbe.swift
+      - path: ../VerbatimVoice/Models/TranscriptionModels.swift
+      - path: ../VerbatimVoice/Models/ProviderContextCompiler.swift
+      - path: ../VerbatimVoice/Storage/HistoryStore.swift
+      - path: ../VerbatimVoice/Storage/PersonalLexiconStore.swift
+      - path: ../VerbatimVoice/Audio/PCMConverter.swift
+      - path: ../VerbatimVoice/Audio/SessionAudioArchive.swift
+      - path: ../VerbatimVoice/App/AppIdentity.swift
+      - path: ../VerbatimVoice/App/AppSettings.swift
+      - path: ../VerbatimVoice/App/AppSettingsProfile.swift
+      # END mac-reuse
+    dependencies:
+      - target: VerbatimKeyboard
+      - target: VerbatimWidgets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(TOTYPE_BUNDLE_ID)
+        PRODUCT_NAME: VerbatimVoiceMobile
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) VERBATIM_MAIN_APP $(TOTYPE_HOST_RETURN_SWIFT)
+    info:
+      path: Config/App-Info.plist
+      properties:
+        CFBundleDisplayName: $(TOTYPE_DISPLAY_NAME)
+        # Read at run time by Shared/MobileIdentity.swift.
+        TotypeAppBundleID: $(TOTYPE_BUNDLE_ID)
+        TotypeAppGroup: $(TOTYPE_APP_GROUP)
+        TotypeURLScheme: $(TOTYPE_URL_SCHEME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIBackgroundModes: [audio]
+        NSMicrophoneUsageDescription: $(TOTYPE_DISPLAY_NAME) 需要麦克风来录下你说的话并逐字转写；录音只保存在本机，并发送给你配置的识别服务。
+        NSSpeechRecognitionUsageDescription: 没有填写云端 Key 时，$(TOTYPE_DISPLAY_NAME) 用 iPhone 自带的语音识别在本机把录音转成文字，音频不离开手机。
+        NSSupportsLiveActivities: true
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          - CFBundleURLName: $(PRODUCT_BUNDLE_IDENTIFIER)
+            CFBundleURLSchemes: [$(TOTYPE_URL_SCHEME)]
+    entitlements:
+      path: Config/App.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - $(TOTYPE_APP_GROUP)
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)$(TOTYPE_BUNDLE_ID).shared
+
+  VerbatimKeyboard:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Keyboard
+      - path: Shared
+      - path: Design
+      - path: KeyboardUI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(TOTYPE_BUNDLE_ID).keyboard
+        PRODUCT_NAME: VerbatimKeyboard
+        APPLICATION_EXTENSION_API_ONLY: YES
+        # Keyboard/HostIdentity.m: load-time arbiter swizzle and host lookup,
+        # compiled only when TOTYPE_PRIVATE_HOST_RETURN = YES.
+        SWIFT_OBJC_BRIDGING_HEADER: Keyboard/Keyboard-Bridging-Header.h
+        CLANG_ENABLE_OBJC_ARC: YES
+        GCC_PREPROCESSOR_DEFINITIONS: $(inherited) $(TOTYPE_HOST_RETURN_OBJC)
+    info:
+      path: Config/Keyboard-Info.plist
+      properties:
+        CFBundleDisplayName: $(TOTYPE_DISPLAY_NAME)
+        # Read at run time by Shared/MobileIdentity.swift.
+        TotypeAppBundleID: $(TOTYPE_BUNDLE_ID)
+        TotypeAppGroup: $(TOTYPE_APP_GROUP)
+        TotypeURLScheme: $(TOTYPE_URL_SCHEME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: false
+            PrefersRightToLeft: false
+            PrimaryLanguage: zh-Hans
+            RequestsOpenAccess: true
+    entitlements:
+      path: Config/Keyboard.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - $(TOTYPE_APP_GROUP)
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)$(TOTYPE_BUNDLE_ID).shared
+
+  VerbatimWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      - path: Shared
+      - path: Intents
+      - path: Design
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(TOTYPE_BUNDLE_ID).widgets
+        PRODUCT_NAME: VerbatimWidgets
+        APPLICATION_EXTENSION_API_ONLY: YES
+    info:
+      path: Config/Widgets-Info.plist
+      properties:
+        CFBundleDisplayName: $(TOTYPE_DISPLAY_NAME)
+        # Read at run time by Shared/MobileIdentity.swift.
+        TotypeAppBundleID: $(TOTYPE_BUNDLE_ID)
+        TotypeAppGroup: $(TOTYPE_APP_GROUP)
+        TotypeURLScheme: $(TOTYPE_URL_SCHEME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Config/Widgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - $(TOTYPE_APP_GROUP)
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)$(TOTYPE_BUNDLE_ID).shared
+
+schemes:
+  VerbatimVoiceMobile:
+    build:
+      targets:
+        VerbatimVoiceMobile: all
+        VerbatimKeyboard: all
+        VerbatimWidgets: all
+    run:
+      config: Debug
+    archive:
+      config: Release

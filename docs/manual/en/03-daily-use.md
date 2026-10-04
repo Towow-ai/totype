@@ -13,9 +13,9 @@ Tap Right Option to start recording, tap it again to stop and insert, press Esc 
 
 You can also skip the hotkey: the buttons `开始录音` (Start recording) and `结束并插入` (End and insert) in the menu panel do the same thing.
 
-A single recording lasts at most 180 seconds by default and is finalized automatically at that point. The limit can be changed under `高级与诊断` (Advanced and diagnostics) in `设置` (Settings).
+A single recording lasts at most 10 minutes by default (up to 30 minutes) and is finalized automatically at that point. The limit can be changed under `高级与诊断` (Advanced and diagnostics) in `设置` (Settings).
 
-![Recording overlay](../../images/overlay-listening.png)
+![Recording overlay](../../images/en/overlay-listening.png)
 
 ## Cancel and undo
 
@@ -56,7 +56,7 @@ In the card, `插入当前输入框` puts the text into whatever field has focus
 
 Click the menu bar icon. The panel shows the current state with a one-line hint, the start or end button, and three facts: `主引擎` (Primary engine; `未配置` after the name means that engine is not usable yet), `插入` (Insertion; whether Accessibility works), and `麦克风` (Microphone; either recording, or `按需释放` meaning released on demand: the microphone is fully released when you are not recording, so features like Continuity are not blocked). `打开历史…` at the bottom opens the history window. The `⋯` menu holds `检查辅助功能`, `检查输入监控`, `打开数据目录` (Open data folder) and the quit item.
 
-![Menu panel](../../images/menubar-panel.png)
+![Menu panel](../../images/en/menubar-panel.png)
 
 ## The history window
 
@@ -71,4 +71,8 @@ The detail page offers:
 
 An entry that has audio but no text shows `已保留音频，尚无文字` (Audio kept, no text yet); `重新转写` can fill it in. Click the app name at the top left to return to the recording state, the person icon to open `个人资料` (Profile), and the gear icon to open `设置`.
 
-![History window](../../images/history-window.png)
+![History window](../../images/en/history-window.png)
+
+## Interface language
+
+The interface is in English or Simplified Chinese. By default it follows your system language order (a Chinese language first in System Settings → General → Language & Region gives Chinese, anything else gives English). To choose one, open Settings (the gear icon) → Language, pick Follow system, 简体中文 or English, then click Restart now. The choice is also saved in an exported profile.

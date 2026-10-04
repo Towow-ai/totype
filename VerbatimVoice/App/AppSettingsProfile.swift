@@ -39,7 +39,9 @@ extension AppSettings {
                 removeChatTerminalPeriod: removeChatTerminalPeriod,
                 appendTrailingSpaceAfterEnglish: appendTrailingSpaceAfterEnglish
             ),
-            retention: .init(audioRetentionDays: audioRetentionDays, audioQuotaMegabytes: audioQuotaMegabytes)
+            retention: .init(audioRetentionDays: audioRetentionDays, audioQuotaMegabytes: audioQuotaMegabytes),
+            hotkey: .init(trigger: triggerKey.rawValue),
+            interface: .init(language: interfaceLanguage.rawValue)
         )
     }
 
@@ -63,5 +65,33 @@ extension AppSettings {
             if let value = retention.audioRetentionDays { audioRetentionDays = max(0, value) }
             if let value = retention.audioQuotaMegabytes { audioQuotaMegabytes = max(0, value) }
         }
+        // An unknown key name (from a newer version) leaves the current key alone.
+        if let raw = profile.hotkey?.trigger, let value = TriggerKey(rawValue: raw) { triggerKey = value }
+        if let raw = profile.interface?.language, let value = InterfaceLanguage(profileValue: raw) { interfaceLanguage = value }
     }
+
+    // MARK: Interface language
+
+    /// The language setting stored in this app's own defaults domain (not the merged
+    /// view, which would also show the system list). Takes effect on the next launch.
+    var interfaceLanguage: InterfaceLanguage {
+        get {
+            let domain = Bundle.main.bundleIdentifier.flatMap { UserDefaults.standard.persistentDomain(forName: $0) }
+            return InterfaceLanguage(appleLanguages: domain?["AppleLanguages"] as? [String])
+        }
+        set {
+            if let languages = newValue.appleLanguages {
+                UserDefaults.standard.set(languages, forKey: "AppleLanguages")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+            }
+            UserDefaults.standard.synchronize() // a restart may follow at once
+        }
+    }
+
+    /// What this process started with; a different `interfaceLanguage` needs a restart.
+    static let launchInterfaceLanguage: InterfaceLanguage = {
+        let domain = Bundle.main.bundleIdentifier.flatMap { UserDefaults.standard.persistentDomain(forName: $0) }
+        return InterfaceLanguage(appleLanguages: domain?["AppleLanguages"] as? [String])
+    }()
 }

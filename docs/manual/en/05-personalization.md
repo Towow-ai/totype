@@ -6,7 +6,7 @@ The `个人资料` (Profile) page nudges recognition toward your vocabulary: des
 
 To open it, click the person icon at the top left of the history window.
 
-![Profile page](../../images/profile.png)
+![Profile page](../../images/en/profile.png)
 
 ## Speaker background
 

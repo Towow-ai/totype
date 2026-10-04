@@ -24,7 +24,7 @@ enum AliyunRealtimeProtocol {
         components.host = region.webSocketHost
         components.path = "/api-ws/v1/inference"
         guard let url = components.url else {
-            throw ASRProviderError.invalidState("无法生成阿里云 WebSocket 地址")
+            throw ASRProviderError.invalidState(String(localized: "无法生成阿里云 WebSocket 地址"))
         }
         return url
     }
@@ -128,7 +128,7 @@ enum AliyunRealtimeProtocol {
         case "task-failed":
             return .failure(
                 code: header["error_code"] as? String,
-                message: header["error_message"] as? String ?? "阿里云返回未知错误"
+                message: header["error_message"] as? String ?? String(localized: "阿里云返回未知错误")
             )
         default:
             return .other(event)
@@ -138,7 +138,7 @@ enum AliyunRealtimeProtocol {
     private static func encode(_ object: [String: Any]) throws -> String {
         let data = try JSONSerialization.data(withJSONObject: object, options: [])
         guard let string = String(data: data, encoding: .utf8) else {
-            throw ASRProviderError.invalidState("无法编码阿里云实时事件")
+            throw ASRProviderError.invalidState(String(localized: "无法编码阿里云实时事件"))
         }
         return string
     }
@@ -146,7 +146,7 @@ enum AliyunRealtimeProtocol {
 
 actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
     nonisolated let id = "aliyun-qwen-audio-asr"
-    nonisolated let displayName = "阿里云 qwen-audio-3.0-asr-flash-streaming"
+    nonisolated let displayName = String(localized: "阿里云 qwen-audio-3.0-asr-flash-streaming")
 
     private enum State {
         case disconnected
@@ -218,7 +218,7 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
             closeConnection()
             try await connectAndStart(context: context, signature: signature)
         case .starting, .active, .finalizing:
-            throw ASRProviderError.invalidState("阿里云会话正在使用")
+            throw ASRProviderError.invalidState(String(localized: "阿里云会话正在使用"))
         }
     }
 
@@ -239,7 +239,7 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
             closeConnection()
             try await connectAndStart(context: context, signature: signature)
         case .starting, .active, .finalizing:
-            throw ASRProviderError.invalidState("上一段阿里云口述尚未结束")
+            throw ASRProviderError.invalidState(String(localized: "上一段阿里云口述尚未结束"))
         }
 
         self.eventHandler = eventHandler
@@ -263,10 +263,10 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
     func send(_ chunk: PCM16Chunk) async throws {
         if let terminalError { throw terminalError }
         guard state == .active, let socket else {
-            throw ASRProviderError.invalidState("阿里云实时连接尚未就绪")
+            throw ASRProviderError.invalidState(String(localized: "阿里云实时连接尚未就绪"))
         }
         guard chunk.sampleRate == 16_000, chunk.channels == 1 else {
-            throw ASRProviderError.invalidState("阿里云实时输入必须是 16 kHz 单声道 PCM")
+            throw ASRProviderError.invalidState(String(localized: "阿里云实时输入必须是 16 kHz 单声道 PCM"))
         }
         guard !chunk.data.isEmpty else { return }
         let started = ContinuousClock.now
@@ -281,10 +281,10 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
     func finalize() async throws -> TranscriptResult {
         if let terminalError { throw terminalError }
         guard state == .active, let socket, let taskID else {
-            throw ASRProviderError.invalidState("没有活动的阿里云实时口述")
+            throw ASRProviderError.invalidState(String(localized: "没有活动的阿里云实时口述"))
         }
         guard finalizationContinuation == nil else {
-            throw ASRProviderError.invalidState("阿里云口述已经在定稿")
+            throw ASRProviderError.invalidState(String(localized: "阿里云口述已经在定稿"))
         }
 
         state = .finalizing
@@ -389,7 +389,7 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
                status >= 400 {
                 failActiveRequest(ProviderRejection(
                     failureKind: ProviderFailureClassifier.httpStatus(status),
-                    message: "阿里云拒绝连接（HTTP \(status)）：\(error.localizedDescription)"
+                    message: String(localized: "阿里云拒绝连接（HTTP \(status)）：\(error.localizedDescription)")
                 ))
                 return
             }
@@ -400,7 +400,7 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
     private func processServerData(_ data: Data) {
         liveness?.markServerMessage()
         guard let event = AliyunRealtimeProtocol.parseServerEvent(data) else {
-            eventHandler?(.warning(providerID: id, message: "收到无法解析的阿里云响应"))
+            eventHandler?(.warning(providerID: id, message: String(localized: "收到无法解析的阿里云响应")))
             return
         }
 
@@ -509,12 +509,12 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
 
     private func startTimedOut() {
         guard startContinuation != nil else { return }
-        failStart(ASRProviderError.timeout("阿里云未在 7 秒内启动转写任务"))
+        failStart(ASRProviderError.timeout(String(localized: "阿里云未在 7 秒内启动转写任务")))
     }
 
     private func finalizationTimedOut() {
         guard finalizationContinuation != nil else { return }
-        failActiveRequest(ASRProviderError.timeout("阿里云未在 10 秒内返回最终转写"))
+        failActiveRequest(ASRProviderError.timeout(String(localized: "阿里云未在 10 秒内返回最终转写")))
     }
 
     private func failStart(_ error: Error) {
@@ -547,7 +547,7 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
 
     private func resolvedAPIKey() throws -> String {
         let key = try apiKeyProvider().trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !key.isEmpty else { throw ASRProviderError.missingAPIKey("阿里云百炼") }
+        guard !key.isEmpty else { throw ASRProviderError.missingAPIKey(String(localized: "阿里云百炼")) }
         return key
     }
 

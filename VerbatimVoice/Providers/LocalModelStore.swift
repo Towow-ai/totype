@@ -37,7 +37,7 @@ enum LocalModelFiles {
 
     static let runtimeArchive = Asset(
         key: "runtime",
-        label: "运行程序",
+        label: String(localized: "运行程序"),
         url: URL(string: "https://github.com/QwenAudio/SenseVoice/releases/download/runtime-llamacpp-v0.1.9/funasr-llamacpp-macos-arm64.tar.gz")!,
         sha256: "2d5786784ad09d8f4def1d942f678728638fe601d00acf0dad7cf094a9328363",
         kind: .runtimeArchive,
@@ -46,7 +46,7 @@ enum LocalModelFiles {
     static let executableSHA256 = "49d66b2f79d439e2db7933627e1deb9eb7f3ebf0d708473757828130f3619435"
     static let model = Asset(
         key: "model",
-        label: "识别模型",
+        label: String(localized: "识别模型"),
         url: URL(string: "https://huggingface.co/FunAudioLLM/SenseVoiceSmall-GGUF/resolve/main/sensevoice-small-q8.gguf")!,
         sha256: "4ae45c94422de949b387e2e0fb10d7e14e4c42c69db30c3444ecc7d4b844b7c5",
         kind: .file(name: modelName),
@@ -54,7 +54,7 @@ enum LocalModelFiles {
     )
     static let vad = Asset(
         key: "vad",
-        label: "语音检测模型",
+        label: String(localized: "语音检测模型"),
         url: URL(string: "https://huggingface.co/FunAudioLLM/fsmn-vad-GGUF/resolve/main/fsmn-vad.gguf")!,
         sha256: "1270f2559c495f4e7b6e739541151027d360761a3fda43fc147034f5719f5479",
         kind: .file(name: vadName),
@@ -102,8 +102,8 @@ enum LocalModelError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .checksum(let label): return "\(label)校验失败，已删除下载的文件"
-        case .extraction(let detail): return "运行程序解压失败：\(detail)"
+        case .checksum(let label): return String(localized: "\(label)校验失败，已删除下载的文件")
+        case .extraction(let detail): return String(localized: "运行程序解压失败：\(detail)")
         }
     }
 }
@@ -196,7 +196,7 @@ final class LocalModelStore: ObservableObject {
         do {
             try FileManager.default.createDirectory(at: partialDirectory, withIntermediateDirectories: true)
         } catch {
-            status = .failed(kind: .other, message: "无法创建模型目录：\(error.localizedDescription)")
+            status = .failed(kind: .other, message: String(localized: "无法创建模型目录：\(error.localizedDescription)"))
             return
         }
         userCancelled = false
@@ -345,7 +345,7 @@ final class LocalModelStore: ObservableObject {
         if let data = nsError.userInfo[NSURLSessionDownloadTaskResumeData] as? Data { resumeData[key] = data }
         abandonTransfers()
         let detail = nsError.domain == NSURLErrorDomain
-            ? "网络中断（\(error.localizedDescription)）"
+            ? String(localized: "网络中断（\(error.localizedDescription)）")
             : error.localizedDescription
         status = .failed(kind: .network, message: detail)
         onChange?()
@@ -377,7 +377,7 @@ final class LocalModelStore: ObservableObject {
             status = isAvailableFromBundle ? .bundled : .installed
             onChange?()
         } else {
-            status = .failed(kind: .other, message: "模型文件不完整，请重试")
+            status = .failed(kind: .other, message: String(localized: "模型文件不完整，请重试"))
             onChange?()
         }
     }
@@ -426,7 +426,7 @@ final class LocalModelStore: ObservableObject {
             try extract(archive: downloaded, to: staging)
             let executable = staging.appendingPathComponent(LocalModelFiles.executableName)
             guard fm.fileExists(atPath: executable.path) else {
-                throw LocalModelError.extraction("压缩包里没有 \(LocalModelFiles.executableName)")
+                throw LocalModelError.extraction(String(localized: "压缩包里没有 \(LocalModelFiles.executableName)"))
             }
             guard try sha256(of: executable) == LocalModelFiles.executableSHA256 else {
                 throw LocalModelError.checksum(asset.label)
@@ -467,7 +467,7 @@ final class LocalModelStore: ObservableObject {
         guard process.terminationStatus == 0 else {
             let detail = String(decoding: stderr.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            throw LocalModelError.extraction(detail.isEmpty ? "tar 退出状态 \(process.terminationStatus)" : detail)
+            throw LocalModelError.extraction(detail.isEmpty ? String(localized: "tar 退出状态 \(process.terminationStatus)") : detail)
         }
     }
 
@@ -511,7 +511,7 @@ private final class DownloadRelay: NSObject, URLSessionDownloadDelegate, @unchec
             let error = NSError(
                 domain: NSURLErrorDomain,
                 code: NSURLErrorBadServerResponse,
-                userInfo: [NSLocalizedDescriptionKey: "服务器返回 \(http.statusCode)"]
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "服务器返回 \(http.statusCode)")]
             )
             Task { @MainActor [weak store] in store?.didFail(key: key, error: error) }
             return

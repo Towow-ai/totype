@@ -286,7 +286,7 @@ printf '\n== Global Escape cancellation ==\n'
 python3 - <<'PY'
 from pathlib import Path
 
-source = Path('VerbatimVoice/Input/RightOptionMonitor.swift').read_text()
+source = Path('VerbatimVoice/Input/HotkeyMonitor.swift').read_text()
 modifier = source.split('private func installModifierTapOnTapThread()', 1)[1].split(
     'private func removeModifierTapOnTapThread()', 1
 )[0]
@@ -296,14 +296,14 @@ escape = source.split('private func installEscapeTapOnTapThread()', 1)[1].split(
 handler = source.split('private func handleEscapeTap(', 1)[1].split('\n    }', 1)[0]
 if 'guard type == .keyDown' not in handler:
     raise SystemExit('Escape tap may consume non-keyDown events')
-# Right Option: flagsChanged only, never consumes, Accessibility-authorised
+# Trigger key: flagsChanged only, never consumes, Accessibility-authorised
 # (.listenOnly needs Input Monitoring, whose TCC record here is a stale cdhash).
 for required in ('CGEventType.flagsChanged.rawValue', 'options: .defaultTap', 'CGEvent.tapIsEnabled(tap: tap)'):
     if required not in modifier:
-        raise SystemExit(f'right Option tap contract missing: {required}')
+        raise SystemExit(f'trigger-key tap contract missing: {required}')
 for forbidden in ('CGEventType.keyDown.rawValue', 'options: .listenOnly', '? nil'):
     if forbidden in modifier:
-        raise SystemExit(f'right Option tap must stay flagsChanged-only and pass-through: {forbidden}')
+        raise SystemExit(f'trigger-key tap must stay flagsChanged-only and pass-through: {forbidden}')
 # Escape: the only active tap, keyDown only.
 for required in ('CGEventType.keyDown.rawValue', 'options: .defaultTap', '? nil'):
     if required not in escape:
@@ -336,7 +336,7 @@ for required in (
     'self.removeEscapeTapOnTapThread()',
     'handle(event, canConsumeCancel: false)',
     'return consumed ? nil : event',
-    'rightOptionDeviceMask',
+    'ModifierTapDetector(key:',
     'EventTapThread',
 ):
     if required not in source:
@@ -346,33 +346,99 @@ if 'CFRunLoopGetMain()' in source:
 app = Path('VerbatimVoice/App/AppModel.swift').read_text()
 if 'setCancelCaptureActive(state == .starting || state == .listening)' not in app:
     raise SystemExit('Escape capture is not scoped to active recording states')
-print('ok  right Option tap is flagsChanged-only off-main; Escape tap exists only while recording')
+print('ok  trigger-key tap is flagsChanged-only off-main; Escape tap exists only while recording')
 PY
 
-printf '\n== Right Option lost-release recovery ==\n'
+printf '\n== Right Option (press) and other keys (release): recovery, device masks, combinations ==\n'
 python3 - <<'PY'
 from pathlib import Path
 
-source = Path('VerbatimVoice/Input/RightOptionMonitor.swift').read_text()
+source = Path('VerbatimVoice/Input/HotkeyMonitor.swift').read_text()
 policy = Path(
     'VerbatimVoiceCore/Sources/VerbatimCore/RealtimeCompletionPolicy.swift'
 ).read_text()
+detector = Path(
+    'VerbatimVoiceCore/Sources/VerbatimCore/ModifierTapDetector.swift'
+).read_text()
 for required in (
-    'ModifierPressEdgePolicy()',
+    'ModifierTapDetector(key:',
     'DispatchTime.now().uptimeNanoseconds',
-    'case .acceptedPress:',
+    'case .tap:',
 ):
     if required not in source:
-        raise SystemExit(f'right Option recovery integration missing: {required}')
+        raise SystemExit(f'trigger-key integration missing: {required}')
+# Right Option: press edge through the unchanged lost-release policy.
 for required in (
     'duplicateWindowNanoseconds',
     'Accept a later press even if `isPressed` is still true',
 ):
     if required not in policy:
         raise SystemExit(f'right Option recovery policy missing: {required}')
-if 'guard pressed != isPressed else { return }' in source:
+right = detector.split('public static let rightOption = ModifierKeySpec(', 1)[1].split(')', 1)[0]
+if 'triggerOn: .press' not in right or 'deviceMask: 0x40' not in right:
+    raise SystemExit('right Option must trigger on press with its own device mask')
+for name in ('leftOption', 'rightCommand', 'leftControl', 'function'):
+    spec = detector.split(f'public static let {name} = ModifierKeySpec(', 1)[1].split(')', 1)[0]
+    if 'triggerOn: .release' not in spec:
+        raise SystemExit(f'{name} must trigger on release')
+press = detector.split('private mutating func observePress(', 1)[1].split('\n    }\n', 1)[0]
+if 'guard keyCode == key.keyCode else { return .unrelated }' not in press or 'pressEdges.observe(' not in press:
+    raise SystemExit('press-mode keys must use ModifierPressEdgePolicy on their own key code only')
+if 'lastOtherInput' in press:
+    raise SystemExit('press-mode keys must not consult HID key times')
+# Release keys: lost modifier-up recovery and combination filter.
+release = detector.split('private mutating func observeRelease(', 1)[1].split('\n    }\n}', 1)[0]
+for required in (
+    'Accept a new press even while one is on record',
+    'pressRestarted',
+    'releaseMissed',
+    'otherModifierHeld(rawFlags:',
+    'lastOtherInput()',
+    'maximumTapNanoseconds',
+    'duplicateWindowNanoseconds',
+):
+    if required not in release:
+        raise SystemExit(f'release-mode tap policy missing: {required}')
+if 'siblingDeviceMask' not in detector:
+    raise SystemExit('left/right device masks are not compared')
+if 'guard pressed != isPressed else { return }' in source + detector:
     raise SystemExit('brittle modifier boolean latch returned')
-print('ok  right Option recovers after a missing modifier-up event')
+# No per-key branching in the monitor: the key spec decides the edge.
+for forbidden in ('triggerOn', '.rightOption:', 'rightOptionKeyCode', '== 61'):
+    if forbidden in source.split('extension TriggerKey {', 1)[0]:
+        raise SystemExit(f'HotkeyMonitor branches on the trigger key: {forbidden}')
+# Every flagsChanged event reaches the detector so another modifier can
+# interrupt a release-mode tap; the detector filters per mode.
+handler = source.split('private func handleModifierTap(', 1)[1].split('\n    }\n', 1)[0]
+if 'keyboardEventKeycode) ==' in handler:
+    raise SystemExit('modifier tap filters on one key code before the detector')
+# HID key time is read lazily, only through the detector's release path.
+transition = source.split('private func transition(', 1)[1].split('\n    }\n', 1)[0]
+if 'lastOtherInput: { Self.lastOtherInputNanoseconds(now: now) }' not in transition:
+    raise SystemExit('HID key time must be passed lazily to the detector')
+if source.count('secondsSinceLastEventType') != 1:
+    raise SystemExit('HID key time must be queried only in lastOtherInputNanoseconds')
+if 'trigger release ignored:' not in source:
+    raise SystemExit('rejected release-mode taps must be logged with their reason')
+# Trackpad momentum keeps posting scroll events after the fingers lift and
+# would swallow the tap that ends a recording.
+other = source.split('private static func lastOtherInputNanoseconds(', 1)[1].split('\n    }\n', 1)[0]
+if 'scrollWheel' in other:
+    raise SystemExit('scrolling must not count as a key combination')
+# Switching the trigger key changes the detector only; the tap is not rebuilt.
+switch = source.split('func setTriggerKey(', 1)[1].split('\n    }\n', 1)[0]
+for forbidden in ('tapCreate', 'restart()', 'start()', 'stop()', 'installModifierTap', 'removeModifierTap'):
+    if forbidden in switch:
+        raise SystemExit(f'switching the trigger key rebuilds the event tap: {forbidden}')
+app = Path('VerbatimVoice/App/AppModel.swift').read_text()
+sink = app.split('settings.$triggerKey', 1)[1].split('.store(in: &cancellables)', 1)[0]
+if 'hotkey.setTriggerKey(key)' not in sink:
+    raise SystemExit('trigger key setting does not reach the hotkey monitor')
+for forbidden in ('hotkey.restart', 'hotkey.start', 'hotkey.stop'):
+    if forbidden in sink:
+        raise SystemExit(f'switching the trigger key restarts the hotkey monitor: {forbidden}')
+print('ok  right Option triggers on press and recovers after a missing modifier-up event')
+print('ok  other trigger keys fire on a clean release; combinations and long holds are ignored')
 PY
 
 printf '\n== Late dispatch and main-thread load guards ==\n'
@@ -411,7 +477,7 @@ printf '\n== Critical-path latency isolation ==\n'
 python3 - <<'PY'
 from pathlib import Path
 
-hotkey = Path('VerbatimVoice/Input/RightOptionMonitor.swift').read_text()
+hotkey = Path('VerbatimVoice/Input/HotkeyMonitor.swift').read_text()
 startup = Path('VerbatimVoice/App/AppModel.swift').read_text()
 insertion = Path('VerbatimVoice/Input/PasteboardInserter.swift').read_text()
 
@@ -570,6 +636,9 @@ if missing_names or unknown_names or duplicates or phase_missing:
 
 print(f'ok  {len(actual_names)} Swift source files are referenced')
 PY
+
+printf '\n== Localization tables ==\n'
+scripts/check_l10n.sh
 
 printf '\n== App build ==\n'
 APP_PATH="$(scripts/build.sh | tail -n 1)"

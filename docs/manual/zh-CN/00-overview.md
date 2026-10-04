@@ -18,6 +18,7 @@ Totype 是 macOS 菜单栏里的语音输入法。它接一流的识别模型：
 | [08 故障排查](08-troubleshooting.md) | 热键、权限、插入、云端错误 |
 | [09 构建与贡献](09-build-and-contribute.md) | 构建、测试、配置、仓库结构 |
 | [10 名词与限制](10-glossary-and-limits.md) | 名词表与已知限制 |
+| [11 iPhone 版（预览）](11-iphone.md) | 源码安装、签名、键盘、本机识别、私有 API 开关 |
 
 ## 它做什么
 

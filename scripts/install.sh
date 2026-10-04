@@ -26,6 +26,19 @@ DESTINATION_DIR="$(dirname "$DESTINATION")"
 STAGING="$DESTINATION_DIR/$APP_NAME.staging.$TIMESTAMP.$$.app.disabled"
 BACKUP="$DESTINATION_DIR/$APP_NAME.backup.$TIMESTAMP.app.disabled"
 SWAP_HELPER="$PROJECT_DIR/.build/install-tools/atomic-swap"
+# Renaming the app (VERBATIM_APP_NAME) moves it to a new path. When the copy at
+# the previous name has the same bundle ID, the installer quits it, installs the
+# new name and keeps the old bundle as the rollback backup. Bundle ID, signing
+# identity and data directory stay the same, so privacy grants and data carry over.
+LEGACY_APP_NAME="${VERBATIM_LEGACY_APP_NAME:-}"
+LEGACY_DESTINATION=""
+if [[ -n "$LEGACY_APP_NAME" && "$LEGACY_APP_NAME" != "$APP_NAME" && ! -e "$DESTINATION" ]]; then
+    candidate="$(dirname "$DESTINATION")/$LEGACY_APP_NAME.app"
+    if [[ -f "$candidate/Contents/Info.plist" ]]; then
+        LEGACY_DESTINATION="$candidate"
+        BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$candidate/Contents/Info.plist" 2>/dev/null || echo "$VERBATIM_BUNDLE_ID")"
+    fi
+fi
 
 die() {
     printf '安装已安全停止：%s\n' "$1" >&2
@@ -183,6 +196,16 @@ compile_swap_helper() {
 
 rollback_to() {
     local old_location="$1"
+    if [[ -n "$LEGACY_DESTINATION" ]]; then
+        # Undo a rename: the previous name goes back to its own path.
+        [[ -d "$old_location" ]] || die "回滚所需 bundle 不完整；保留现场：$old_location"
+        [[ ! -d "$DESTINATION" ]] || mv "$DESTINATION" "$DESTINATION_DIR/$APP_NAME.failed.$TIMESTAMP.app.disabled"
+        mv "$old_location" "$LEGACY_DESTINATION" || die "回滚失败；旧版本保留在：$old_location"
+        verify_bundle "$LEGACY_DESTINATION"
+        /usr/bin/open "$LEGACY_DESTINATION" >/dev/null 2>&1 || true
+        log_event "rolled-back" "restored=$LEGACY_DESTINATION"
+        return
+    fi
     [[ -d "$old_location" && -d "$DESTINATION" ]] || die "回滚所需 bundle 不完整；保留现场：$old_location"
     "$SWAP_HELPER" "$DESTINATION" "$old_location" || die "原子回滚失败；保留现场。"
     verify_bundle "$DESTINATION"
@@ -240,6 +263,44 @@ fi
 
 log_event "started" "destination=$DESTINATION"
 
+legacy_pids() {
+    [[ -n "$LEGACY_DESTINATION" ]] || return 0
+    local output result
+    set +e
+    output="$(/usr/bin/pgrep -x "$LEGACY_APP_NAME" 2>/dev/null)"
+    result=$?
+    set -e
+    [[ $result -le 1 ]] || die "无法读取 ${LEGACY_APP_NAME} 进程列表；不覆盖应用。"
+    [[ -z "$output" ]] || printf '%s\n' "$output"
+}
+
+# Quits the copy under the previous name after the same idle checks as a normal
+# update, but against its own executable path.
+quit_legacy_app() {
+    local pids pid
+    pids="$(legacy_pids)"
+    [[ -n "$pids" ]] || return 0
+    [[ "$(printf '%s\n' "$pids" | wc -l | tr -d ' ')" == "1" ]] || die "检测到多个 ${LEGACY_APP_NAME} 进程。"
+    pid="$pids"
+    if [[ -f "$STATUS_FILE" ]]; then
+        local status_pid state expected_path
+        status_pid="$(json_field "$STATUS_FILE" pid || true)"
+        state="$(json_field "$STATUS_FILE" state || true)"
+        expected_path="$(json_field "$STATUS_FILE" executablePath || true)"
+        [[ "$status_pid" == "$pid" && "$expected_path" == "$LEGACY_DESTINATION/Contents/MacOS/$LEGACY_APP_NAME" ]] \
+            || die "旧名称应用的状态握手与运行进程不一致；请从菜单退出后重试。"
+        install_state_allows_exchange "$state" || die "应用当前状态为 ${state}；结束或取消本次口述后再更新。"
+    elif [[ "$STRICT" == "1" ]]; then
+        die "旧名称应用没有状态握手；请从菜单退出后重试。"
+    fi
+    request_normal_quit "$pid"
+}
+
+if [[ -n "$LEGACY_DESTINATION" ]]; then
+    log_event "rename" "from=$LEGACY_DESTINATION to=$DESTINATION"
+    quit_legacy_app
+fi
+
 PIDS="$(candidate_pids)"
 if [[ -n "$PIDS" ]]; then
     if [[ "$(printf '%s\n' "$PIDS" | wc -l | tr -d ' ')" != "1" ]]; then
@@ -264,6 +325,8 @@ if [[ -n "$PIDS" ]]; then
     quit_running_app "$PID" "构建期间旧版被重新打开；首次 bootstrap 已停止。"
 fi
 
+[[ -z "$LEGACY_DESTINATION" ]] || quit_legacy_app
+
 compile_swap_helper
 cp -R -X "$APP_PATH" "$STAGING"
 verify_bundle "$STAGING"
@@ -282,7 +345,16 @@ else
 fi
 
 OLD_LOCATION=""
-if [[ -d "$DESTINATION" ]]; then
+if [[ -n "$LEGACY_DESTINATION" ]]; then
+    verify_bundle "$LEGACY_DESTINATION"
+    if [[ "$STRICT" == "1" || $IS_ADHOC -eq 0 ]]; then
+        [[ "$(designated_requirement "$LEGACY_DESTINATION")" == "$NEW_REQUIREMENT" ]] || die "designated requirement 发生变化；拒绝污染 TCC 身份。"
+        [[ "$(certificate_sha256 "$LEGACY_DESTINATION")" == "$NEW_CERT_SHA" ]] || die "签名证书指纹发生变化；拒绝覆盖。"
+    fi
+    mv "$STAGING" "$DESTINATION"
+    mv "$LEGACY_DESTINATION" "$BACKUP" || { mv "$DESTINATION" "$STAGING"; die "无法移走旧名称应用；已撤回新版本。"; }
+    OLD_LOCATION="$BACKUP"
+elif [[ -d "$DESTINATION" ]]; then
     verify_bundle "$DESTINATION"
     OLD_REQUIREMENT="$(designated_requirement "$DESTINATION")"
     OLD_CERT_SHA="$(certificate_sha256 "$DESTINATION")"
@@ -336,6 +408,15 @@ validate_live_status "$NEW_PIDS"
 
 commit_protocol
 log_event "committed" "version=$NEW_VERSION build=$NEW_BUILD destination=$DESTINATION"
+
+# Keep exactly one rollback point: the version this install just replaced.
+# Older backups from earlier installs are removed once the new one is committed.
+for stale in "$DESTINATION_DIR/$APP_NAME".backup.*.app.disabled ${LEGACY_APP_NAME:+"$DESTINATION_DIR/$LEGACY_APP_NAME".backup.*.app.disabled}; do
+    [[ -d "$stale" && "$stale" != "$OLD_LOCATION" ]] || continue
+    if /bin/rm -rf -- "$stale"; then
+        log_event "pruned_backup" "path=$stale"
+    fi
+done
 
 printf '已安全安装：%s（版本 %s，构建 %s）\n' "$DESTINATION" "$NEW_VERSION" "$NEW_BUILD"
 if [[ -n "$OLD_LOCATION" ]]; then

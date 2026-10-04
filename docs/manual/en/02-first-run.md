@@ -8,7 +8,7 @@ Totype needs three system permissions: Microphone to record, Accessibility to in
 
 On the first launch Totype opens a window titled `开始之前` (Before you start) with five steps: Microphone, Accessibility, Input Monitoring, Local model, and a test sentence. Each step shows a check mark once it is done, and the next step that needs you has the filled button. Input Monitoring may show `立即重启` (Restart now), because the hotkey only works after a restart. The local model step has a `下载` (Download) button; if you have already saved a cloud key, it says the local model can be installed later. In the last step, click the box, tap Right Option, speak, and tap again. When everything is done the button reads `完成` (Done); otherwise `稍后再说` (Later) closes the window.
 
-![First-run guide](../../images/onboarding.png)
+![First-run guide](../../images/en/onboarding.png)
 
 The window does not open if all three permissions are already granted and a local model or cloud key is available. You can reopen it any time: menu bar icon → `⋯` → `打开入门引导…` (Open the first-run guide…). If you skip it, do the same things by hand as described below.
 

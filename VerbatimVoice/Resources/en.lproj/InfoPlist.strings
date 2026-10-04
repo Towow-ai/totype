@@ -1,0 +1,4 @@
+/* Permission prompts. $(VERBATIM_APP_NAME) is replaced by scripts/build.sh (and by the Xcode "Localize Info.plist strings" phase). */
+"NSMicrophoneUsageDescription" = "$(VERBATIM_APP_NAME) uses the microphone only after you start recording, and releases it as soon as you finish or cancel.";
+"NSInputMonitoringUsageDescription" = "$(VERBATIM_APP_NAME) uses a configurable modifier key (Right Option by default) as the global shortcut that starts and stops recording with a single tap, and Escape to cancel.";
+"NSSpeechRecognitionUsageDescription" = "$(VERBATIM_APP_NAME) uses Apple's speech recognition to create verbatim transcripts, and prefers recognition on the device when it is supported.";

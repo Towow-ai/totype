@@ -73,6 +73,24 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
         }
     }
 
+    public struct Hotkey: Codable, Equatable, Sendable {
+        /// `TriggerKey` raw value, e.g. "rightOption" or "fn".
+        public var trigger: String?
+
+        public init(trigger: String? = nil) {
+            self.trigger = trigger
+        }
+    }
+
+    public struct Interface: Codable, Equatable, Sendable {
+        /// `InterfaceLanguage` raw value: "system", "zh-Hans" or "en".
+        public var language: String?
+
+        public init(language: String? = nil) {
+            self.language = language
+        }
+    }
+
     public var version: Int
     public var glossary: [String]?
     public var lexicon: [LexiconEntry]?
@@ -81,6 +99,8 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
     public var engine: Engine?
     public var insertion: Insertion?
     public var retention: Retention?
+    public var hotkey: Hotkey?
+    public var interface: Interface?
 
     public init(
         version: Int = PersonalProfile.currentVersion,
@@ -90,7 +110,9 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
         transcriptionPrompt: String? = nil,
         engine: Engine? = nil,
         insertion: Insertion? = nil,
-        retention: Retention? = nil
+        retention: Retention? = nil,
+        hotkey: Hotkey? = nil,
+        interface: Interface? = nil
     ) {
         self.version = version
         self.glossary = glossary
@@ -100,6 +122,8 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
         self.engine = engine
         self.insertion = insertion
         self.retention = retention
+        self.hotkey = hotkey
+        self.interface = interface
     }
 
     public init(from decoder: Decoder) throws {
@@ -112,6 +136,8 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
         engine = try container.decodeIfPresent(Engine.self, forKey: .engine)
         insertion = try container.decodeIfPresent(Insertion.self, forKey: .insertion)
         retention = try container.decodeIfPresent(Retention.self, forKey: .retention)
+        hotkey = try container.decodeIfPresent(Hotkey.self, forKey: .hotkey)
+        interface = try container.decodeIfPresent(Interface.self, forKey: .interface)
     }
 
     // MARK: Encoding
@@ -191,7 +217,7 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
             let want = Set(glossary.map(key))
             let removed = (current.glossary ?? []).filter { !want.contains(key($0)) }
             if !added.isEmpty || !removed.isEmpty {
-                result.append(Change(title: "术语表", detail: "新增 \(added.count) 个，移除 \(removed.count) 个"))
+                result.append(Change(title: String(localized: "术语表"), detail: String(localized: "新增 \(added.count, format: .number.grouping(.never)) 个，移除 \(removed.count, format: .number.grouping(.never)) 个")))
             }
         }
         if let entries = incoming.lexicon {
@@ -199,38 +225,44 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
             if !upserts.isEmpty {
                 let existing = Set((current.lexicon ?? []).map { key($0.canonical) })
                 let created = upserts.filter { !existing.contains(key($0.canonical)) }.count
-                result.append(Change(title: "误听别名", detail: "新增 \(created) 个词，补充 \(upserts.count - created) 个词的别名"))
+                result.append(Change(title: String(localized: "误听别名"), detail: String(localized: "新增 \(created, format: .number.grouping(.never)) 个词，补充 \(upserts.count - created, format: .number.grouping(.never)) 个词的别名")))
             }
         }
         if let value = incoming.speakerBackground, value != (current.speakerBackground ?? "") {
-            result.append(Change(title: "说话人背景", detail: value.isEmpty ? "清空" : "\(value.count) 字，替换现有内容"))
+            result.append(Change(title: String(localized: "说话人背景"), detail: value.isEmpty ? String(localized: "清空") : String(localized: "\(value.count, format: .number.grouping(.never)) 字，替换现有内容")))
         }
         if let value = incoming.transcriptionPrompt, value != (current.transcriptionPrompt ?? "") {
-            result.append(Change(title: "转写提示词", detail: "替换现有内容"))
+            result.append(Change(title: String(localized: "转写提示词"), detail: String(localized: "替换现有内容")))
         }
         if let engine = incoming.engine {
             let now = current.engine ?? Engine()
-            appendChange(&result, "主引擎", now.primaryProvider, engine.primaryProvider)
-            appendChange(&result, "阿里云区域", now.aliyunRegion, engine.aliyunRegion)
-            appendChange(&result, "同时对照其他引擎", now.comparisonModeEnabled, engine.comparisonModeEnabled)
-            appendChange(&result, "云端异常时用本地模型", now.automaticLocalFallback, engine.automaticLocalFallback)
+            appendChange(&result, String(localized: "主引擎"), now.primaryProvider, engine.primaryProvider)
+            appendChange(&result, String(localized: "阿里云区域"), now.aliyunRegion, engine.aliyunRegion)
+            appendChange(&result, String(localized: "同时对照其他引擎"), now.comparisonModeEnabled, engine.comparisonModeEnabled)
+            appendChange(&result, String(localized: "云端异常时用本地模型"), now.automaticLocalFallback, engine.automaticLocalFallback)
         }
         if let insertion = incoming.insertion {
             let now = current.insertion ?? Insertion()
-            appendChange(&result, "聊天句尾去句号", now.removeChatTerminalPeriod, insertion.removeChatTerminalPeriod)
-            appendChange(&result, "英文后补空格", now.appendTrailingSpaceAfterEnglish, insertion.appendTrailingSpaceAfterEnglish)
+            appendChange(&result, String(localized: "聊天句尾去句号"), now.removeChatTerminalPeriod, insertion.removeChatTerminalPeriod)
+            appendChange(&result, String(localized: "英文后补空格"), now.appendTrailingSpaceAfterEnglish, insertion.appendTrailingSpaceAfterEnglish)
         }
         if let retention = incoming.retention {
             let now = current.retention ?? Retention()
-            appendChange(&result, "录音保留天数", now.audioRetentionDays, retention.audioRetentionDays)
-            appendChange(&result, "录音容量上限（MB）", now.audioQuotaMegabytes, retention.audioQuotaMegabytes)
+            appendChange(&result, String(localized: "录音保留天数"), now.audioRetentionDays, retention.audioRetentionDays)
+            appendChange(&result, String(localized: "录音容量上限（MB）"), now.audioQuotaMegabytes, retention.audioQuotaMegabytes)
+        }
+        if let hotkey = incoming.hotkey {
+            appendChange(&result, String(localized: "触发键"), current.hotkey?.trigger, hotkey.trigger)
+        }
+        if let interface = incoming.interface {
+            appendChange(&result, String(localized: "界面语言"), current.interface?.language, interface.language)
         }
         return result
     }
 
     private static func appendChange<T: Equatable>(_ result: inout [Change], _ title: String, _ now: T?, _ new: T?) {
         guard let new, new != now else { return }
-        let before = now.map { "\($0)" } ?? "未设置"
+        let before = now.map { "\($0)" } ?? String(localized: "未设置")
         result.append(Change(title: title, detail: "\(before) → \(new)"))
     }
 
@@ -259,7 +291,7 @@ public enum PersonalProfileError: LocalizedError, Equatable {
     public var errorDescription: String? {
         switch self {
         case .newerVersion(let version):
-            return "配置文件版本 \(version) 比当前应用支持的版本新，请先更新应用"
+            return String(localized: "配置文件版本 \(version) 比当前应用支持的版本新，请先更新应用")
         }
     }
 }
@@ -291,5 +323,40 @@ public struct StarterGlossary: Codable, Equatable, Sendable {
               let pack = try? JSONDecoder().decode(StarterGlossary.self, from: data)
         else { return [] }
         return pack.terms
+    }
+}
+
+
+/// The app's interface language setting. macOS picks the UI language from the
+/// `AppleLanguages` list in the app's own defaults domain, falling back to the
+/// system list when the key is absent; this type maps between the setting and
+/// that list. Pure, so it can be tested without touching any defaults.
+public enum InterfaceLanguage: String, CaseIterable, Sendable {
+    /// No override: the system language order decides.
+    case system
+    case simplifiedChinese = "zh-Hans"
+    case english = "en"
+
+    /// The `AppleLanguages` value to store, or nil to remove the key (follow the system).
+    public var appleLanguages: [String]? {
+        switch self {
+        case .system: return nil
+        case .simplifiedChinese: return ["zh-Hans"]
+        case .english: return ["en"]
+        }
+    }
+
+    /// The setting a stored `AppleLanguages` value stands for. The first entry decides, so
+    /// a hand-written ["zh-Hans-AU", "en"] reads as Chinese; an unknown language reads as system.
+    public init(appleLanguages: [String]?) {
+        guard let first = appleLanguages?.first?.lowercased() else { self = .system; return }
+        if first.hasPrefix("zh-hans") || first == "zh" || first == "zh_cn" { self = .simplifiedChinese }
+        else if first == "en" || first.hasPrefix("en-") || first.hasPrefix("en_") { self = .english }
+        else { self = .system }
+    }
+
+    /// A profile value; nil for an unknown name (from a newer version), which leaves the setting alone.
+    public init?(profileValue: String) {
+        self.init(rawValue: profileValue)
     }
 }

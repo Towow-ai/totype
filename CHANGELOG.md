@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-04
+
+- 菜单面板新增“设置…”（⌘,）和“个人资料…”入口。单次录音默认上限从 3 分钟提高到 10 分钟，可在设置里调到 30 分钟。
+- The menu panel gains Settings… (⌘,) and Profile… entries. The default limit for one recording rises from 3 to 10 minutes and can be raised to 30 minutes in Settings.
+
+- 英文界面：菜单面板、浮窗、设置页（含个人资料和触发键）、历史窗口、引导窗口、通知、错误与状态提示、权限用途说明都有英文版。系统语言是中文时仍显示现在的中文，其他语言一律显示英文。文案放在 `VerbatimVoice/Resources/{en,zh-Hans}.lproj`，`scripts/check_l10n.sh`（已并入 `verify.sh`）检查两张表的键一致、代码里每个本地化调用都有条目，并列出疑似漏网的中文字面量；`scripts/design_preview.sh docs-en` 渲染英文截图（`docs/images/en`），README.en.md 和英文说明书改用这组截图。
+
+- English interface: the menu panel, overlay, Settings (including Profile and Trigger key), History window, first-run guide, notifications, error and status messages and the permission prompts now come in English. A Chinese system language still shows the current Chinese text; every other language shows English. The strings live in `VerbatimVoice/Resources/{en,zh-Hans}.lproj`. `scripts/check_l10n.sh` (part of `verify.sh`) checks that both tables have the same keys and that every localized call in the code has an entry, and lists Chinese literals that may have escaped localization. `scripts/design_preview.sh docs-en` renders English screenshots (`docs/images/en`), which README.en.md and the English manual now use.
+
+- 界面语言可以在 设置 → 界面语言 里选择：跟随系统（默认）、简体中文或 English，改完点“立即重启”生效。这项选择也包含在导出和导入的配置里（`interface.language`）。
+
+- Choose the interface language in Settings → Language: Follow system (default), 简体中文 or English; click Restart now to apply it. The choice is part of exported and imported profiles (`interface.language`).
+
+- 可选触发键：在设置 → 触发键里，可以把开始和结束录音的键从右 Option 换成右 Command、左 Option、左 Control 或 Fn（🌐），选好立即生效，导出的配置里也会带上这项。右 Option 仍然是按下就开始。另外四个键平时常用于快捷键，所以改成单独按一下、松开时才开始；和其他键或鼠标一起按（比如 Command+C）不会开始录音，按住超过 1 秒也不算。选 Fn 时，先到 系统设置 → 键盘，把“按下 🌐 键时”改为“不执行任何操作”。
+
+- Choose your trigger key: in Settings → Trigger key, the key that starts and stops recording can be Right Command, Left Option, Left Control or Fn (🌐) instead of Right Option. The change applies at once and is included in exported settings. Right Option still starts on press. The other four keys are everyday shortcut keys, so they start on release, only after a press on its own: pressed together with another key or the mouse (Command+C, for example) they do nothing, and a hold longer than 1 second does not count. Before using Fn, set System Settings → Keyboard → "Press 🌐 key to" to "Do Nothing".
+
 ## [0.4.0] - 2026-10-04
 
 首个公开版本。

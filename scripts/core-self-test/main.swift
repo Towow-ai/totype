@@ -43,6 +43,399 @@ expect(
     .acceptedPress,
     "松键事件丢失后下一次按下仍可自恢复"
 )
+// MARK: Modifier trigger detection (synthetic flagsChanged sequences)
+
+do {
+    let ms: UInt64 = 1_000_000
+    let nonCoalesced: UInt64 = 0x100
+    func down(_ key: ModifierKeySpec, extra: UInt64 = 0) -> UInt64 {
+        key.familyFlag | key.deviceMask | nonCoalesced | extra
+    }
+    /// Feeds (keyCode, rawFlags, ms, lastOtherInput ms) and returns the observations.
+    func run(
+        _ events: [(Int64, UInt64, UInt64, UInt64?)],
+        detector: inout ModifierTapDetector
+    ) -> [ModifierTapObservation] {
+        events.map { code, flags, at, other in
+            detector.observe(keyCode: code, rawFlags: flags, nowNanoseconds: at * ms,
+                             lastOtherInput: { other.map { $0 * ms } })
+        }
+    }
+    func fresh(_ key: ModifierKeySpec) -> ModifierTapDetector { ModifierTapDetector(key: key) }
+
+    // 0. Trigger edge per key: right Option on press, the rest on release.
+    expect(ModifierKeySpec.rightOption.triggerOn, .press, "右 Option 按下即触发")
+    for key in [ModifierKeySpec.rightCommand, .leftOption, .leftControl, .function] {
+        expect(key.triggerOn, .release, "keycode \(key.keyCode) 松开时判定")
+    }
+
+    // 1. Each of the five keys: one press toggles once.
+    let keys: [(String, ModifierKeySpec)] = [
+        ("右 Option", .rightOption), ("右 Command", .rightCommand), ("左 Option", .leftOption),
+        ("左 Control", .leftControl), ("Fn", .function),
+    ]
+    for (name, key) in keys {
+        var d = fresh(key)
+        expect(
+            run([(key.keyCode, down(key), 1_000, nil), (key.keyCode, nonCoalesced, 1_080, 900)], detector: &d),
+            key.triggerOn == .press ? [.tap, .released] : [.pressStarted, .tap],
+            "\(name) 单击触发一次"
+        )
+    }
+    expect(ModifierKeySpec.rightOption.keyCode, 61, "右 Option keycode")
+    expect(ModifierKeySpec.leftOption.keyCode, 58, "左 Option keycode")
+    expect(ModifierKeySpec.rightCommand.keyCode, 54, "右 Command keycode")
+    expect(ModifierKeySpec.leftControl.keyCode, 59, "左 Control keycode")
+    expect(ModifierKeySpec.function.keyCode, 63, "Fn keycode")
+    do {
+        // Remapped keyboards may set no device bits: the family flag stands in.
+        var d = fresh(.rightOption)
+        expect(
+            run([(61, ModifierKeySpec.optionFlag, 0, nil), (61, 0, 90, nil)], detector: &d),
+            [.tap, .released],
+            "没有设备位的键盘按族标志判断右 Option"
+        )
+        d = fresh(.leftOption)
+        expect(
+            run([(58, ModifierKeySpec.optionFlag, 0, nil), (58, 0, 90, nil)], detector: &d),
+            [.pressStarted, .tap],
+            "没有设备位的键盘按族标志判断左 Option"
+        )
+    }
+
+    // 2. Right Option (press mode) behaves exactly as before.
+    do {
+        // Differential check against the unchanged ModifierPressEdgePolicy and
+        // the old monitor's key-code filter and isRightOptionDown, over random
+        // flagsChanged streams that mix in other modifiers.
+        func oldIsRightOptionDown(rawFlags: UInt64) -> Bool {
+            let leftOptionDeviceMask: UInt64 = 0x20
+            let rightOptionDeviceMask: UInt64 = 0x40
+            let optionFlag: UInt64 = 0x80000
+            if rawFlags & (leftOptionDeviceMask | rightOptionDeviceMask) == 0 {
+                return rawFlags & optionFlag != 0
+            }
+            return rawFlags & rightOptionDeviceMask != 0
+        }
+        var seed: UInt64 = 0x9E37_79B9_7F4A_7C15
+        func next(_ bound: UInt64) -> UInt64 {
+            seed = seed &* 6364136223846793005 &+ 1442695040888963407
+            return (seed >> 33) % bound
+        }
+        let codes: [Int64] = [61, 61, 61, 58, 56, 54, 63, 59]
+        let bits: [UInt64] = [0x80000, 0x40, 0x20, 0x20000, 0x02, 0x100000, 0x10, 0x800000, 0x40000, 0x01, 0x10000]
+        var mismatches = 0
+        var accepted = 0
+        var lastOtherCalls = 0
+        for _ in 0..<2_000 {
+            var old = ModifierPressEdgePolicy()
+            var d = fresh(.rightOption)
+            var now: UInt64 = 1_000 * ms
+            for _ in 0..<40 {
+                now += next(700) * ms
+                let code = codes[Int(next(UInt64(codes.count)))]
+                var flags = nonCoalesced
+                for bit in bits where next(3) == 0 { flags |= bit }
+                let actual = d.observe(keyCode: code, rawFlags: flags, nowNanoseconds: now,
+                                       lastOtherInput: { lastOtherCalls += 1; return now })
+                let expected: ModifierTapObservation
+                if code != 61 {
+                    expected = .unrelated
+                } else {
+                    switch old.observe(pressed: oldIsRightOptionDown(rawFlags: flags), nowNanoseconds: now) {
+                    case .acceptedPress: expected = .tap; accepted += 1
+                    case .release: expected = .released
+                    case .ignoredDuplicate: expected = .rejected(.duplicate)
+                    }
+                }
+                if actual != expected { mismatches += 1 }
+            }
+        }
+        expect(mismatches, 0, "右 Option 在 8 万个随机事件上与改动前的判定逐条一致")
+        expect(accepted > 1_000, true, "差分测试确实覆盖了大量触发")
+        expect(lastOtherCalls, 0, "右 Option 从不查询 HID 按键时间")
+
+        var d = fresh(.rightOption)
+        expect(
+            run([(61, down(.rightOption), 1_000, 1_000), (61, nonCoalesced, 1_100, 1_050)], detector: &d),
+            [.tap, .released],
+            "右 Option 按下即开始，之后的按键不影响（与以前一致）"
+        )
+        d = fresh(.rightOption)
+        expect(
+            run([
+                (61, down(.rightOption), 0, nil), (61, nonCoalesced, 5_000, nil),
+                (61, down(.rightOption), 6_000, nil),
+            ], detector: &d),
+            [.tap, .released, .tap],
+            "右 Option 没有按住阈值：按住 5 秒后下一次按下照常触发"
+        )
+        d = fresh(.rightOption)
+        expect(
+            run([
+                (61, down(.rightOption), 0, nil),
+                (61, down(.rightOption), 5, nil),
+                (61, nonCoalesced, 80, nil),
+                (61, down(.rightOption), 150, nil), (61, nonCoalesced, 230, nil),
+                (61, down(.rightOption), 600, nil),
+            ], detector: &d),
+            [.tap, .rejected(.duplicate), .released, .rejected(.duplicate), .released, .tap],
+            "右 Option 350 ms 内的重复边沿只触发一次，之后正常"
+        )
+        d = fresh(.rightOption)
+        expect(
+            run([
+                (61, down(.rightOption), 0, nil),
+                (61, down(.rightOption), 2_000, nil),
+                (61, down(.rightOption), 4_000, nil),
+            ], detector: &d),
+            [.tap, .tap, .tap],
+            "右 Option 松键事件接连丢失仍每次可触发（无布尔锁存）"
+        )
+    }
+
+    // 3. Left/right confusion.
+    do {
+        var d = fresh(.rightOption)
+        expect(
+            run([(58, down(.leftOption), 0, nil), (58, nonCoalesced, 80, nil)], detector: &d),
+            [.unrelated, .unrelated],
+            "触发键为右 Option 时左 Option 单击不触发"
+        )
+        d = fresh(.leftOption)
+        expect(
+            run([(61, down(.rightOption), 0, nil), (61, nonCoalesced, 80, nil)], detector: &d),
+            [.unrelated, .unrelated],
+            "触发键为左 Option 时右 Option 单击不触发"
+        )
+        d = fresh(.rightCommand)
+        expect(
+            run([(55, ModifierKeySpec.commandFlag | 0x08, 0, nil), (55, 0, 80, nil)], detector: &d),
+            [.unrelated, .unrelated],
+            "触发键为右 Command 时左 Command 单击不触发"
+        )
+        d = fresh(.leftControl)
+        expect(
+            run([(62, ModifierKeySpec.controlFlag | 0x2000, 0, nil), (62, 0, 80, nil)], detector: &d),
+            [.unrelated, .unrelated],
+            "触发键为左 Control 时右 Control 单击不触发"
+        )
+        // Left Option held while right Option goes down and up: the shared
+        // Option flag never clears, so only the device bit shows right is up.
+        d = fresh(.rightOption)
+        let leftHeld = down(.leftOption)
+        expect(
+            run([
+                (58, leftHeld, 0, nil),
+                (61, leftHeld | 0x40, 100, nil),
+                (61, leftHeld, 180, nil),
+                (58, nonCoalesced, 300, nil),
+                (61, down(.rightOption), 600, nil),
+            ], detector: &d),
+            [.unrelated, .tap, .released, .unrelated, .tap],
+            "按住左 Option 时右 Option 抬起按设备位识别，下一次按下照常触发"
+        )
+        d = fresh(.leftOption)
+        let rightHeld = down(.rightOption)
+        expect(
+            run([
+                (61, rightHeld, 0, nil),
+                (58, rightHeld | 0x20, 100, nil),
+                (58, rightHeld, 180, nil),
+                (61, nonCoalesced, 300, nil),
+            ], detector: &d),
+            [.unrelated, .pressStarted, .rejected(.combined), .unrelated],
+            "按住右 Option 再单击左 Option 视为组合，不触发"
+        )
+    }
+
+    // 4. Release keys: combinations never trigger.
+    do {
+        var d = fresh(.rightCommand)
+        expect(
+            run([(54, down(.rightCommand), 1_000, 500), (54, nonCoalesced, 1_120, 1_040)], detector: &d),
+            [.pressStarted, .rejected(.combined)],
+            "Command+C：按住期间有按键，不触发"
+        )
+        d = fresh(.leftOption)
+        expect(
+            run([(58, down(.leftOption), 1_000, nil), (58, nonCoalesced, 1_300, 1_200)], detector: &d),
+            [.pressStarted, .rejected(.combined)],
+            "左 Option+方向键或字母不触发"
+        )
+        d = fresh(.leftControl)
+        expect(
+            run([(59, down(.leftControl), 1_000, nil), (59, nonCoalesced, 1_150, 1_060)], detector: &d),
+            [.pressStarted, .rejected(.combined)],
+            "Control+点按（鼠标按下）不触发"
+        )
+        d = fresh(.function)
+        expect(
+            run([(63, down(.function), 1_000, nil), (63, nonCoalesced, 1_150, 1_070)], detector: &d),
+            [.pressStarted, .rejected(.combined)],
+            "Fn+方向键不触发"
+        )
+        d = fresh(.rightCommand)
+        let shift = ModifierKeySpec.shiftFlag | 0x02
+        expect(
+            run([
+                (56, shift, 0, nil),
+                (54, shift | down(.rightCommand), 100, nil),
+                (54, shift, 180, nil),
+                (56, 0, 260, nil),
+            ], detector: &d),
+            [.unrelated, .pressStarted, .rejected(.combined), .unrelated],
+            "先按住 Shift 再单击右 Command 不触发"
+        )
+        d = fresh(.leftOption)
+        expect(
+            run([
+                (58, down(.leftOption), 0, nil),
+                (56, down(.leftOption) | shift, 50, nil),
+                (56, down(.leftOption), 90, nil),
+                (58, nonCoalesced, 140, nil),
+            ], detector: &d),
+            [.pressStarted, .unrelated, .unrelated, .rejected(.combined)],
+            "左 Option 按住期间按下 Shift 不触发"
+        )
+        d = fresh(.leftControl)
+        expect(
+            run([
+                (59, down(.leftControl), 0, nil),
+                (63, down(.leftControl) | ModifierKeySpec.functionFlag, 40, nil),
+                (63, down(.leftControl), 70, nil),
+                (59, nonCoalesced, 120, nil),
+            ], detector: &d),
+            [.pressStarted, .unrelated, .unrelated, .rejected(.combined)],
+            "左 Control 按住期间按 Fn 不触发"
+        )
+        d = fresh(.rightCommand)
+        expect(
+            run([
+                (54, down(.rightCommand, extra: ModifierKeySpec.functionFlag | 0x10000), 0, nil),
+                (54, ModifierKeySpec.functionFlag | 0x10000, 90, nil),
+            ], detector: &d),
+            [.pressStarted, .tap],
+            "残留的 Fn 位与 Caps Lock 位不算组合"
+        )
+        d = fresh(.rightCommand)
+        expect(
+            run([(54, down(.rightCommand), 1_000, 990), (54, nonCoalesced, 1_090, 990)], detector: &d),
+            [.pressStarted, .tap],
+            "按下触发键之前的打字不影响单击"
+        )
+        // HID key time is read only when a release key goes up.
+        var calls = 0
+        d = fresh(.rightCommand)
+        _ = d.observe(keyCode: 54, rawFlags: down(.rightCommand), nowNanoseconds: 0, lastOtherInput: { calls += 1; return nil })
+        _ = d.observe(keyCode: 56, rawFlags: down(.rightCommand), nowNanoseconds: 10 * ms, lastOtherInput: { calls += 1; return nil })
+        expect(calls, 0, "松开模式只在触发键抬起时查询 HID 按键时间")
+    }
+
+    // 5. Release keys: lost modifier-up events recover.
+    do {
+        var d = fresh(.rightCommand)
+        expect(
+            run([
+                (54, down(.rightCommand), 0, nil),
+                (54, nonCoalesced, 80, nil),
+                (54, down(.rightCommand), 5_000, nil),
+                // the up event of this press is lost
+                (54, down(.rightCommand), 9_000, nil),
+                (54, nonCoalesced, 9_080, nil),
+            ], detector: &d),
+            [.pressStarted, .tap, .pressStarted, .pressRestarted, .tap],
+            "结束键的抬起丢失后，下一次单击仍能结束录音"
+        )
+        d = fresh(.leftControl)
+        expect(
+            run([
+                (59, down(.leftControl), 0, nil),
+                // up lost; a later Shift event shows Control already up
+                (56, ModifierKeySpec.shiftFlag | 0x02, 3_000, nil),
+                (56, 0, 3_100, nil),
+                (59, down(.leftControl), 4_000, nil),
+                (59, nonCoalesced, 4_090, nil),
+            ], detector: &d),
+            [.pressStarted, .rejected(.releaseMissed), .unrelated, .pressStarted, .tap],
+            "其他修饰键事件显示触发键已抬起时丢弃悬空的按下，之后照常单击"
+        )
+        d = fresh(.function)
+        expect(
+            run([
+                // down lost; only the up arrives
+                (63, nonCoalesced, 0, nil),
+                (63, down(.function), 1_000, nil),
+                (63, nonCoalesced, 1_090, nil),
+            ], detector: &d),
+            [.unrelated, .pressStarted, .tap],
+            "按下事件丢失时孤立的抬起被忽略，下一次单击正常"
+        )
+    }
+
+    // 6. Release keys: two quick taps in a row.
+    do {
+        var d = fresh(.rightCommand)
+        expect(
+            run([
+                (54, down(.rightCommand), 0, nil), (54, nonCoalesced, 80, nil),
+                (54, down(.rightCommand), 150, nil), (54, nonCoalesced, 230, nil),
+                (54, down(.rightCommand), 600, nil), (54, nonCoalesced, 680, nil),
+            ], detector: &d),
+            [.pressStarted, .tap, .pressStarted, .rejected(.duplicate), .pressStarted, .tap],
+            "350 ms 内的第二次单击视为抖动，之后的单击正常"
+        )
+        d = fresh(.function)
+        expect(
+            run([
+                (63, down(.function), 0, nil), (63, nonCoalesced, 80, nil),
+                (63, down(.function), 85, nil), (63, nonCoalesced, 88, nil),
+            ], detector: &d),
+            [.pressStarted, .tap, .pressStarted, .rejected(.duplicate)],
+            "抬起时的硬件抖动只触发一次"
+        )
+        d = fresh(.leftOption)
+        expect(
+            run([
+                (58, down(.leftOption), 0, nil), (58, nonCoalesced, 70, nil),
+                (58, down(.leftOption), 430, nil), (58, nonCoalesced, 500, nil),
+            ], detector: &d),
+            [.pressStarted, .tap, .pressStarted, .tap],
+            "间隔超过 350 ms 的两次单击分别开始和结束"
+        )
+    }
+
+    // 7. Release keys: holding past the threshold.
+    do {
+        var d = fresh(.rightCommand)
+        expect(
+            run([(54, down(.rightCommand), 0, nil), (54, nonCoalesced, 1_200, nil)], detector: &d),
+            [.pressStarted, .rejected(.heldTooLong)],
+            "松开模式按住超过 1 秒不算单击"
+        )
+        d = fresh(.rightCommand)
+        expect(
+            run([(54, down(.rightCommand), 0, nil), (54, nonCoalesced, 950, nil)], detector: &d),
+            [.pressStarted, .tap],
+            "慢按（1 秒内）仍算单击"
+        )
+        expect(ModifierTapDetector.maximumTapNanoseconds, 1_000_000_000, "按住阈值为 1 秒")
+        expect(ModifierTapDetector.duplicateWindowNanoseconds, ModifierPressEdgePolicy.duplicateWindowNanoseconds, "两种模式去重窗口相同")
+    }
+
+    // 8. Switching the key in place, across modes.
+    do {
+        var d = fresh(.rightOption)
+        expect(d.observe(keyCode: 61, rawFlags: down(.rightOption), nowNanoseconds: 0), .tap, "右 Option 按下触发")
+        d.setKey(.rightCommand)
+        expect(d.observe(keyCode: 61, rawFlags: nonCoalesced, nowNanoseconds: 80 * ms), .unrelated, "切换触发键后旧键的抬起不触发")
+        expect(d.observe(keyCode: 54, rawFlags: down(.rightCommand), nowNanoseconds: 200 * ms), .pressStarted, "切换后新键按下")
+        expect(d.observe(keyCode: 54, rawFlags: nonCoalesced, nowNanoseconds: 280 * ms), .tap, "切换后新键单击立即生效")
+        d.setKey(.rightOption)
+        expect(d.observe(keyCode: 61, rawFlags: down(.rightOption), nowNanoseconds: 300 * ms), .tap, "切回右 Option 后按下即触发")
+    }
+}
+
 expect(
     RealtimeCompletionPolicy.primaryPreferenceNanoseconds,
     750_000_000,
@@ -649,6 +1042,37 @@ do {
     )
     expect(changes.map(\.title), ["术语表", "聊天句尾去句号"], "预览只列出会变的项")
     expect(PersonalProfile.changes(current: current, incoming: PersonalProfile()).isEmpty, true, "空文件不改变任何东西")
+    let hotkeyProfile = PersonalProfile(hotkey: .init(trigger: "fn"))
+    expect(try PersonalProfile.decode(from: hotkeyProfile.encoded()), hotkeyProfile, "触发键随配置导出再导入")
+    expect(old.hotkey == nil, true, "旧文件没有触发键时保持当前设置")
+    expect(
+        PersonalProfile.changes(current: PersonalProfile(hotkey: .init(trigger: "rightOption")), incoming: hotkeyProfile).map(\.title),
+        ["触发键"],
+        "导入预览列出触发键变化"
+    )
+
+    // Interface language: the setting <-> the AppleLanguages value in the app's defaults domain.
+    expect(InterfaceLanguage.system.appleLanguages == nil, true, "跟随系统时删除 AppleLanguages")
+    expect(InterfaceLanguage.simplifiedChinese.appleLanguages ?? [], ["zh-Hans"], "简体中文写入 zh-Hans")
+    expect(InterfaceLanguage.english.appleLanguages ?? [], ["en"], "English 写入 en")
+    for language in InterfaceLanguage.allCases {
+        expect(InterfaceLanguage(appleLanguages: language.appleLanguages), language, "界面语言写入后读回一致：\(language.rawValue)")
+    }
+    expect(InterfaceLanguage(appleLanguages: nil), .system, "没有 AppleLanguages 读作跟随系统")
+    expect(InterfaceLanguage(appleLanguages: []), .system, "空列表读作跟随系统")
+    expect(InterfaceLanguage(appleLanguages: ["zh-Hans-AU", "en"]), .simplifiedChinese, "以第一项为准：zh-Hans-AU")
+    expect(InterfaceLanguage(appleLanguages: ["en-US", "zh-Hans-AU"]), .english, "以第一项为准：en-US")
+    expect(InterfaceLanguage(appleLanguages: ["fr"]), .system, "不支持的语言读作跟随系统")
+    expect(InterfaceLanguage(profileValue: "zh-Hans"), .simplifiedChinese, "配置里的语言名")
+    expect(InterfaceLanguage(profileValue: "klingon") == nil, true, "未知语言名不改变设置")
+    let interfaceProfile = PersonalProfile(interface: .init(language: "en"))
+    expect(try PersonalProfile.decode(from: interfaceProfile.encoded()), interfaceProfile, "界面语言随配置导出再导入")
+    expect(old.interface == nil, true, "旧文件没有界面语言时保持当前设置")
+    expect(
+        PersonalProfile.changes(current: PersonalProfile(interface: .init(language: "system")), incoming: interfaceProfile).map(\.title),
+        ["界面语言"],
+        "导入预览列出界面语言变化"
+    )
 
     // Terms sent after the lexicon: glossary first, then the starter pack, no duplicates.
     expect(

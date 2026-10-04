@@ -25,7 +25,7 @@ struct ProfilePane: View {
     @State private var draftCanonical = ""
     @State private var draftAliases = ""
 
-    private static let backgroundExample = "示例：说话人是一名产品经理，常谈用户研究、季度规划和数据看板。"
+    private static var backgroundExample: String { String(localized: "示例：说话人是一名产品经理，常谈用户研究、季度规划和数据看板。") }
 
     var body: some View {
         ScrollView {
@@ -35,9 +35,9 @@ struct ProfilePane: View {
 
                 section("说话人背景") {
                     editor($settings.speakerBackground, minHeight: 90)
-                    note(settings.speakerBackground.isEmpty
-                        ? "发给 Soniox 作为背景，帮助它在听不清时偏向你常说的领域。只写身份、常谈话题和常用词，不写指令。\n" + Self.backgroundExample
-                        : "发给 Soniox 作为背景，帮助它在听不清时偏向你常说的领域。")
+                    note(verbatim: settings.speakerBackground.isEmpty
+                        ? String(localized: "发给 Soniox 作为背景，帮助它在听不清时偏向你常说的领域。只写身份、常谈话题和常用词，不写指令。") + "\n" + Self.backgroundExample
+                        : String(localized: "发给 Soniox 作为背景，帮助它在听不清时偏向你常说的领域。"))
                 }
 
                 section("术语表") {
@@ -89,7 +89,7 @@ struct ProfilePane: View {
                         importPreview(pendingImport)
                     }
                     if !status.isEmpty {
-                        note(status)
+                        note(verbatim: status)
                     }
                 }
             }
@@ -158,7 +158,7 @@ struct ProfilePane: View {
         .background(VVColor.bgSunken, in: RoundedRectangle(cornerRadius: VVMetric.radiusKey, style: .continuous))
     }
 
-    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func section<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title).font(.system(size: 13, weight: .semibold))
             content()
@@ -174,15 +174,22 @@ struct ProfilePane: View {
             .background(VVColor.bgSunken, in: RoundedRectangle(cornerRadius: VVMetric.radiusKey, style: .continuous))
     }
 
-    private func note(_ text: String) -> some View {
+    private func note(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(.system(size: 12))
             .foregroundStyle(VVColor.fgSecondary)
             .fixedSize(horizontal: false, vertical: true)
     }
 
+    private func note(verbatim text: String) -> some View {
+        Text(verbatim: text)
+            .font(.system(size: 12))
+            .foregroundStyle(VVColor.fgSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
     private func splitAliases(_ raw: String) -> [String] {
-        raw.split(whereSeparator: { $0 == "," || $0 == "，" || $0 == "、" || $0.isNewline })
+        raw.split(whereSeparator: { $0 == "," || $0 == "，" || $0 == "、" || $0.isNewline }) // l10n:ignore: parses user input
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
     }

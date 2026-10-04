@@ -32,7 +32,7 @@ struct ASRContext: Sendable {
         let literalInstructions = instructions?.trimmingCharacters(in: .whitespacesAndNewlines)
         let resolvedInstructions = literalInstructions?.isEmpty == false
             ? literalInstructions!
-            : "逐字听写；保留重复、口头语、否定、自我修正和中英文切换；不要总结、改写、补全或结构化。根据真实停顿和句意使用自然标点。"
+            : "逐字听写；保留重复、口头语、否定、自我修正和中英文切换；不要总结、改写、补全或结构化。根据真实停顿和句意使用自然标点。" // l10n:ignore 发给识别引擎的提示词
         return ASRContext(
             languages: ["zh", "en"],
             terms: Array(terms.prefix(2_000)),

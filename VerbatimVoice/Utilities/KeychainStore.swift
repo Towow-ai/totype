@@ -9,10 +9,10 @@ struct KeychainStore: Sendable {
         var errorDescription: String? {
             switch self {
             case let .unhandled(status):
-                let systemMessage = SecCopyErrorMessageString(status, nil) as String? ?? "未知错误"
-                return "无法读取系统钥匙串（\(systemMessage)，状态码 \(status)）"
+                let systemMessage = SecCopyErrorMessageString(status, nil) as String? ?? String(localized: "未知错误")
+                return String(localized: "无法读取系统钥匙串（\(systemMessage)，状态码 \(status)）")
             case .invalidData:
-                return "系统钥匙串中的 API Key 数据无法识别"
+                return String(localized: "系统钥匙串中的 API Key 数据无法识别")
             }
         }
     }
@@ -106,7 +106,7 @@ final class PersonalSecretStore: @unchecked Sendable {
         var errorDescription: String? {
             switch self {
             case .unreadable:
-                return "个人模式密钥文件无法读取；请在设置中重新保存 API Key"
+                return String(localized: "个人模式密钥文件无法读取；请在设置中重新保存 API Key")
             }
         }
     }

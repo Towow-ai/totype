@@ -35,12 +35,12 @@ enum ASRProviderError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .missingAPIKey(let provider): return "尚未设置\(provider) API Key"
-        case .notPrepared: return "转写 Provider 尚未准备完成"
-        case .invalidState(let message): return "Provider 状态错误：\(message)"
-        case .connectionFailed(let message): return "连接失败：\(message)"
-        case .server(let message): return "服务端错误：\(message)"
-        case .timeout(let message): return "等待超时：\(message)"
+        case .missingAPIKey(let provider): return String(localized: "尚未设置\(provider) API Key")
+        case .notPrepared: return String(localized: "转写 Provider 尚未准备完成")
+        case .invalidState(let message): return String(localized: "Provider 状态错误：\(message)")
+        case .connectionFailed(let message): return String(localized: "连接失败：\(message)")
+        case .server(let message): return String(localized: "服务端错误：\(message)")
+        case .timeout(let message): return String(localized: "等待超时：\(message)")
         case .unavailable(let message): return message
         }
     }
@@ -57,7 +57,7 @@ struct ProviderRejection: ClassifiedProviderError {
     let failureKind: ProviderFailureKind
     let message: String
 
-    var errorDescription: String? { "服务端错误：\(message)" }
+    var errorDescription: String? { String(localized: "服务端错误：\(message)") }
 }
 
 extension ProviderFailureKind {

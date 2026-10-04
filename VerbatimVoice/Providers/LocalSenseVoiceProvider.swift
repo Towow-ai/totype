@@ -6,7 +6,7 @@ import Foundation
 /// never invents partial text while the utterance is still being recorded.
 actor LocalSenseVoiceProvider: ASRProvider {
     nonisolated let id = "local-sensevoice"
-    nonisolated let displayName = "SenseVoiceSmall q8（本地）"
+    nonisolated let displayName = String(localized: "SenseVoiceSmall q8（本地）")
 
     private static let maximumPCMBytes = 32_000 * 900
 
@@ -30,10 +30,10 @@ actor LocalSenseVoiceProvider: ASRProvider {
         let urls = try resolvedRuntimeURLs()
         let fm = FileManager.default
         guard fm.isExecutableFile(atPath: urls.executable.path) else {
-            throw ASRProviderError.unavailable("本地 SenseVoice 运行程序缺失或不可执行")
+            throw ASRProviderError.unavailable(String(localized: "本地 SenseVoice 运行程序缺失或不可执行"))
         }
         guard fm.fileExists(atPath: urls.model.path), fm.fileExists(atPath: urls.vad.path) else {
-            throw ASRProviderError.unavailable("本地 SenseVoice 模型不完整；请在设置里重新下载")
+            throw ASRProviderError.unavailable(String(localized: "本地 SenseVoice 模型不完整；请在设置里重新下载"))
         }
     }
 
@@ -43,7 +43,7 @@ actor LocalSenseVoiceProvider: ASRProvider {
         eventHandler: @escaping @Sendable (ASREvent) -> Void
     ) async throws {
         guard utteranceID == nil, runningProcess == nil else {
-            throw ASRProviderError.invalidState("上一段本地转写尚未结束")
+            throw ASRProviderError.invalidState(String(localized: "上一段本地转写尚未结束"))
         }
         try await prepare(context: context)
         utteranceID = id
@@ -56,10 +56,10 @@ actor LocalSenseVoiceProvider: ASRProvider {
     func send(_ chunk: PCM16Chunk) async throws {
         guard utteranceID != nil else { throw ASRProviderError.notPrepared }
         guard chunk.sampleRate == 16_000, chunk.channels == 1 else {
-            throw ASRProviderError.invalidState("本地模型只接受 16 kHz 单声道 PCM16")
+            throw ASRProviderError.invalidState(String(localized: "本地模型只接受 16 kHz 单声道 PCM16"))
         }
         guard pcm.count + chunk.data.count <= Self.maximumPCMBytes else {
-            throw ASRProviderError.unavailable("本地转写音频超过 15 分钟安全上限")
+            throw ASRProviderError.unavailable(String(localized: "本地转写音频超过 15 分钟安全上限"))
         }
         pcm.append(chunk.data)
     }
@@ -70,7 +70,7 @@ actor LocalSenseVoiceProvider: ASRProvider {
         }
         guard pcm.count >= 640 else {
             reset()
-            throw ASRProviderError.unavailable("录音太短，没有足够的语音可识别")
+            throw ASRProviderError.unavailable(String(localized: "录音太短，没有足够的语音可识别"))
         }
 
         let finalizeStartedAt = Date()
@@ -101,7 +101,7 @@ actor LocalSenseVoiceProvider: ASRProvider {
             try process.run()
         } catch {
             runningProcess = nil
-            throw ASRProviderError.unavailable("无法启动本地 SenseVoice：\(error.localizedDescription)")
+            throw ASRProviderError.unavailable(String(localized: "无法启动本地 SenseVoice：\(error.localizedDescription)"))
         }
 
         let status = await Task.detached(priority: .userInitiated) {
@@ -116,13 +116,13 @@ actor LocalSenseVoiceProvider: ASRProvider {
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard status == 0 else {
-            let detail = diagnostic.isEmpty ? "退出状态 \(status)" : diagnostic
-            throw ASRProviderError.unavailable("本地 SenseVoice 识别失败：\(detail)")
+            let detail = diagnostic.isEmpty ? String(localized: "退出状态 \(status)") : diagnostic
+            throw ASRProviderError.unavailable(String(localized: "本地 SenseVoice 识别失败：\(detail)"))
         }
 
         let text = Self.literalTranscript(from: String(decoding: outputData, as: UTF8.self))
         guard !text.isEmpty else {
-            throw ASRProviderError.unavailable("本地 SenseVoice 没有识别到语音")
+            throw ASRProviderError.unavailable(String(localized: "本地 SenseVoice 没有识别到语音"))
         }
 
         let finishedAt = Date()
@@ -165,7 +165,7 @@ actor LocalSenseVoiceProvider: ASRProvider {
     private func resolvedRuntimeURLs() throws -> (executable: URL, model: URL, vad: URL) {
         if let runtimeDirectory { return Self.urls(in: runtimeDirectory) }
         guard let location = LocalModelFiles.current() else {
-            throw ASRProviderError.unavailable("本地 SenseVoice 模型未安装；请在设置里下载，或改用云端识别")
+            throw ASRProviderError.unavailable(String(localized: "本地 SenseVoice 模型未安装；请在设置里下载，或改用云端识别"))
         }
         return Self.urls(in: location.directory)
     }

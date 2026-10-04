@@ -130,14 +130,18 @@ public enum ProviderFailureClassifier {
         providerName: String,
         fallbackName: String?
     ) -> String {
-        let reason: String
-        switch kind {
-        case .billing: reason = "\(providerName) 余额不足"
-        case .auth: reason = "\(providerName) Key 无效"
-        case .transient, .other: reason = "\(providerName) 暂时不可用"
+        guard let fallbackName else {
+            switch kind {
+            case .billing: return String(localized: "\(providerName) 余额不足")
+            case .auth: return String(localized: "\(providerName) Key 无效")
+            case .transient, .other: return String(localized: "\(providerName) 暂时不可用")
+            }
         }
-        guard let fallbackName else { return reason }
-        return "\(reason)，已改用\(fallbackName)"
+        switch kind {
+        case .billing: return String(localized: "\(providerName) 余额不足，已改用\(fallbackName)")
+        case .auth: return String(localized: "\(providerName) Key 无效，已改用\(fallbackName)")
+        case .transient, .other: return String(localized: "\(providerName) 暂时不可用，已改用\(fallbackName)")
+        }
     }
 }
 

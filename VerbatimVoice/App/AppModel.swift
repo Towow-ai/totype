@@ -19,7 +19,7 @@ final class AppModel: ObservableObject {
             hotkey.setCancelCaptureActive(state == .starting || state == .listening)
         }
     }
-    @Published private(set) var statusMessage = "正在启动"
+    @Published private(set) var statusMessage = String(localized: "正在启动")
     @Published private(set) var provisionalText = ""
     @Published private(set) var previewText = ""
     @Published private(set) var lastTranscript = ""
@@ -42,20 +42,20 @@ final class AppModel: ObservableObject {
     @Published private(set) var localModelReady = false
     @Published private(set) var sonioxKeyConfigured = false
     @Published private(set) var aliyunKeyConfigured = false
-    @Published private(set) var appleBaselineStatus = "未检查"
-    @Published private(set) var secureInputStatus = "未检测到"
+    @Published private(set) var appleBaselineStatus = String(localized: "未检查")
+    @Published private(set) var secureInputStatus = String(localized: "未检测到")
     @Published private(set) var recentHistory: [HistoryRecord] = []
     @Published private(set) var launchAtLoginEnabled = false
     @Published var correctionDraft = ""
     @Published private(set) var storageStatus = ""
-    @Published private(set) var correctionCaptureStatus = "等待下一次可观察的插入"
+    @Published private(set) var correctionCaptureStatus = String(localized: "等待下一次可观察的插入")
     @Published private(set) var correctionSuggestions: [CorrectionSuggestion] = []
-    @Published private(set) var providerContextStatus = "尚未编译个人术语上下文"
+    @Published private(set) var providerContextStatus = String(localized: "尚未编译个人术语上下文")
     @Published private(set) var historyCopyStatus = ""
     @Published private(set) var retranscribingHistoryIDs: Set<UUID> = []
     @Published private(set) var historyOperationStatus = ""
     @Published private(set) var personalTerms: [PersonalTerm] = []
-    @Published private(set) var personalLexiconStatus = "正在读取个人词库"
+    @Published private(set) var personalLexiconStatus = String(localized: "正在读取个人词库")
     @Published private(set) var lastProviderContextReceipts: [ProviderContextReceipt] = []
     @Published var personalTermDraft = ""
     /// A cloud provider that rejects requests (balance, key); shown at the
@@ -69,7 +69,7 @@ final class AppModel: ObservableObject {
 
     private let legacyKeychain = KeychainStore()
     private let personalSecrets = PersonalSecretStore()
-    private let hotkey = RightOptionMonitor()
+    private let hotkey = HotkeyMonitor()
     private let targetService = AccessibilityTargetService()
     private let inserter = PasteboardInserter()
     private let sessionSink = ActiveSessionSink()
@@ -141,6 +141,7 @@ final class AppModel: ObservableObject {
     init(settings: AppSettings? = nil) {
         let resolvedSettings = settings ?? AppSettings()
         self.settings = resolvedSettings
+        _ = AppSettings.launchInterfaceLanguage // fix the language this process started with
         audioEngine = WarmAudioEngine(preRollMilliseconds: resolvedSettings.preRollMilliseconds)
         installStatusReporter = InstallRuntimeStatusReporter()
         localModels.onChange = { [weak self] in self?.refreshLocalModelReady() }
@@ -181,13 +182,13 @@ final class AppModel: ObservableObject {
         microphonePermission = MicrophonePermission.current
         // On a first run the first-run window asks for Accessibility in its own order.
         let onboardingPending = !UserDefaults.standard.bool(forKey: Self.onboardingCompletedKey)
-            && !(microphonePermission == .granted && accessibilityTrusted && RightOptionMonitor.hasInputMonitoringAccess)
+            && !(microphonePermission == .granted && accessibilityTrusted && HotkeyMonitor.hasInputMonitoringAccess)
         if !accessibilityTrusted, !onboardingPending,
            !UserDefaults.standard.bool(forKey: Self.stableAccessibilityPromptKey) {
             UserDefaults.standard.set(true, forKey: Self.stableAccessibilityPromptKey)
             accessibilityTrusted = AccessibilityTargetService.requestTrustPrompt()
         }
-        inputMonitoringTrusted = RightOptionMonitor.hasInputMonitoringAccess
+        inputMonitoringTrusted = HotkeyMonitor.hasInputMonitoringAccess
         launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
         hotkey.start()
         networkPathObserver.start()
@@ -203,14 +204,14 @@ final class AppModel: ObservableObject {
         // AVAudioEngine input alive while idle interferes with Continuity
         // features such as Universal Clipboard and system live translation.
         releaseAudioCapture()
-        statusMessage = "就绪：右 Option 开始；空闲时麦克风已释放"
+        statusMessage = readyMessage()
 
         if settings.appleBaselineEnabled {
             Task { @MainActor [weak self] in
                 await self?.prepareAppleBaseline()
             }
         } else {
-            appleBaselineStatus = "已关闭"
+            appleBaselineStatus = String(localized: "已关闭")
         }
 
         warmPrimaryCloudProviderIfUseful()
@@ -241,7 +242,7 @@ final class AppModel: ObservableObject {
         if microphonePermission != microphone { microphonePermission = microphone }
         let accessibility = AccessibilityTargetService.isTrusted
         if accessibilityTrusted != accessibility { accessibilityTrusted = accessibility }
-        let inputMonitoring = RightOptionMonitor.hasInputMonitoringAccess
+        let inputMonitoring = HotkeyMonitor.hasInputMonitoringAccess
         if inputMonitoringTrusted != inputMonitoring { inputMonitoringTrusted = inputMonitoring }
         localModels.refresh()
     }
@@ -261,7 +262,7 @@ final class AppModel: ObservableObject {
 
     func requestInputMonitoringForOnboarding() {
         // CGRequestListenEventAccess registers the app in the Input Monitoring list.
-        _ = RightOptionMonitor.requestInputMonitoringAccess()
+        _ = HotkeyMonitor.requestInputMonitoringAccess()
         openPrivacySettings(pane: "Privacy_ListenEvent")
     }
 
@@ -290,13 +291,13 @@ final class AppModel: ObservableObject {
     private var localModelUnavailableMessage: String {
         switch localModels.status {
         case .downloading(let progress):
-            return "本地模型正在下载（\(Int(progress.fraction * 100))%），完成后再试"
+            return String(localized: "本地模型正在下载（\(Int(progress.fraction * 100))%），完成后再试")
         case .verifying:
-            return "本地模型正在校验，稍等片刻再试"
+            return String(localized: "本地模型正在校验，稍等片刻再试")
         case .failed:
-            return "本地模型下载失败：到设置 → 识别 重试，或改用云端密钥"
+            return String(localized: "本地模型下载失败：到设置 → 识别 重试，或改用云端密钥")
         default:
-            return "本地模型未安装：到设置 → 识别 下载（约 \(LocalModelFiles.megabytes(LocalModelFiles.approximateTotalBytes))），或改用云端密钥"
+            return String(localized: "本地模型未安装：到设置 → 识别 下载（约 \(LocalModelFiles.megabytes(LocalModelFiles.approximateTotalBytes))），或改用云端密钥")
         }
     }
 
@@ -328,7 +329,7 @@ final class AppModel: ObservableObject {
         if state == .preview { dismissPreview() }
 
         guard !SecureInputMonitor.isEnabled else {
-            presentFailure("系统 Secure Input 正在占用键盘事件；先退出密码框或关闭占用它的应用")
+            presentFailure(String(localized: "系统 Secure Input 正在占用键盘事件；先退出密码框或关闭占用它的应用"))
             return
         }
         switch settings.primaryProvider {
@@ -341,13 +342,13 @@ final class AppModel: ObservableObject {
         case .aliyun:
             refreshAPIKeyState()
             guard aliyunKeyConfigured else {
-                presentFailure("已选择阿里云百炼，但未配置 API Key；不会切换到系统听写")
+                presentFailure(String(localized: "已选择阿里云百炼，但未配置 API Key；不会切换到系统听写"))
                 return
             }
         case .soniox:
             refreshAPIKeyState()
             guard sonioxKeyConfigured else {
-                presentFailure("已选择 Soniox，但未配置 API Key；不会切换到系统听写")
+                presentFailure(String(localized: "已选择 Soniox，但未配置 API Key；不会切换到系统听写"))
                 return
             }
         }
@@ -375,7 +376,7 @@ final class AppModel: ObservableObject {
         cancelUndoTask = nil
         recordingStartedAt = startedAt
         state = .starting
-        statusMessage = "正在启动麦克风"
+        statusMessage = String(localized: "正在启动麦克风")
 
         // Establish the session boundary before opening audio. The target
         // application's identity is already captured as PID/bundle metadata;
@@ -420,7 +421,7 @@ final class AppModel: ObservableObject {
                     }
                     return
                 }
-                self.failPendingStart("无法开始录音：\(error.localizedDescription)")
+                self.failPendingStart(String(localized: "无法开始录音：\(error.localizedDescription)"))
                 return
             }
             timeline.mark(.audioHardwareReady)
@@ -432,7 +433,7 @@ final class AppModel: ObservableObject {
                 }
                 return
             }
-            self.statusMessage = "正在听"
+            self.statusMessage = String(localized: "正在听")
             let preRollStartedAt = Date()
             let preRollSnapshot = self.audioEngine.preRollSnapshot()
             self.pendingPreRollSnapshot = preRollSnapshot
@@ -482,11 +483,11 @@ final class AppModel: ObservableObject {
         }
 
         if let target, target.isSecureField {
-            failPendingStart("安全输入字段中已暂停语音输入")
+            failPendingStart(String(localized: "安全输入字段中已暂停语音输入"))
             return
         }
         if let target, target.compositionLikelyActive {
-            failPendingStart("检测到尚未上屏的中文输入法组合文本；先上屏或取消拼音，再按一下右 Option")
+            failPendingStart(String(localized: "检测到尚未上屏的中文输入法组合文本；先上屏或取消拼音，再按一下\(settings.triggerKey.displayName)"))
             return
         }
 
@@ -652,7 +653,7 @@ final class AppModel: ObservableObject {
         if activeSession == nil, pendingStartTask != nil {
             pendingStartShouldFinalize = true
             state = .finalizing
-            statusMessage = "正在定稿"
+            statusMessage = String(localized: "正在定稿")
             overlayController.present(
                 sessionID: token.sessionID,
                 mode: .finalizing,
@@ -689,7 +690,7 @@ final class AppModel: ObservableObject {
         maximumDurationTask?.cancel()
         maximumDurationTask = nil
         state = .finalizing
-        statusMessage = "正在定稿"
+        statusMessage = String(localized: "正在定稿")
         overlayController.present(
             sessionID: token.sessionID,
             mode: .finalizing,
@@ -735,7 +736,7 @@ final class AppModel: ObservableObject {
             pendingTimeline?.mark(.cancelRequested)
             _ = sessionCoordinator.transition(token, to: .cancelPending)
             state = .cancelPending
-            statusMessage = "已取消"
+            statusMessage = String(localized: "已取消")
             provisionalText = ""
             overlayController.presentCancelPending(
                 sessionID: token.sessionID,
@@ -762,7 +763,7 @@ final class AppModel: ObservableObject {
         session.timeline.mark(.cancelRequested)
         _ = sessionCoordinator.transition(session.token, to: .cancelPending)
         state = .cancelPending
-        statusMessage = "已取消"
+        statusMessage = String(localized: "已取消")
         provisionalText = ""
         let deadline = Date().addingTimeInterval(5)
         pendingCancelDeadline = deadline
@@ -788,7 +789,7 @@ final class AppModel: ObservableObject {
         pendingStartPostRollElapsed = activeSession == nil
         _ = sessionCoordinator.transition(token, to: .finalizing)
         state = .finalizing
-        statusMessage = "正在恢复并转写"
+        statusMessage = String(localized: "正在恢复并转写")
         overlayController.present(
             sessionID: token.sessionID,
             mode: .finalizing,
@@ -865,7 +866,7 @@ final class AppModel: ObservableObject {
         pendingCancelDeadline = nil
         cancelUndoTask = nil
         state = .idle
-        statusMessage = "已保留到历史"
+        statusMessage = String(localized: "已保留到历史")
         _ = sessionCoordinator.transition(token, to: .completed)
         _ = sessionCoordinator.finish(token, as: .completed)
 
@@ -902,7 +903,7 @@ final class AppModel: ObservableObject {
                 insertionAttempts: [],
                 audioRelativePath: audioURL.map { "audio/\($0.lastPathComponent)" },
                 preRollMilliseconds: preRollMilliseconds,
-                notes: ["启动阶段取消；音频已保留，可从历史重新转写"],
+                notes: [String(localized: "启动阶段取消；音频已保留，可从历史重新转写")],
                 schemaVersion: 2,
                 appVersion: appVersion,
                 buildNumber: buildNumber,
@@ -935,7 +936,7 @@ final class AppModel: ObservableObject {
         cancelUndoTask = nil
         completionTask = nil
         state = .idle
-        statusMessage = "已保留到历史"
+        statusMessage = String(localized: "已保留到历史")
         provisionalText = ""
         _ = sessionCoordinator.transition(session.token, to: .completed)
         _ = sessionCoordinator.finish(session.token, as: .completed)
@@ -984,7 +985,7 @@ final class AppModel: ObservableObject {
                 providerContextReceipts: session.providerContextReceipts,
                 audioRelativePath: audioURL.map { "audio/\($0.lastPathComponent)" },
                 preRollMilliseconds: session.preRollMilliseconds,
-                notes: ["用户取消；音频已保留，可从历史重新转写"],
+                notes: [String(localized: "用户取消；音频已保留，可从历史重新转写")],
                 schemaVersion: 2,
                 appVersion: appVersion,
                 buildNumber: buildNumber,
@@ -1030,7 +1031,7 @@ final class AppModel: ObservableObject {
         let target = targetService.capture()
         let text = previewText
         state = .inserting
-        statusMessage = "正在插入"
+        statusMessage = String(localized: "正在插入")
         overlayController.present(mode: .finalizing, message: statusMessage, text: "", level: 0, anchor: nil)
 
         Task { @MainActor [weak self] in
@@ -1085,7 +1086,7 @@ final class AppModel: ObservableObject {
                 try? await HistoryStore.shared.appendAction(
                     sessionID: sessionID,
                     insertionStatus: .canceled,
-                    message: "用户关闭了预览"
+                    message: String(localized: "用户关闭了预览")
                 )
                 await refreshHistory()
             }
@@ -1135,7 +1136,7 @@ final class AppModel: ObservableObject {
     }
 
     func testAliyunConnection() async -> String {
-        guard aliyunKeyConfigured else { return "请先保存阿里云 API Key" }
+        guard aliyunKeyConfigured else { return String(localized: "请先保存阿里云 API Key") }
         let probe = makeAliyunProvider()
         do {
             try await probe.startUtterance(
@@ -1144,10 +1145,10 @@ final class AppModel: ObservableObject {
                 eventHandler: { _ in }
             )
             await probe.cancel()
-            return "连接成功：\(settings.aliyunRegion.displayName)"
+            return String(localized: "连接成功：\(settings.aliyunRegion.displayName)")
         } catch {
             await probe.cancel()
-            return "连接失败：\(error.localizedDescription)"
+            return String(localized: "连接失败：\(error.localizedDescription)")
         }
     }
 
@@ -1161,7 +1162,7 @@ final class AppModel: ObservableObject {
     }
 
     func requestInputMonitoringPermission() {
-        inputMonitoringTrusted = RightOptionMonitor.requestInputMonitoringAccess()
+        inputMonitoringTrusted = HotkeyMonitor.requestInputMonitoringAccess()
         hotkey.restart()
     }
 
@@ -1186,7 +1187,7 @@ final class AppModel: ObservableObject {
             launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
         } catch {
             launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
-            presentFailure("开机启动设置失败：\(error.localizedDescription)")
+            presentFailure(String(localized: "开机启动设置失败：\(error.localizedDescription)"))
         }
     }
 
@@ -1198,7 +1199,12 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func showSettingsWindow() {
+    /// The console page the next `showSettingsWindow` should land on; the view
+    /// consumes it and resets it to nil.
+    @Published var requestedSettingsDestination: SettingsDestination?
+
+    func showSettingsWindow(_ destination: SettingsDestination? = nil) {
+        if let destination { requestedSettingsDestination = destination }
         settingsWindowController.show(model: self)
     }
 
@@ -1216,15 +1222,15 @@ final class AppModel: ObservableObject {
         Task { @MainActor [weak self] in
             guard let self else { return }
             guard let url = try? await HistoryStore.shared.audioURL(for: record) else {
-                self.historyOperationStatus = "这条历史没有可播放的音频"
+                self.historyOperationStatus = String(localized: "这条历史没有可播放的音频")
                 return
             }
             self.playbackSound?.stop()
             self.playbackSound = NSSound(contentsOf: url, byReference: true)
             if self.playbackSound?.play() == true {
-                self.historyOperationStatus = "正在播放历史音频"
+                self.historyOperationStatus = String(localized: "正在播放历史音频")
             } else {
-                self.historyOperationStatus = "历史音频播放失败"
+                self.historyOperationStatus = String(localized: "历史音频播放失败")
             }
         }
     }
@@ -1235,13 +1241,13 @@ final class AppModel: ObservableObject {
     ) {
         guard !retranscribingHistoryIDs.contains(record.id) else { return }
         retranscribingHistoryIDs.insert(record.id)
-        historyOperationStatus = "正在重新转写…"
+        historyOperationStatus = String(localized: "正在重新转写…")
 
         Task { @MainActor [weak self] in
             guard let self else { return }
             defer { self.retranscribingHistoryIDs.remove(record.id) }
             guard let audioURL = try? await HistoryStore.shared.audioURL(for: record) else {
-                self.historyOperationStatus = "音频文件已不存在，无法重新转写"
+                self.historyOperationStatus = String(localized: "音频文件已不存在，无法重新转写")
                 return
             }
 
@@ -1265,7 +1271,7 @@ final class AppModel: ObservableObject {
                     try ArchivedAudioReader.pcm16Chunks(from: audioURL)
                 }.value
             } catch {
-                self.historyOperationStatus = "历史音频读取失败：\(error.localizedDescription)"
+                self.historyOperationStatus = String(localized: "历史音频读取失败：\(error.localizedDescription)")
                 return
             }
             let totalPCMBytes = chunks.reduce(into: 0) { $0 += $1.data.count }
@@ -1281,8 +1287,8 @@ final class AppModel: ObservableObject {
                 ) / 1_000_000_000
             )
             self.historyOperationStatus = durationSeconds >= 60
-                ? "正在重新转写约 \(durationSeconds / 60) 分 \(durationSeconds % 60) 秒的音频…"
-                : "正在重新转写约 \(durationSeconds) 秒的音频…"
+                ? String(localized: "正在重新转写约 \(durationSeconds / 60) 分 \(durationSeconds % 60) 秒的音频…")
+                : String(localized: "正在重新转写约 \(durationSeconds) 秒的音频…")
 
             let task = Task<ProviderRunOutcome, Never>(priority: .userInitiated) {
                 do {
@@ -1309,8 +1315,8 @@ final class AppModel: ObservableObject {
                                 guard let self,
                                       self.retranscribingHistoryIDs.contains(record.id) else { return }
                                 self.historyOperationStatus = percent == 100
-                                    ? "音频已发送，等待 \(model) 完成…"
-                                    : "正在向 \(model) 发送历史音频：\(percent)%"
+                                    ? String(localized: "音频已发送，等待 \(model) 完成…")
+                                    : String(localized: "正在向 \(model) 发送历史音频：\(percent)%")
                             }
                         }
                         if isRealtimeCloud, completed < chunks.count {
@@ -1357,7 +1363,7 @@ final class AppModel: ObservableObject {
                     providerID: providerID,
                     model: model,
                     error: ASRProviderError.timeout(
-                        "历史重转写超过按音频时长计算的 \(deadlineNanoseconds / 1_000_000_000) 秒截止"
+                        String(localized: "历史重转写超过按音频时长计算的 \(deadlineNanoseconds / 1_000_000_000) 秒截止")
                     ),
                     terminationReason: .timedOut
                 )
@@ -1375,11 +1381,12 @@ final class AppModel: ObservableObject {
             do {
                 try await HistoryStore.shared.appendRevision(sessionID: record.id, revision: revision)
                 await self.refreshHistory()
+                let failureReason = outcome.errorMessage ?? String(localized: "未知错误")
                 self.historyOperationStatus = outcome.result == nil
-                    ? "重新转写失败：\(outcome.errorMessage ?? "未知错误")"
-                    : "已新增一个转写版本（不会自动插入）"
+                    ? String(localized: "重新转写失败：\(failureReason)")
+                    : String(localized: "已新增一个转写版本（不会自动插入）")
             } catch {
-                self.historyOperationStatus = "转写已完成，但版本保存失败：\(error.localizedDescription)"
+                self.historyOperationStatus = String(localized: "转写已完成，但版本保存失败：\(error.localizedDescription)")
             }
         }
     }
@@ -1401,15 +1408,15 @@ final class AppModel: ObservableObject {
         }
         switch resolved {
         case .automatic:
-            throw ASRProviderError.unavailable("无法选择重转写模型")
+            throw ASRProviderError.unavailable(String(localized: "无法选择重转写模型"))
         case .soniox:
             guard sonioxKeyConfigured else { throw ASRProviderError.missingAPIKey(" Soniox") }
             return makeSonioxProvider()
         case .aliyun:
-            guard aliyunKeyConfigured else { throw ASRProviderError.missingAPIKey("阿里云") }
+            guard aliyunKeyConfigured else { throw ASRProviderError.missingAPIKey(String(localized: "阿里云")) }
             return makeAliyunProvider()
         case .localSenseVoice:
-            guard localModelReady else { throw ASRProviderError.unavailable("本地模型尚未就绪") }
+            guard localModelReady else { throw ASRProviderError.unavailable(String(localized: "本地模型尚未就绪")) }
             return LocalSenseVoiceProvider()
         }
     }
@@ -1445,10 +1452,10 @@ final class AppModel: ObservableObject {
             personalTerms = loaded
             let activeCount = loaded.filter { $0.state == .confirmed }.count
             let pinnedCount = loaded.filter { $0.state == .confirmed && $0.pinned }.count
-            personalLexiconStatus = "个人词 \(activeCount) 个，其中钉住 \(pinnedCount) 个；仅保存在本机"
+            personalLexiconStatus = String(localized: "个人词 \(activeCount, format: .number.grouping(.never)) 个，其中钉住 \(pinnedCount, format: .number.grouping(.never)) 个；仅保存在本机")
         } catch {
             personalTerms = []
-            personalLexiconStatus = "个人词库不可用，已回退兼容词表：\(error.localizedDescription)"
+            personalLexiconStatus = String(localized: "个人词库不可用，已回退兼容词表：\(error.localizedDescription)")
         }
     }
 
@@ -1462,9 +1469,9 @@ final class AppModel: ObservableObject {
                 var updated = existing
                 updated.state = .confirmed
                 updated.pinned = true
-                upsertPersonalTerm(updated, message: "已重新启用并钉住“\(existing.canonical)”")
+                upsertPersonalTerm(updated, message: String(localized: "已重新启用并钉住“\(existing.canonical)”"))
             } else {
-                personalLexiconStatus = "“\(existing.canonical)”已在个人词库中"
+                personalLexiconStatus = String(localized: "“\(existing.canonical)”已在个人词库中")
             }
             personalTermDraft = ""
             return
@@ -1472,7 +1479,7 @@ final class AppModel: ObservableObject {
         personalTermDraft = ""
         upsertPersonalTerm(
             PersonalTerm(canonical: canonical, pinned: true),
-            message: "已加入并钉住“\(canonical)”，下次录音生效"
+            message: String(localized: "已加入并钉住“\(canonical)”，下次录音生效")
         )
     }
 
@@ -1482,7 +1489,7 @@ final class AppModel: ObservableObject {
         if updated.state != .confirmed { updated.state = .confirmed }
         upsertPersonalTerm(
             updated,
-            message: updated.pinned ? "已钉住“\(term.canonical)”" : "已取消钉住“\(term.canonical)”"
+            message: updated.pinned ? String(localized: "已钉住“\(term.canonical)”") : String(localized: "已取消钉住“\(term.canonical)”")
         )
     }
 
@@ -1492,8 +1499,8 @@ final class AppModel: ObservableObject {
         upsertPersonalTerm(
             updated,
             message: updated.state == .confirmed
-                ? "已恢复“\(term.canonical)”，下次录音生效"
-                : "已停用“\(term.canonical)”，下次录音不再发送"
+                ? String(localized: "已恢复“\(term.canonical)”，下次录音生效")
+                : String(localized: "已停用“\(term.canonical)”，下次录音不再发送")
         )
     }
 
@@ -1502,11 +1509,11 @@ final class AppModel: ObservableObject {
             guard let self else { return }
             do {
                 self.personalTerms = try await self.personalLexiconStore.delete(termID: term.id)
-                self.personalLexiconStatus = "已从当前个人词库删除“\(term.canonical)”"
+                self.personalLexiconStatus = String(localized: "已从当前个人词库删除“\(term.canonical)”")
                 self.cancelPendingProviderPreparation()
                 self.warmPrimaryCloudProviderIfUseful()
             } catch {
-                self.personalLexiconStatus = "删除失败：\(error.localizedDescription)"
+                self.personalLexiconStatus = String(localized: "删除失败：\(error.localizedDescription)")
             }
         }
     }
@@ -1524,9 +1531,9 @@ final class AppModel: ObservableObject {
     func exportProfile(to url: URL) {
         do {
             try currentProfile().encoded().write(to: url, options: .atomic)
-            profileStatus = "已导出到 \(url.lastPathComponent)。文件不含 API Key、历史和录音。"
+            profileStatus = String(localized: "已导出到 \(url.lastPathComponent)。文件不含 API Key、历史和录音。")
         } catch {
-            profileStatus = "导出失败：\(error.localizedDescription)"
+            profileStatus = String(localized: "导出失败：\(error.localizedDescription)")
         }
     }
 
@@ -1541,7 +1548,7 @@ final class AppModel: ObservableObject {
             profileStatus = ""
         } catch {
             cancelProfileImport()
-            profileStatus = "无法读取配置文件：\(error.localizedDescription)"
+            profileStatus = String(localized: "无法读取配置文件：\(error.localizedDescription)")
         }
     }
 
@@ -1562,13 +1569,13 @@ final class AppModel: ObservableObject {
         do {
             try currentProfile().encoded().write(to: backupURL, options: .withoutOverwriting)
         } catch {
-            profileStatus = "没有导入：无法在 \(backupURL.deletingLastPathComponent().lastPathComponent) 里写入备份（\(error.localizedDescription)）"
+            profileStatus = String(localized: "没有导入：无法在 \(backupURL.deletingLastPathComponent().lastPathComponent) 里写入备份（\(error.localizedDescription)）")
             return
         }
         cancelProfileImport()
         settings.apply(pending.profile)
         let upserts = pending.profile.lexiconUpserts(into: personalTerms)
-        upsertPersonalTerms(upserts, message: "已导入配置，原配置备份为 \(backupURL.lastPathComponent)")
+        upsertPersonalTerms(upserts, message: String(localized: "已导入配置，原配置备份为 \(backupURL.lastPathComponent)"))
         applyRuntimeSettings()
     }
 
@@ -1577,16 +1584,16 @@ final class AppModel: ObservableObject {
             lexicon: [.init(canonical: canonical, aliases: aliases, pinned: true)]
         ).lexiconUpserts(into: personalTerms)
         guard !upserts.isEmpty else {
-            personalLexiconStatus = "“\(canonical)”已有这些别名"
+            personalLexiconStatus = String(localized: "“\(canonical)”已有这些别名")
             return
         }
-        upsertPersonalTerms(upserts, message: "已保存“\(canonical)”的别名，下次录音生效")
+        upsertPersonalTerms(upserts, message: String(localized: "已保存“\(canonical)”的别名，下次录音生效"))
     }
 
     func removePersonalAlias(_ alias: String, from term: PersonalTerm) {
         var updated = term
         updated.aliases.removeAll { $0.caseInsensitiveCompare(alias) == .orderedSame }
-        upsertPersonalTerm(updated, message: "已删除“\(term.canonical)”的别名“\(alias)”")
+        upsertPersonalTerm(updated, message: String(localized: "已删除“\(term.canonical)”的别名“\(alias)”"))
     }
 
     private func upsertPersonalTerms(_ terms: [PersonalTerm], message: String) {
@@ -1605,7 +1612,7 @@ final class AppModel: ObservableObject {
                 self.cancelPendingProviderPreparation()
                 self.warmPrimaryCloudProviderIfUseful()
             } catch {
-                self.personalLexiconStatus = "个人词保存失败：\(error.localizedDescription)"
+                self.personalLexiconStatus = String(localized: "个人词保存失败：\(error.localizedDescription)")
                 self.profileStatus = self.personalLexiconStatus
             }
         }
@@ -1620,48 +1627,48 @@ final class AppModel: ObservableObject {
                 self.cancelPendingProviderPreparation()
                 self.warmPrimaryCloudProviderIfUseful()
             } catch {
-                self.personalLexiconStatus = "个人词保存失败：\(error.localizedDescription)"
+                self.personalLexiconStatus = String(localized: "个人词保存失败：\(error.localizedDescription)")
             }
         }
     }
 
     func playMostRecentAudio() {
         guard let record = recentHistory.first else {
-            statusMessage = "还没有历史记录"
+            statusMessage = String(localized: "还没有历史记录")
             return
         }
         Task { @MainActor [weak self] in
             guard let self else { return }
             guard let url = try? await HistoryStore.shared.audioURL(for: record) else {
-                self.statusMessage = "最近一条记录没有可播放的音频"
+                self.statusMessage = String(localized: "最近一条记录没有可播放的音频")
                 return
             }
             self.playbackSound = NSSound(contentsOf: url, byReference: true)
             guard self.playbackSound?.play() == true else {
-                self.statusMessage = "音频播放失败"
+                self.statusMessage = String(localized: "音频播放失败")
                 return
             }
-            self.statusMessage = "正在播放最近一条原始音频"
+            self.statusMessage = String(localized: "正在播放最近一条原始音频")
         }
     }
 
     func copyHistoryRecord(_ record: HistoryRecord) {
         copyHistoryText(
             record.insertedText,
-            successMessage: "已复制这条历史的完整文字（\(record.insertedText.count) 字）"
+            successMessage: String(localized: "已复制这条历史的完整文字（\(record.insertedText.count, format: .number.grouping(.never)) 字）")
         )
     }
 
     func copyHistoryProviderOutput(_ summary: ProviderSummary) {
         copyHistoryText(
             summary.text,
-            successMessage: "已复制 \(summary.model) 的完整结果（\(summary.text.count) 字）"
+            successMessage: String(localized: "已复制 \(summary.model) 的完整结果（\(summary.text.count, format: .number.grouping(.never)) 字）")
         )
     }
 
     private func copyHistoryText(_ text: String, successMessage: String) {
         guard !text.isEmpty else {
-            historyCopyStatus = "这项结果是空的，没有可复制内容"
+            historyCopyStatus = String(localized: "这项结果是空的，没有可复制内容")
             return
         }
         let result = inserter.copyOnly(text)
@@ -1673,7 +1680,7 @@ final class AppModel: ObservableObject {
         guard let record = recentHistory.first else { return }
         let corrected = correctionDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !corrected.isEmpty else {
-            statusMessage = "修正文本不能为空"
+            statusMessage = String(localized: "修正文本不能为空")
             return
         }
         Task { @MainActor [weak self] in
@@ -1692,16 +1699,16 @@ final class AppModel: ObservableObject {
                 try await HistoryStore.shared.appendAction(
                     sessionID: record.id,
                     correctedText: corrected,
-                    message: "用户人工修正",
+                    message: String(localized: "用户人工修正"),
                     originalText: record.insertedText,
                     correctionSource: "manual-settings",
                     targetBundleIdentifier: record.targetBundleIdentifier,
                     replacements: replacement.map { [$0] }
                 )
-                self.statusMessage = "修正已保存，可用于之后对照原始音频"
+                self.statusMessage = String(localized: "修正已保存，可用于之后对照原始音频")
                 await self.refreshHistory()
             } catch {
-                self.presentFailure("保存修正失败：\(error.localizedDescription)")
+                self.presentFailure(String(localized: "保存修正失败：\(error.localizedDescription)"))
             }
         }
     }
@@ -1711,12 +1718,12 @@ final class AppModel: ObservableObject {
         guard !term.isEmpty, !suggestion.punctuationOnly else { return }
         let existing = Set(settings.glossaryTerms.map { $0.lowercased() })
         guard !existing.contains(term.lowercased()) else {
-            statusMessage = "“\(term)”已经在个人术语中"
+            statusMessage = String(localized: "“\(term)”已经在个人术语中")
             return
         }
         let separator = settings.glossaryText.hasSuffix("\n") || settings.glossaryText.isEmpty ? "" : "\n"
         settings.glossaryText += separator + term + "\n"
-        statusMessage = "已将“\(term)”加入个人术语"
+        statusMessage = String(localized: "已将“\(term)”加入个人术语")
     }
 
     func runStorageMaintenance() async {
@@ -1729,10 +1736,10 @@ final class AppModel: ObservableObject {
             let formatter = ByteCountFormatter()
             formatter.countStyle = .file
             storageStatus = result.deletedAudioFiles == 0
-                ? "音频空间正常"
-                : "已清理 \(result.deletedAudioFiles) 个音频，释放 \(formatter.string(fromByteCount: result.reclaimedBytes))"
+                ? String(localized: "音频空间正常")
+                : String(localized: "已清理 \(result.deletedAudioFiles) 个音频，释放 \(formatter.string(fromByteCount: result.reclaimedBytes))")
         } catch {
-            storageStatus = "清理检查失败：\(error.localizedDescription)"
+            storageStatus = String(localized: "清理检查失败：\(error.localizedDescription)")
         }
     }
 
@@ -1746,10 +1753,14 @@ final class AppModel: ObservableObject {
         if settings.appleBaselineEnabled {
             Task { @MainActor [weak self] in await self?.prepareAppleBaseline() }
         } else {
-            appleBaselineStatus = "已关闭"
+            appleBaselineStatus = String(localized: "已关闭")
         }
         Task { @MainActor [weak self] in await self?.runStorageMaintenance() }
         warmPrimaryCloudProviderIfUseful()
+    }
+
+    private func readyMessage(_ key: TriggerKey? = nil) -> String {
+        String(localized: "就绪：\((key ?? settings.triggerKey).displayName) 开始；空闲时麦克风已释放")
     }
 
     private func configureCallbacks() {
@@ -1780,9 +1791,9 @@ final class AppModel: ObservableObject {
                 guard let self else { return }
                 self.microphoneReady = running
                 if self.state == .idle {
-                    self.statusMessage = "就绪：右 Option 开始；空闲时麦克风已释放"
+                    self.statusMessage = self.readyMessage()
                 } else if running, self.state == .starting {
-                    self.statusMessage = "正在听"
+                    self.statusMessage = String(localized: "正在听")
                 }
             }
             .store(in: &cancellables)
@@ -1804,8 +1815,19 @@ final class AppModel: ObservableObject {
             .sink { [weak self] milliseconds in self?.audioEngine.setPreRoll(milliseconds: milliseconds) }
             .store(in: &cancellables)
 
+        // The trigger key changes in place: the event tap is not recreated.
+        hotkey.setTriggerKey(settings.triggerKey)
+        settings.$triggerKey
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak self] key in
+                guard let self else { return }
+                self.hotkey.setTriggerKey(key)
+                if self.state == .idle { self.statusMessage = self.readyMessage(key) }
+            }
+            .store(in: &cancellables)
+
         hotkey.onPress = { [weak self] in self?.toggleDictation() }
-        hotkey.onRelease = nil
         hotkey.onCancel = { [weak self] in self?.cancelDictation() }
         hotkey.onEscapeCancelAvailabilityChanged = { [weak self] available in
             self?.applyEscapeCancelAvailability(available)
@@ -1838,14 +1860,14 @@ final class AppModel: ObservableObject {
            let frontmost = NSWorkspace.shared.frontmostApplication,
            frontmost.bundleIdentifier != Bundle.main.bundleIdentifier,
            frontmost.processIdentifier != targetPID {
-            return "你已切换到其他应用，未自动输入；可点“复制”"
+            return String(localized: "你已切换到其他应用，未自动输入；可点“复制”")
         }
         if let stopRequestedUptime {
             let sinceStop = ProcessInfo.processInfo.systemUptime - stopRequestedUptime
             // HID state counts only physical input, never our own posted events.
             let sinceKeyDown = CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: .keyDown)
             if sinceStop > 0.15, sinceKeyDown < sinceStop - 0.05 {
-                return "结束后检测到键盘输入，为避免打断你正在打的字，未自动输入；可点“复制”"
+                return String(localized: "结束后检测到键盘输入，为避免打断你正在打的字，未自动输入；可点“复制”")
             }
         }
         return nil
@@ -1872,7 +1894,7 @@ final class AppModel: ObservableObject {
                 // boundaries. Poll them conservatively and only publish an
                 // actual change, never a duplicate value on every timer tick.
                 let accessibilityTrusted = AccessibilityTargetService.isTrusted
-                let inputMonitoringTrusted = RightOptionMonitor.hasInputMonitoringAccess
+                let inputMonitoringTrusted = HotkeyMonitor.hasInputMonitoringAccess
                 let launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
                 if self.accessibilityTrusted != accessibilityTrusted {
                     self.accessibilityTrusted = accessibilityTrusted
@@ -1892,22 +1914,23 @@ final class AppModel: ObservableObject {
                 if self.launchAtLoginEnabled != launchAtLoginEnabled {
                     self.launchAtLoginEnabled = launchAtLoginEnabled
                 }
+                let secureInputNone = String(localized: "未检测到")
                 if SecureInputMonitor.isEnabled {
-                    let frontmost = NSWorkspace.shared.frontmostApplication?.localizedName ?? "未知应用"
-                    let secureStatus = "已开启（前台：\(frontmost)；占用者可能不同）"
+                    let frontmost = NSWorkspace.shared.frontmostApplication?.localizedName ?? String(localized: "未知应用")
+                    let secureStatus = String(localized: "已开启（前台：\(frontmost)；占用者可能不同）")
                     if self.secureInputStatus != secureStatus {
                         self.secureInputStatus = secureStatus
                     }
                     if self.state == .idle {
-                        let message = "Secure Input 正在开启；全局热键可能收不到事件"
+                        let message = String(localized: "Secure Input 正在开启；全局热键可能收不到事件")
                         if self.statusMessage != message { self.statusMessage = message }
                     }
                 } else {
-                    if self.secureInputStatus != "未检测到" {
-                        self.secureInputStatus = "未检测到"
+                    if self.secureInputStatus != secureInputNone {
+                        self.secureInputStatus = secureInputNone
                     }
                     if self.state == .idle {
-                        let message = "就绪：右 Option 开始；空闲时麦克风已释放"
+                        let message = self.readyMessage()
                         if self.statusMessage != message { self.statusMessage = message }
                     }
                 }
@@ -1917,15 +1940,15 @@ final class AppModel: ObservableObject {
 
     private func prepareAppleBaseline() async {
         guard settings.appleBaselineEnabled else {
-            appleBaselineStatus = "已关闭"
+            appleBaselineStatus = String(localized: "已关闭")
             return
         }
-        appleBaselineStatus = "正在准备 Apple 系统听写"
+        appleBaselineStatus = String(localized: "正在准备 Apple 系统听写")
         do {
             try await appleProvider.prepare(context: personalASRContext(providerID: appleProvider.id))
-            appleBaselineStatus = "Apple 系统听写就绪"
+            appleBaselineStatus = String(localized: "Apple 系统听写就绪")
         } catch {
-            appleBaselineStatus = "不可用：\(error.localizedDescription)"
+            appleBaselineStatus = String(localized: "不可用：\(error.localizedDescription)")
         }
     }
 
@@ -1935,7 +1958,7 @@ final class AppModel: ObservableObject {
         case .connected(let providerID):
             if providerID == activeSession?.primaryProviderID,
                state == .starting || state == .listening {
-                statusMessage = "正在听"
+                statusMessage = String(localized: "正在听")
             }
         case .partial(let providerID, let text):
             guard state == .starting || state == .listening else { return }
@@ -1950,7 +1973,7 @@ final class AppModel: ObservableObject {
             lastError = message
         case .failed(let providerID, let message):
             providerPartials.removeValue(forKey: providerID)
-            lastError = "\(providerID)：\(message)"
+            lastError = String(localized: "\(providerID)：\(message)")
         }
     }
 
@@ -2000,10 +2023,10 @@ final class AppModel: ObservableObject {
                 ProviderLivenessPolicy.cloudsDeadAtStop(primary: $0, standby: standbyView)
             } ?? false)
             if primarySilent {
-                sessionNotes.append("停止时主云已无声（未建连或已报错），未等偏好窗口")
+                sessionNotes.append(String(localized: "停止时主云已无声（未建连或已报错），未等偏好窗口"))
             }
             if cloudsDeadAtStop {
-                sessionNotes.append("录音期间两家云端都不可用，停止后立即本地转写")
+                sessionNotes.append(String(localized: "录音期间两家云端都不可用，停止后立即本地转写"))
             }
 
             let cloudTask = Task { @MainActor [weak self, weak session] () -> CloudPhaseResult in
@@ -2027,7 +2050,7 @@ final class AppModel: ObservableObject {
                 alreadyResolvedComparisons[Self.localProviderID] = local
             }
             if race.localCancelled {
-                sessionNotes.append("本地赛跑已启动，云端先到，已停止本地")
+                sessionNotes.append(String(localized: "本地赛跑已启动，云端先到，已停止本地"))
             }
 
             if case .takeLocal(let reason) = race.decision, let local = race.local {
@@ -2043,16 +2066,16 @@ final class AppModel: ObservableObject {
                 primaryOutcome = race.cloud?.primary ?? ProviderRunOutcome.failure(
                     providerID: session.primaryProviderID,
                     model: session.primaryProviderID,
-                    error: ASRProviderError.timeout("本地先完成，主云已停止"),
+                    error: ASRProviderError.timeout(String(localized: "本地先完成，主云已停止")),
                     terminationReason: .quarantined
                 )
                 chosenOutcome = local
                 usedOfflineFallback = true
                 selectedReason = reason
                 statusMessage = race.localStart == .cloudStalled
-                    ? "云端较慢，已改用本地"
-                    : "云端不可用，已改用本地"
-                overlayController.showProviderBadge("本地", sessionID: session.id)
+                    ? String(localized: "云端较慢，已改用本地")
+                    : String(localized: "云端不可用，已改用本地")
+                overlayController.showProviderBadge(String(localized: "本地"), sessionID: session.id)
             } else {
                 let cloud = race.cloud ?? CloudPhaseResult(decision: .noUsableResult)
                 let resolvedPrimary = cloud.primary
@@ -2067,7 +2090,7 @@ final class AppModel: ObservableObject {
                     primaryOutcome = resolvedPrimary ?? ProviderRunOutcome.failure(
                         providerID: session.primaryProviderID,
                         model: session.primaryProviderID,
-                        error: ASRProviderError.timeout("主云未在热备结果前完成"),
+                        error: ASRProviderError.timeout(String(localized: "主云未在热备结果前完成")),
                         terminationReason: .quarantined
                     )
                     alreadyResolvedComparisons[standbyID!] = standby
@@ -2075,8 +2098,8 @@ final class AppModel: ObservableObject {
                     selectedReason = reason
                     session.quarantinePrimary()
                     statusMessage = primaryOutcome.failureKind?.disablesProvider == true
-                        ? "主云不可用，已采用热备结果"
-                        : "主云收尾较慢，已采用热备结果"
+                        ? String(localized: "主云不可用，已采用热备结果")
+                        : String(localized: "主云收尾较慢，已采用热备结果")
                     overlayController.showProviderBadge(
                         Self.providerDisplayName(standbyID),
                         sessionID: session.id
@@ -2113,7 +2136,7 @@ final class AppModel: ObservableObject {
             if let bypassed = providerOutages.outage(for: configuredCloudPrimaryID),
                session.primaryProviderID != configuredCloudPrimaryID {
                 sessionNotes.append(
-                    "\(Self.providerDisplayName(bypassed.providerID)) 不可用（\(bypassed.kind.rawValue)），本次直接使用\(Self.providerDisplayName(session.primaryProviderID))"
+                    String(localized: "\(Self.providerDisplayName(bypassed.providerID)) 不可用（\(bypassed.kind.rawValue)），本次直接使用\(Self.providerDisplayName(session.primaryProviderID))")
                 )
             }
         }
@@ -2135,8 +2158,8 @@ final class AppModel: ObservableObject {
             let localFailure = alreadyResolvedComparisons[Self.localProviderID]?.errorMessage
             let details = [outageNotice, primaryOutcome.errorMessage, localFailure, appleOutcome?.errorMessage]
                 .compactMap { $0 }
-                .joined(separator: "；")
-            presentFailure(details.isEmpty ? "没有得到可用的转写结果" : details)
+                .joined(separator: String(localized: "；"))
+            presentFailure(details.isEmpty ? String(localized: "没有得到可用的转写结果") : details)
             refreshProviderOutageStatus()
             persist(
                 session: session,
@@ -2208,7 +2231,7 @@ final class AppModel: ObservableObject {
         lastTranscript = preparedText
         guard sessionCoordinator.claimCommit(session.token) else { return }
         state = .inserting
-        statusMessage = "正在插入"
+        statusMessage = String(localized: "正在插入")
         // Stay in the existing finalizing panel instead of presenting and
         // repositioning it for a second intermediate state.
         overlayController.updateMessage(statusMessage, sessionID: session.id)
@@ -2287,7 +2310,7 @@ final class AppModel: ObservableObject {
                     bundleIdentifier: session.targetBundleIdentifier
                 )
             } else {
-                correctionCaptureStatus = "本次目标不提供可观察文本；未监听后续修改"
+                correctionCaptureStatus = String(localized: "本次目标不提供可观察文本；未监听后续修改")
             }
         } else {
             activeSession = nil
@@ -2343,11 +2366,11 @@ final class AppModel: ObservableObject {
         bundleIdentifier: String?
     ) {
         guard settings.correctionCaptureEnabled else {
-            correctionCaptureStatus = "插入后修改观察已关闭"
+            correctionCaptureStatus = String(localized: "插入后修改观察已关闭")
             return
         }
         if let bundleIdentifier, Self.correctionCaptureSkippedBundles.contains(bundleIdentifier) {
-            correctionCaptureStatus = "终端不提供可观察文本；未监听后续修改"
+            correctionCaptureStatus = String(localized: "终端不提供可观察文本；未监听后续修改")
             return
         }
         correctionCaptureGeneration &+= 1
@@ -2361,7 +2384,7 @@ final class AppModel: ObservableObject {
                   generation == self.correctionCaptureGeneration,
                   self.state == .idle || self.state == .preview else { return }
             guard let snapshot else {
-                self.correctionCaptureStatus = "当前输入控件不暴露文本内容；未观察后续修改"
+                self.correctionCaptureStatus = String(localized: "当前输入控件不暴露文本内容；未观察后续修改")
                 return
             }
             self.startCorrectionObservation(
@@ -2391,7 +2414,7 @@ final class AppModel: ObservableObject {
         sessionLogger.notice("hotword learned from repeated correction")
         upsertPersonalTerm(
             PersonalTerm(canonical: corrected, category: .other, pinned: false),
-            message: "已自动学习热词“\(corrected)”（你改过 \(occurrences) 次：\(original) → \(corrected)）"
+            message: String(localized: "已自动学习热词“\(corrected)”（你改过 \(occurrences) 次：\(original) → \(corrected)）")
         )
     }
 
@@ -2401,22 +2424,24 @@ final class AppModel: ObservableObject {
         target: TargetSnapshot
     ) {
         guard settings.correctionCaptureEnabled else {
-            correctionCaptureStatus = "插入后修改观察已关闭"
+            correctionCaptureStatus = String(localized: "插入后修改观察已关闭")
             return
         }
-        correctionCaptureStatus = "正在短时观察本次插入的文字修改"
+        correctionCaptureStatus = String(localized: "正在短时观察本次插入的文字修改")
         let isObserving = correctionMonitor.observe(insertedText: insertedText, target: target) { [weak self] corrected, replacement in
             guard let self else { return }
+            let capturedOriginal = replacement.original.isEmpty ? String(localized: "（新增）") : replacement.original
+            let capturedCorrected = replacement.corrected.isEmpty ? String(localized: "（删除）") : replacement.corrected
             self.correctionCaptureStatus = replacement.punctuationOnly
-                ? "已捕获一次标点修正"
-                : "已捕获：\(replacement.original.isEmpty ? "（新增）" : replacement.original) → \(replacement.corrected.isEmpty ? "（删除）" : replacement.corrected)"
+                ? String(localized: "已捕获一次标点修正")
+                : String(localized: "已捕获：\(capturedOriginal) → \(capturedCorrected)")
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 do {
                     try await HistoryStore.shared.appendAction(
                         sessionID: sessionID,
                         correctedText: corrected,
-                        message: "已从目标输入框捕获用户修改",
+                        message: String(localized: "已从目标输入框捕获用户修改"),
                         originalText: insertedText,
                         correctionSource: "observed-after-insertion",
                         targetBundleIdentifier: target.bundleIdentifier,
@@ -2425,12 +2450,12 @@ final class AppModel: ObservableObject {
                     await self.refreshHistory()
                     await self.learnHotwordIfRepeated(replacement)
                 } catch {
-                    self.correctionCaptureStatus = "修改已观察到，但保存失败"
+                    self.correctionCaptureStatus = String(localized: "修改已观察到，但保存失败")
                 }
             }
         }
         if !isObserving {
-            correctionCaptureStatus = "当前输入控件不暴露文本内容；未观察后续修改"
+            correctionCaptureStatus = String(localized: "当前输入控件不暴露文本内容；未观察后续修改")
         }
     }
 
@@ -2579,7 +2604,7 @@ final class AppModel: ObservableObject {
                 )
                 localRun = run
                 if start != .cloudExhausted {
-                    statusMessage = "云端较慢，正在同时用本地转写"
+                    statusMessage = String(localized: "云端较慢，正在同时用本地转写")
                     overlayController.updateMessage(statusMessage, sessionID: session.id)
                 }
                 Task { sink.yield(.local(await run.task.value)) }
@@ -2728,7 +2753,7 @@ final class AppModel: ObservableObject {
                 providerContextReceipts: session.providerContextReceipts,
                 audioRelativePath: audioURL.map { "audio/\($0.lastPathComponent)" },
                 preRollMilliseconds: session.preRollMilliseconds,
-                notes: [insertion.message] + (usedOfflineFallback ? ["云端失败后使用本地模型"] : []) + extraNotes,
+                notes: [insertion.message] + (usedOfflineFallback ? [String(localized: "云端失败后使用本地模型")] : []) + extraNotes,
                 schemaVersion: 2,
                 appVersion: appVersion,
                 buildNumber: buildNumber,
@@ -2882,9 +2907,9 @@ final class AppModel: ObservableObject {
     static func providerDisplayName(_ providerID: String?) -> String {
         switch providerID {
         case sonioxProviderID: return "Soniox"
-        case aliyunProviderID: return "阿里云"
-        case localProviderID: return "本地"
-        default: return providerID ?? "热备"
+        case aliyunProviderID: return String(localized: "阿里云")
+        case localProviderID: return String(localized: "本地")
+        default: return providerID ?? String(localized: "热备")
         }
     }
 
@@ -3075,10 +3100,12 @@ final class AppModel: ObservableObject {
 
     func receiptSummary(_ receipt: ProviderContextReceipt) -> String {
         if receipt.capabilitiesUsed.contains("terms_unsupported") {
-            return "\(receipt.provider)：本地暂不支持个人术语"
+            return String(localized: "\(receipt.provider)：本地暂不支持个人术语")
         }
-        let dropped = receipt.droppedCount > 0 ? "，未发送 \(receipt.droppedCount)" : ""
-        return "\(receipt.provider)：上次已发送 \(receipt.includedTerms.count) / 候选 \(receipt.candidateCount)\(dropped)"
+        if receipt.droppedCount > 0 {
+            return String(localized: "\(receipt.provider)：上次已发送 \(receipt.includedTerms.count, format: .number.grouping(.never)) / 候选 \(receipt.candidateCount, format: .number.grouping(.never))，未发送 \(receipt.droppedCount, format: .number.grouping(.never))")
+        }
+        return String(localized: "\(receipt.provider)：上次已发送 \(receipt.includedTerms.count, format: .number.grouping(.never)) / 候选 \(receipt.candidateCount, format: .number.grouping(.never))")
     }
 
     private func scheduleMaximumDuration(for session: ActiveDictationSession) {
@@ -3091,7 +3118,7 @@ final class AppModel: ObservableObject {
                   let session,
                   self.activeSession === session,
                   self.state == .listening || self.state == .starting else { return }
-            self.statusMessage = "已达到 \(seconds) 秒上限，正在自动定稿"
+            self.statusMessage = String(localized: "已达到 \(seconds) 秒上限，正在自动定稿")
             self.endDictation()
         }
     }
@@ -3119,7 +3146,7 @@ final class AppModel: ObservableObject {
             apiKeyProvider: { [personalSecrets] in
                 guard let key = try personalSecrets.get(account: Self.aliyunAccount),
                       !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    throw ASRProviderError.missingAPIKey("阿里云百炼")
+                    throw ASRProviderError.missingAPIKey(String(localized: "阿里云百炼"))
                 }
                 return key
             },
@@ -3254,7 +3281,7 @@ struct ProviderOutageStatus: Equatable {
         self.message = message
         self.probing = probing
         let isSoniox = outage.providerID == "soniox"
-        actionTitle = outage.kind == .billing ? "去充值" : "检查 Key"
+        actionTitle = outage.kind == .billing ? String(localized: "去充值") : String(localized: "检查 Key")
         actionURL = URL(string: isSoniox ? "https://console.soniox.com" : "https://bailian.console.aliyun.com")!
     }
 }

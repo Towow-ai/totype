@@ -421,7 +421,7 @@ struct AccessibilityTargetService {
     private func isPlainPasteMenuItem(_ element: AXUIElement) -> Bool {
         let title: String = copyAttribute(element, kAXTitleAttribute as CFString) ?? ""
         let normalizedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let exactTitles: Set<String> = ["paste", "粘贴", "貼り付け", "붙여넣기"]
+        let exactTitles: Set<String> = ["paste", "粘贴", "貼り付け", "붙여넣기"] // l10n:ignore
         if exactTitles.contains(normalizedTitle) { return true }
 
         let commandCharacter: String? = copyAttribute(
@@ -437,13 +437,13 @@ struct AccessibilityTargetService {
 
     func verifyInsertion(_ original: TargetSnapshot, insertedText: String) -> InsertionVerification {
         guard let current = capture(processIdentifier: original.processIdentifier) else {
-            return .ambiguous("输入已发送，但目标应用不再暴露输入焦点")
+            return .ambiguous(String(localized: "输入已发送，但目标应用不再暴露输入焦点"))
         }
         guard current.processIdentifier == original.processIdentifier else {
-            return .ambiguous("输入已发送，但前台应用已经变化")
+            return .ambiguous(String(localized: "输入已发送，但前台应用已经变化"))
         }
         guard representsSameLogicalTarget(original, current) else {
-            return .ambiguous("输入已发送，但插入后焦点已经变化")
+            return .ambiguous(String(localized: "输入已发送，但插入后焦点已经变化"))
         }
 
         let insertedUTF16Length = (insertedText as NSString).length
@@ -483,7 +483,7 @@ struct AccessibilityTargetService {
                     if currentValue == originalValue,
                        current.selectedRange == original.selectedRange,
                        current.characterCount == original.characterCount {
-                        return .unchanged("输入框内容、字符数和光标均未变化")
+                        return .unchanged(String(localized: "输入框内容、字符数和光标均未变化"))
                     }
                     valueChangedUnexpectedly = currentValue != originalValue
                 }
@@ -499,7 +499,7 @@ struct AccessibilityTargetService {
             }
             if currentCount == originalCount,
                current.selectedRange == original.selectedRange {
-                return .unchanged("字符数和光标均未变化")
+                return .unchanged(String(localized: "字符数和光标均未变化"))
             }
             countChangedUnexpectedly = currentCount != originalCount
         }
@@ -512,21 +512,21 @@ struct AccessibilityTargetService {
                 return .confirmed
             }
             if currentRange == originalRange {
-                return .unchanged("光标和选区未变化")
+                return .unchanged(String(localized: "光标和选区未变化"))
             }
             rangeChangedUnexpectedly = true
         }
 
         if valueChangedUnexpectedly {
-            return .ambiguous("输入框发生了非预期变化，无法安全自动重试")
+            return .ambiguous(String(localized: "输入框发生了非预期变化，无法安全自动重试"))
         }
         if countChangedUnexpectedly {
-            return .ambiguous("字符数发生了非预期变化，无法安全自动重试")
+            return .ambiguous(String(localized: "字符数发生了非预期变化，无法安全自动重试"))
         }
         if rangeChangedUnexpectedly {
-            return .ambiguous("光标发生了非预期变化，无法安全自动重试")
+            return .ambiguous(String(localized: "光标发生了非预期变化，无法安全自动重试"))
         }
-        return .ambiguous("当前应用不提供足够的 Accessibility 信息来确认结果")
+        return .ambiguous(String(localized: "当前应用不提供足够的 Accessibility 信息来确认结果"))
     }
 
     private func representsSameLogicalTarget(

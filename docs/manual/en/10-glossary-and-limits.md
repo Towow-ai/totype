@@ -29,7 +29,7 @@
 - The app interface is Simplified Chinese only.
 - The app is not notarized by Apple: the first launch needs a manual approval, and the three permissions may need granting again after an update.
 - Electron apps, custom-drawn interfaces and some web editors do not expose the field's content, so Totype cannot confirm the insertion; history records it as `已发送` (Sent).
-- A single recording lasts 180 seconds by default.
+- A single recording lasts 10 minutes by default; the limit can be raised to 30 minutes.
 - The history window shows only the latest 20 entries; older ones remain in the data folder.
 - Whether an app counts as chat-type comes from a fixed list of app identities, and browsers are all treated as chat-type.
 - The prebuilt dmg on GitHub Releases is a lite build that is not notarized, so the first launch needs a manual approval. For the full build with the model bundled, build from source (the default; `VERBATIM_BUNDLE_MODEL=0` gives the lite build).

@@ -159,7 +159,7 @@ final class OverlayPanelController {
         present(
             sessionID: sessionID,
             mode: .cancelPending,
-            message: "已取消",
+            message: String(localized: "已取消"),
             text: "",
             level: 0,
             anchor: nil
@@ -184,6 +184,17 @@ final class OverlayPanelController {
             attributes: [.font: NSFont.systemFont(ofSize: 13, weight: .medium)]
         )
         return ceil(text.size().width) + 1 + VVMac.pillGap * 2
+    }()
+
+    /// Finalizing pill: leading + collapsed waveform + gap + label + trailing, label measured
+    /// once in the pill font (+2pt for tracking and rounding). 116 for Chinese is the floor.
+    private static let finalizingPillWidth: CGFloat = {
+        let text = NSAttributedString(
+            string: OverlayContentView.finalizingNote,
+            attributes: [.font: NSFont.systemFont(ofSize: 13, weight: .regular)]
+        )
+        return VVMac.pillLeading + StaticWaveform.width(count: VVMetric.waveformBarsMac)
+            + VVMac.pillGap + ceil(text.size().width) + 2 + VVMac.pillTrailing
     }()
 
     func reposition(anchor: CGRect?) {
@@ -245,7 +256,7 @@ final class OverlayPanelController {
                 self.present(
                     sessionID: sessionID,
                     mode: .success,
-                    message: ["已插入 \(characterCount) 字", notice].compactMap { $0 }.joined(separator: "，"),
+                    message: [String(localized: "已插入 \(characterCount, format: .number.grouping(.never)) 字"), notice].compactMap { $0 }.joined(separator: String(localized: "，")),
                     text: "",
                     level: 0,
                     anchor: nil
@@ -426,7 +437,10 @@ final class OverlayPanelController {
             // hotkey and the panel appearing. Wide enough for a "00:00" timer; the pill
             // draws at its own width, centred, so the extra is transparent margin.
             let note = mode == .listening && viewModel.escapeCancelUnavailable ? Self.escapeNoteWidth : 0
-            return CGSize(width: 116 + note + inset, height: VVMac.pillHeight + inset)
+            // "识别中" fits inside 116 (pill ≈ 109pt); the English label is wider, so the
+            // finalizing width never drops below the pill's own measured width.
+            let width = mode == .finalizing ? max(116, Self.finalizingPillWidth) : 116 + note
+            return CGSize(width: width + inset, height: VVMac.pillHeight + inset)
         case .success, .failure, .cancelPending:
             guard let hostingView else {
                 return CGSize(width: 96 + inset, height: VVMac.pillHeight + inset)

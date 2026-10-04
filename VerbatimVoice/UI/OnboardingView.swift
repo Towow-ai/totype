@@ -29,6 +29,7 @@ struct OnboardingState: Equatable {
     /// A cloud key is saved, so the local model is optional.
     var cloudKeyConfigured: Bool
     var triedText: String
+    var triggerKeyName = TriggerKey.rightOption.displayName
 
     var modelReady: Bool {
         switch model {
@@ -74,7 +75,7 @@ struct OnboardingView: View {
         self.model = model
         localModels = model.localModels
         self.finish = finish
-        _inputMonitoringMissingAtOpen = State(initialValue: !RightOptionMonitor.hasInputMonitoringAccess)
+        _inputMonitoringMissingAtOpen = State(initialValue: !HotkeyMonitor.hasInputMonitoringAccess)
         _baselineRecordID = State(initialValue: model.recentHistory.first?.id)
     }
 
@@ -87,7 +88,8 @@ struct OnboardingView: View {
                 inputMonitoringNeedsRestart: inputMonitoringMissingAtOpen && model.inputMonitoringTrusted,
                 model: localModels.status,
                 cloudKeyConfigured: model.sonioxKeyConfigured || model.aliyunKeyConfigured,
-                triedText: triedText
+                triedText: triedText,
+                triggerKeyName: model.settings.triggerKey.displayName
             ),
             triedText: $triedText,
             actions: OnboardingActions(
@@ -136,10 +138,10 @@ struct OnboardingContent: View {
             Hairline()
             step(
                 done: state.microphone == .granted,
-                title: "麦克风",
+                title: String(localized: "麦克风"),
                 detail: state.microphone == .denied
-                    ? "已被拒绝。到系统设置 → 隐私与安全性 → 麦克风里打开 \(AppIdentity.displayName)。"
-                    : "只在你按下右 Option 后录音，结束后立即释放。"
+                    ? String(localized: "已被拒绝。到系统设置 → 隐私与安全性 → 麦克风里打开 \(AppIdentity.displayName)。")
+                    : String(localized: "只在你按下\(state.triggerKeyName)后录音，结束后立即释放。")
             ) {
                 switch state.microphone {
                 case .notDetermined: Button("允许", action: actions.requestMicrophone).buttonStyle(VVButtonStyle(prominent: state.currentStep == 0))
@@ -150,8 +152,8 @@ struct OnboardingContent: View {
             Hairline()
             step(
                 done: state.accessibility,
-                title: "辅助功能",
-                detail: "用来把识别出的文字插入当前输入框。在列表里打开 \(AppIdentity.displayName)，授权后这里会自动打勾。"
+                title: String(localized: "辅助功能"),
+                detail: String(localized: "用来把识别出的文字插入当前输入框。在列表里打开 \(AppIdentity.displayName)，授权后这里会自动打勾。")
             ) {
                 if !state.accessibility {
                     Button("打开系统设置", action: actions.requestAccessibility).buttonStyle(VVButtonStyle(prominent: state.currentStep == 1))
@@ -160,10 +162,10 @@ struct OnboardingContent: View {
             Hairline()
             step(
                 done: state.inputMonitoring,
-                title: "输入监控",
+                title: String(localized: "输入监控"),
                 detail: state.inputMonitoringNeedsRestart
-                    ? "已授权。重启 \(AppIdentity.displayName) 后右 Option 才会生效。"
-                    : "用来监听右 Option 与 Esc。授权后可能需要重启一次。"
+                    ? String(localized: "已授权。重启 \(AppIdentity.displayName) 后\(state.triggerKeyName)才会生效。")
+                    : String(localized: "用来监听\(state.triggerKeyName)与 Esc。授权后可能需要重启一次。")
             ) {
                 if state.inputMonitoringNeedsRestart {
                     Button("立即重启", action: actions.restart).buttonStyle(VVButtonStyle(prominent: state.currentStep == 2))
@@ -175,10 +177,10 @@ struct OnboardingContent: View {
             VStack(alignment: .leading, spacing: 8) {
                 step(
                     done: state.modelReady || state.cloudKeyConfigured,
-                    title: "本地模型",
+                    title: String(localized: "本地模型"),
                     detail: state.cloudKeyConfigured && !state.modelReady
-                        ? "已配置云端密钥，本地模型可以之后再装。"
-                        : "语音识别在这台 Mac 上完成，声音不会上传。"
+                        ? String(localized: "已配置云端密钥，本地模型可以之后再装。")
+                        : String(localized: "语音识别在这台 Mac 上完成，声音不会上传。")
                 ) { EmptyView() }
                 if !state.modelReady {
                     LocalModelStatusRow(
@@ -197,8 +199,8 @@ struct OnboardingContent: View {
             VStack(alignment: .leading, spacing: 8) {
                 step(
                     done: !state.triedText.isEmpty,
-                    title: "试说一句",
-                    detail: "点进下面的框，按右 Option 说话，再按一次结束，看到文字就完成了。"
+                    title: String(localized: "试说一句"),
+                    detail: String(localized: "点进下面的框，按\(state.triggerKeyName)说话，再按一次结束，看到文字就完成了。")
                 ) { EmptyView() }
                 TextField("在这里说话", text: $triedText, axis: .vertical)
                     .textFieldStyle(.plain)
@@ -219,7 +221,7 @@ struct OnboardingContent: View {
                     .font(.system(size: 12))
                     .foregroundStyle(VVColor.fgSecondary)
                 Spacer(minLength: 12)
-                Button(state.allDone ? "完成" : "稍后再说", action: actions.finish)
+                Button(action: actions.finish) { Text(state.allDone ? String(localized: "完成") : String(localized: "稍后再说")) }
                     .buttonStyle(VVButtonStyle(prominent: state.allDone))
             }
             .padding(.top, 14)
@@ -235,7 +237,7 @@ struct OnboardingContent: View {
     }
 
     private var footnote: String {
-        state.allDone ? "都准备好了" : "可以跳过，之后从菜单栏图标 → ⋯ → 打开入门引导"
+        state.allDone ? String(localized: "都准备好了") : String(localized: "可以跳过，之后从菜单栏图标 → ⋯ → 打开入门引导")
     }
 
     private func step<Trailing: View>(
@@ -280,7 +282,7 @@ private struct StepMark: View {
             }
         }
         .frame(width: 16, height: 16)
-        .accessibilityLabel(done ? "已完成" : "未完成")
+        .accessibilityLabel(done ? String(localized: "已完成") : String(localized: "未完成"))
     }
 }
 

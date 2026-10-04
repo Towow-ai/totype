@@ -2,9 +2,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum SettingsDestination: String, CaseIterable, Identifiable {
-    case history = "历史"
-    case settings = "设置"
-    case profile = "个人资料"
+    case history = "历史" // l10n:ignore
+    case settings = "设置" // l10n:ignore
+    case profile = "个人资料" // l10n:ignore
 
     var id: String { rawValue }
 }
@@ -28,10 +28,17 @@ struct SettingsView: View {
     @State private var historyProviders: [UUID: HistoryRetranscriptionProvider] = [:]
     @State private var advancedExpanded = false
     @State private var copiedRecordID: UUID?
+    @State private var languageRevision = 0
 
     init(model: AppModel) {
         self.model = model
         settings = model.settings
+    }
+
+    @ViewBuilder private var permissionButtons: some View {
+        Button("检查辅助功能") { model.requestAccessibilityPermission() }
+        Button("检查输入监控") { model.requestInputMonitoringPermission() }
+        Button("打开数据目录") { model.openDataFolder() }
     }
 
     var body: some View {
@@ -61,6 +68,10 @@ struct SettingsView: View {
                 if destination == .profile { profile } else { configuration }
             }
         )
+        .onReceive(model.$requestedSettingsDestination.compactMap { $0 }) { requested in
+            destination = requested
+            model.requestedSettingsDestination = nil
+        }
         .onAppear {
             // Open on the newest record (as in mac-history.png) without copying it;
             // the title returns to the recording controls.
@@ -72,11 +83,11 @@ struct SettingsView: View {
 
     private var overviewState: HistoryOverviewState {
         HistoryOverviewState(
-            title: overviewStatus ?? "待命",
+            title: overviewStatus ?? String(localized: "待命"),
             hint: model.escapeCancelAvailable
-                ? "右 Option 开始 · 再按一次结束 · Esc 取消"
-                : "右 Option 开始 · 再按一次结束 · Esc 取消不可用，需要重新授权输入监控",
-            actionTitle: model.state == .idle ? "开始录音" : actionLabel,
+                ? String(localized: "\(settings.triggerKey.displayName) 开始 · 再按一次结束 · Esc 取消")
+                : String(localized: "\(settings.triggerKey.displayName) 开始 · 再按一次结束 · Esc 取消不可用，需要重新授权输入监控"),
+            actionTitle: model.state == .idle ? String(localized: "开始录音") : actionLabel,
             actionEnabled: !(model.state == .finalizing || model.state == .inserting),
             error: model.state == .failed ? model.lastError : nil
         )
@@ -102,8 +113,8 @@ struct SettingsView: View {
 
     private func chooseExportDestination() {
         let panel = NSSavePanel()
-        panel.title = "导出配置"
-        panel.message = "导出的文件包含术语表、个人词库、说话人背景等，不包含 API Key、历史和录音。"
+        panel.title = String(localized: "导出配置")
+        panel.message = String(localized: "导出的文件包含术语表、个人词库、说话人背景等，不包含 API Key、历史和录音。")
         panel.nameFieldStringValue = "\(AppIdentity.dataDirectoryName.lowercased())-profile.json"
         panel.allowedContentTypes = [.json]
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -112,7 +123,7 @@ struct SettingsView: View {
 
     private func chooseImportSource() {
         let panel = NSOpenPanel()
-        panel.title = "导入配置"
+        panel.title = String(localized: "导入配置")
         panel.allowedContentTypes = [.json]
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -138,11 +149,49 @@ struct SettingsView: View {
                     LocalModelStatusView(store: model.localModels)
                 }
 
+                settingsSection("界面语言") {
+                    Picker("界面语言", selection: Binding(
+                        get: { settings.interfaceLanguage },
+                        set: { settings.interfaceLanguage = $0; languageRevision += 1 }
+                    )) {
+                        Text("跟随系统").tag(InterfaceLanguage.system)
+                        Text(verbatim: "简体中文").tag(InterfaceLanguage.simplifiedChinese) // l10n:ignore
+                        Text(verbatim: "English").tag(InterfaceLanguage.english)
+                    }
+                    .id(languageRevision)
+                    if settings.interfaceLanguage != AppSettings.launchInterfaceLanguage {
+                        HStack(spacing: 8) {
+                            Text("重启后使用新的界面语言。")
+                                .font(.system(size: 12))
+                                .foregroundStyle(VVColor.fgSecondary)
+                            Button("立即重启") { model.relaunch() }.buttonStyle(VVButtonStyle())
+                        }
+                    }
+                }
+
+                settingsSection("触发键") {
+                    Picker("单击开始，再按一次结束", selection: $settings.triggerKey) {
+                        ForEach(TriggerKey.allCases) { Text($0.displayName).tag($0) }
+                    }
+                    if settings.triggerKey.modifierKeySpec.triggerOn == .release {
+                        Text("这个键常用于快捷键，松开时才开始，与其他键一起按不会触发。")
+                            .font(.system(size: 12))
+                            .foregroundStyle(VVColor.fgSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if let note = settings.triggerKey.systemConflictNote {
+                        Text(note)
+                            .font(.system(size: 12))
+                            .foregroundStyle(VVColor.fgSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
                 settingsSection("云端密钥") {
                     keyRow(title: "Soniox", configured: model.sonioxKeyConfigured, key: $sonioxAPIKey, message: sonioxKeyMessage) {
                         do {
                             try model.saveSonioxAPIKey(sonioxAPIKey)
-                            sonioxKeyMessage = sonioxAPIKey.isEmpty ? "已删除" : "已保存"
+                            sonioxKeyMessage = sonioxAPIKey.isEmpty ? String(localized: "已删除") : String(localized: "已保存")
                         } catch { sonioxKeyMessage = error.localizedDescription }
                     }
                     Hairline()
@@ -152,7 +201,7 @@ struct SettingsView: View {
                     keyRow(title: "阿里云百炼", configured: model.aliyunKeyConfigured, key: $aliyunAPIKey, message: aliyunKeyMessage) {
                         do {
                             try model.saveAliyunAPIKey(aliyunAPIKey)
-                            aliyunKeyMessage = aliyunAPIKey.isEmpty ? "已删除" : "已保存"
+                            aliyunKeyMessage = aliyunAPIKey.isEmpty ? String(localized: "已删除") : String(localized: "已保存")
                         } catch { aliyunKeyMessage = error.localizedDescription }
                     }
                     HStack(spacing: 8) {
@@ -174,17 +223,17 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Stepper("启动缓冲：\(settings.preRollMilliseconds) ms", value: $settings.preRollMilliseconds, in: 0...1_000, step: 50)
                         Stepper("尾音：\(settings.postRollMilliseconds) ms", value: $settings.postRollMilliseconds, in: 0...800, step: 20)
-                        Stepper("单次上限：\(settings.maximumUtteranceSeconds) 秒", value: $settings.maximumUtteranceSeconds, in: 10...900, step: 10)
+                        Stepper("单次上限：\(settings.maximumUtteranceSeconds) 秒", value: $settings.maximumUtteranceSeconds, in: 10...1800, step: 30)
                         Stepper("音频保留：\(settings.audioRetentionDays) 天", value: $settings.audioRetentionDays, in: 1...365)
                         Stepper("音频上限：\(settings.audioQuotaMegabytes) MB", value: $settings.audioQuotaMegabytes, in: 64...16_384, step: 64)
                         Toggle("观察插入后的人工修改", isOn: $settings.correctionCaptureEnabled)
                         Toggle("保留 Apple 对照", isOn: $settings.appleBaselineEnabled)
                             .onChange(of: settings.appleBaselineEnabled) { _, _ in model.applyRuntimeSettings() }
                         Toggle("登录后自动启动", isOn: Binding(get: { model.launchAtLoginEnabled }, set: { model.setLaunchAtLogin($0) }))
-                        HStack(spacing: 8) {
-                            Button("检查辅助功能") { model.requestAccessibilityPermission() }
-                            Button("检查输入监控") { model.requestInputMonitoringPermission() }
-                            Button("打开数据目录") { model.openDataFolder() }
+                        // English labels are longer; stack them when the row does not fit.
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 8) { permissionButtons }
+                            VStack(alignment: .leading, spacing: 8) { permissionButtons }
                         }
                         .buttonStyle(VVButtonStyle())
                     }
@@ -200,7 +249,7 @@ struct SettingsView: View {
         }
     }
 
-    private func settingsSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func settingsSection<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
@@ -208,7 +257,7 @@ struct SettingsView: View {
         }
     }
 
-    private func keyRow(title: String, configured: Bool, key: Binding<String>, message: String, save: @escaping () -> Void) -> some View {
+    private func keyRow(title: LocalizedStringKey, configured: Bool, key: Binding<String>, message: String, save: @escaping () -> Void) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Text(title).font(.system(size: 13, weight: .medium))
@@ -231,21 +280,21 @@ struct SettingsView: View {
 
     private var overviewStatus: String? {
         switch model.state {
-        case .starting: return "正在启动麦克风"
-        case .listening: return "正在录音"
-        case .cancelPending: return "已取消，5 秒内可以撤销"
-        case .finalizing, .inserting: return "正在转写"
-        case .failed: return "这次没有完成"
+        case .starting: return String(localized: "正在启动麦克风")
+        case .listening: return String(localized: "正在录音")
+        case .cancelPending: return String(localized: "已取消，5 秒内可以撤销")
+        case .finalizing, .inserting: return String(localized: "正在转写")
+        case .failed: return String(localized: "这次没有完成")
         case .idle, .preview: return nil
         }
     }
 
     private var actionLabel: String {
         switch model.state {
-        case .starting, .listening: return "结束并转写"
-        case .cancelPending: return "撤销取消"
-        case .finalizing, .inserting: return "正在处理"
-        default: return "开始录音"
+        case .starting, .listening: return String(localized: "结束并转写")
+        case .cancelPending: return String(localized: "撤销取消")
+        case .finalizing, .inserting: return String(localized: "正在处理")
+        default: return String(localized: "开始录音")
         }
     }
 
@@ -280,8 +329,11 @@ struct SettingsView: View {
     }
 
     private func historyActionLabel(_ record: HistoryRecord) -> String {
-        if record.insertedText.isEmpty { return "打开" }
-        return copiedRecordID == record.id ? "已复制" : "复制"
+        func label() -> LocalizedStringResource {
+            if record.insertedText.isEmpty { return "打开" }
+            return copiedRecordID == record.id ? "已复制" : "复制"
+        }
+        return String(localized: label())
     }
 
     private func historyProviderBinding(_ id: UUID) -> Binding<HistoryRetranscriptionProvider> {
@@ -447,7 +499,7 @@ struct HistoryWindowContent<SettingsPane: View>: View {
             onActivate(record)
         } label: {
             VStack(alignment: .leading, spacing: 3) {
-                Text(record.insertedText.isEmpty ? "已保留音频，尚无文字" : record.insertedText)
+                Text(record.insertedText.isEmpty ? String(localized: "已保留音频，尚无文字") : record.insertedText)
                     .foregroundStyle(record.insertedText.isEmpty ? VVColor.fgSecondary : VVColor.fgPrimary)
                     .lineLimit(2)
                     .lineHeight(17, fontSize: 13)
@@ -577,7 +629,7 @@ struct HistoryRecordDetail: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(record.insertedText.isEmpty ? "（没有转写文字）" : record.insertedText)
+            Text(record.insertedText.isEmpty ? String(localized: "（没有转写文字）") : record.insertedText)
                 .font(VVMac.transcriptFont)
                 .tracking(VVMac.transcriptTracking)
                 .lineHeight(23, fontSize: 15)
@@ -641,7 +693,7 @@ struct HistoryRecordDetail: View {
             .disabled(!playable)
             .opacity(playable ? 1 : 0.4)
             .accessibilityLabel("播放录音")
-            Text(playable ? "播放录音 · \(HistoryFormat.duration(record))" : "没有保留音频")
+            Text(playable ? String(localized: "播放录音 · \(HistoryFormat.duration(record))") : String(localized: "没有保留音频"))
                 .monospacedDigit()
                 .foregroundStyle(VVColor.fgSecondary)
         }
@@ -682,14 +734,14 @@ struct HistoryRecordDetail: View {
                 ForEach(Array(revisions.enumerated()), id: \.offset) { _, revision in
                     VStack(alignment: .leading, spacing: 3) {
                         HStack {
-                            Text((revision.source == .original ? "原始" : "重转写") + " · " + revision.model)
+                            Text((revision.source == .original ? String(localized: "原始") : String(localized: "重转写")) + " · " + revision.model)
                                 .font(.system(size: 12, weight: .medium))
                             Spacer()
                             Text(revision.createdAt.formatted(date: .omitted, time: .shortened))
                                 .font(.system(size: 11))
                                 .foregroundStyle(VVColor.fgTertiary)
                         }
-                        Text(revision.error ?? (revision.text.isEmpty ? "（空结果）" : revision.text))
+                        Text(revision.error ?? (revision.text.isEmpty ? String(localized: "（空结果）") : revision.text))
                             .font(.system(size: 12))
                             .foregroundStyle(VVColor.fgSecondary)
                             .textSelection(.enabled)
@@ -707,28 +759,39 @@ struct HistoryRecordDetail: View {
 enum HistoryFormat {
     static func dayTitle(_ date: Date) -> String {
         let calendar = Calendar.current
-        if calendar.isDateInToday(date) { return "今天" }
-        if calendar.isDateInYesterday(date) { return "昨天" }
+        if calendar.isDateInToday(date) { return String(localized: "今天") }
+        if calendar.isDateInYesterday(date) { return String(localized: "昨天") }
         let sameYear = calendar.isDate(date, equalTo: Date(), toGranularity: .year)
-        return date.formatted(.dateTime.locale(Locale(identifier: "zh_CN")).year(sameYear ? .omitted : .defaultDigits).month(.defaultDigits).day())
+        return date.formatted(.dateTime.locale(dayLocale).year(sameYear ? .omitted : .defaultDigits).month(.defaultDigits).day())
     }
 
+    private static var isChinese: Bool {
+        Bundle.main.preferredLocalizations.first?.hasPrefix("zh") ?? true
+    }
+
+    /// Dates follow the language the app UI resolved to, not the region. Chinese keeps the
+    /// original zh_CN formats; English uses US month/day and a 24-hour clock, like the Chinese one.
+    private static var dayLocale: Locale { Locale(identifier: isChinese ? "zh_CN" : "en_US") } // l10n:ignore
+    private static var clockLocale: Locale { Locale(identifier: isChinese ? "zh_CN" : "en_GB") } // l10n:ignore
+
     static func clock(_ date: Date) -> String {
-        date.formatted(.dateTime.locale(Locale(identifier: "zh_CN")).hour(.twoDigits(amPM: .omitted)).minute(.twoDigits))
+        date.formatted(.dateTime.locale(clockLocale).hour(.twoDigits(amPM: .omitted)).minute(.twoDigits))
     }
 
     static func rowMeta(_ record: HistoryRecord) -> String {
-        var parts = [clock(record.startedAt), record.targetApplicationName ?? "未知应用", duration(record)]
-        if let state = outcomeLabel(record), state != "已插入", state != "已发送" { parts.append(state) }
+        var parts = [clock(record.startedAt), record.targetApplicationName ?? String(localized: "未知应用"), duration(record)]
+        // Routine outcomes stay out of the row; decided on the record, not on label text.
+        if !isRoutineOutcome(record), let state = outcomeLabel(record) { parts.append(state) }
         return parts.joined(separator: " · ")
     }
 
     static func detailMeta(_ record: HistoryRecord) -> String {
         var parts = ["\(dayTitle(record.startedAt)) \(clock(record.startedAt))"]
-        parts.append(record.targetApplicationName ?? "未知应用")
+        parts.append(record.targetApplicationName ?? String(localized: "未知应用"))
         parts.append(duration(record))
         if !record.insertedText.isEmpty {
-            parts.append("\(record.insertedText.filter { !$0.isWhitespace }.count) 字")
+            let count = record.insertedText.filter { !$0.isWhitespace }.count
+            parts.append(count == 1 ? String(localized: "1 字") : String(localized: "\(count, format: .number.grouping(.never)) 字"))
         }
         if let outcome = outcomeLabel(record) { parts.append(outcome) }
         return parts.joined(separator: " · ")
@@ -744,16 +807,22 @@ enum HistoryFormat {
         return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
 
+    /// Inserted or sent normally: the history row omits these outcomes.
+    static func isRoutineOutcome(_ record: HistoryRecord) -> Bool {
+        guard record.disposition != .retainedDraft else { return false }
+        return record.insertionStatus == .inserted || record.insertionStatus == .dispatched
+    }
+
     static func outcomeLabel(_ record: HistoryRecord) -> String? {
-        if record.disposition == .retainedDraft { return "取消后保留" }
+        if record.disposition == .retainedDraft { return String(localized: "取消后保留") }
         switch record.insertionStatus {
-        case .inserted: return "已插入"
-        case .dispatched: return "已发送"
-        case .previewOnly: return "仅预览"
-        case .copied: return "已复制"
-        case .canceled: return "已取消"
-        case .failed: return "失败"
-        case .unconfirmed: return "未确认"
+        case .inserted: return String(localized: "已插入")
+        case .dispatched: return String(localized: "已发送")
+        case .previewOnly: return String(localized: "仅预览")
+        case .copied: return String(localized: "已复制")
+        case .canceled: return String(localized: "已取消")
+        case .failed: return String(localized: "失败")
+        case .unconfirmed: return String(localized: "未确认")
         }
     }
 
@@ -773,47 +842,47 @@ enum HistoryFormat {
         var rows: [(label: String, value: String)] = []
         if let primary = record.primary {
             var value = [primary.model]
-            if let first = primary.firstPartialLatencyMilliseconds { value.append("首帧 \(seconds(first))") }
-            if let finalize = primary.finalizeLatencyMilliseconds { value.append("定稿 \(seconds(finalize))") }
+            if let first = primary.firstPartialLatencyMilliseconds { value.append(String(localized: "首帧 \(seconds(first))")) }
+            if let finalize = primary.finalizeLatencyMilliseconds { value.append(String(localized: "定稿 \(seconds(finalize))")) }
             if let error = primary.error, !error.isEmpty { value.append(error) }
-            rows.append(("主引擎", value.joined(separator: " · ")))
+            rows.append((String(localized: "主引擎"), value.joined(separator: " · ")))
         }
         if let comparisons = record.comparisons, !comparisons.isEmpty {
             let value = comparisons.map { summary -> String in
-                if let error = summary.error, !error.isEmpty { return "\(summary.model) · 未完成" }
+                if let error = summary.error, !error.isEmpty { return String(localized: "\(summary.model) · 未完成") }
                 let same = summary.text == record.insertedText
-                return "\(summary.model) · \(same ? "一致" : "不同")"
-            }.joined(separator: "；")
-            rows.append(("热备", value))
+                return same ? String(localized: "\(summary.model) · 一致") : String(localized: "\(summary.model) · 不同")
+            }.joined(separator: String(localized: "；"))
+            rows.append((String(localized: "热备"), value))
         }
         if record.usedOfflineFallback == true {
-            rows.append(("兜底", "本地 SenseVoice"))
+            rows.append((String(localized: "兜底"), String(localized: "本地 SenseVoice")))
         }
         var insertion: [String] = []
         if let transport = record.insertionTransport { insertion.append(transportLabel(transport)) }
-        if let app = record.targetApplicationName { insertion.append("目标 \(app)") }
+        if let app = record.targetApplicationName { insertion.append(String(localized: "目标 \(app)")) }
         if let outcome = outcomeLabel(record) { insertion.append(outcome) }
-        if !insertion.isEmpty { rows.append(("插入方式", insertion.joined(separator: " · "))) }
+        if !insertion.isEmpty { rows.append((String(localized: "插入方式"), insertion.joined(separator: " · "))) }
         if let timeline = record.timeline {
-            var steps = ["按下 " + preciseClock.string(from: timeline.wallClockStartedAt)]
+            var steps = [String(localized: "按下 \(preciseClock.string(from: timeline.wallClockStartedAt))")]
             if let stop = timeline.milliseconds(from: .trigger, to: .stopRequested) {
-                steps.append("停止 +\(seconds(stop))")
+                steps.append(String(localized: "停止 +\(seconds(stop))"))
                 if let dispatched = timeline.milliseconds(from: .stopRequested, to: .unicodeDispatched) {
-                    steps.append("插入 +\(seconds(dispatched))")
+                    steps.append(String(localized: "插入 +\(seconds(dispatched))"))
                 }
             }
-            rows.append(("时间线", steps.joined(separator: " → ")))
+            rows.append((String(localized: "时间线"), steps.joined(separator: " → ")))
         }
         return rows
     }
 
     static func transportLabel(_ transport: InsertionTransport) -> String {
         switch transport {
-        case .accessibilityDirect: return "辅助功能写入"
-        case .unicodeKeyboard: return "Unicode 键入"
-        case .clipboardPaste: return "粘贴"
-        case .clipboardCopy: return "复制到剪贴板"
-        case .none: return "未插入"
+        case .accessibilityDirect: return String(localized: "辅助功能写入")
+        case .unicodeKeyboard: return String(localized: "Unicode 键入")
+        case .clipboardPaste: return String(localized: "粘贴")
+        case .clipboardCopy: return String(localized: "复制到剪贴板")
+        case .none: return String(localized: "未插入")
         }
     }
 }

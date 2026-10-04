@@ -27,10 +27,10 @@ actor AppleSpeechAnalyzerProvider: ASRProvider {
 
     func prepare(context: ASRContext) async throws {
         guard SpeechTranscriber.isAvailable else {
-            throw ASRProviderError.unavailable("Apple SpeechTranscriber 在当前 Mac 硬件上不可用")
+            throw ASRProviderError.unavailable(String(localized: "Apple SpeechTranscriber 在当前 Mac 硬件上不可用"))
         }
         guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: preferredLocale) else {
-            throw ASRProviderError.unavailable("Apple SpeechTranscriber 当前设备不支持简体中文")
+            throw ASRProviderError.unavailable(String(localized: "Apple SpeechTranscriber 当前设备不支持简体中文"))
         }
 
         // Speech assets are locale-scoped. Keep the locale reserved so the system
@@ -64,7 +64,7 @@ actor AppleSpeechAnalyzerProvider: ASRProvider {
         let transcriber = SpeechTranscriber(locale: selectedLocale, preset: .progressiveTranscription)
         let analyzer = SpeechAnalyzer(modules: [transcriber])
         guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber]) else {
-            throw ASRProviderError.unavailable("Apple SpeechAnalyzer 无法确定可用音频格式")
+            throw ASRProviderError.unavailable(String(localized: "Apple SpeechAnalyzer 无法确定可用音频格式"))
         }
         self.transcriber = transcriber
         self.analyzer = analyzer
@@ -99,7 +99,7 @@ actor AppleSpeechAnalyzerProvider: ASRProvider {
     }
 
     func finalize() async throws -> TranscriptResult {
-        guard let analyzer, let startedAt else { throw ASRProviderError.invalidState("Apple baseline 没有活动口述") }
+        guard let analyzer, let startedAt else { throw ASRProviderError.invalidState(String(localized: "Apple baseline 没有活动口述")) }
         finalizeRequestedAt = Date()
         if let converter, let inputContinuation {
             for input in try converter.flush() {
@@ -173,12 +173,12 @@ actor AppleSpeechAnalyzerProvider: ASRProvider {
             channels: AVAudioChannelCount(chunk.channels),
             interleaved: false
         ) else {
-            throw ASRProviderError.invalidState("无法创建 PCM16 输入格式")
+            throw ASRProviderError.invalidState(String(localized: "无法创建 PCM16 输入格式"))
         }
         let frames = chunk.data.count / MemoryLayout<Int16>.size / max(1, chunk.channels)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)),
               let destination = buffer.int16ChannelData?.pointee else {
-            throw ASRProviderError.invalidState("无法创建 PCM16 输入缓冲")
+            throw ASRProviderError.invalidState(String(localized: "无法创建 PCM16 输入缓冲"))
         }
         buffer.frameLength = AVAudioFrameCount(frames)
         chunk.data.withUnsafeBytes { raw in
@@ -200,7 +200,7 @@ actor AppleSpeechAnalyzerProvider: ASRProvider {
     nonisolated let displayName = "Apple on-device SpeechAnalyzer"
 
     func prepare(context: ASRContext) async throws {
-        throw ASRProviderError.unavailable("Apple 本地对照需要 Xcode 26 / Swift 6.2 工具链")
+        throw ASRProviderError.unavailable(String(localized: "Apple 本地对照需要 Xcode 26 / Swift 6.2 工具链"))
     }
 
     func startUtterance(
@@ -208,7 +208,7 @@ actor AppleSpeechAnalyzerProvider: ASRProvider {
         context: ASRContext,
         eventHandler: @escaping @Sendable (ASREvent) -> Void
     ) async throws {
-        throw ASRProviderError.unavailable("Apple 本地对照需要 Xcode 26 / Swift 6.2 工具链")
+        throw ASRProviderError.unavailable(String(localized: "Apple 本地对照需要 Xcode 26 / Swift 6.2 工具链"))
     }
 
     func send(_ chunk: PCM16Chunk) async throws {

@@ -8,7 +8,10 @@ struct OverlayContentView: View {
     @ObservedObject var viewModel: OverlayViewModel
     let meter: OverlayLevelMeter
 
-    static let escapeUnavailableNote = "Esc 不可用"
+    static let escapeUnavailableNote = String(localized: "Esc 不可用")
+    /// The "识别中" pill label. Shared with the panel so it can size the finalizing pill
+    /// from the localized text (English is wider than Chinese).
+    static let finalizingNote = String(localized: "识别中")
 
     var body: some View {
         Group {
@@ -59,7 +62,7 @@ struct OverlayContentView: View {
             }
         case .finalizing:
             CollapsedWaveform(animated: viewModel.animatesProgress)
-            Text("识别中").foregroundStyle(VVMac.pillSecondary)
+            Text(Self.finalizingNote).foregroundStyle(VVMac.pillSecondary)
         case .success:
             glyph("checkmark")
             if let count = viewModel.insertedCharacterCount {
@@ -82,7 +85,7 @@ struct OverlayContentView: View {
         case .cancelPending:
             glyph("xmark").foregroundStyle(VVMac.pillSecondary)
             TimelineView(.periodic(from: .now, by: 0.2)) { context in
-                (Text("已取消 · ") + Text("\(remainingSeconds(at: context.date))").font(VVMac.numberFont.monospacedDigit()) + Text(" 秒内可撤销"))
+                Text("已取消 · \(Text(verbatim: "\(remainingSeconds(at: context.date))").font(VVMac.numberFont.monospacedDigit())) 秒内可撤销") // l10n:ignore (nested interpolation; key is "已取消 · %@ 秒内可撤销")
                     .foregroundStyle(VVMac.pillSecondary)
             }
             PillSeparator()

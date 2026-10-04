@@ -98,17 +98,25 @@ fi
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $APP_VERSION" "$CONTENTS/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $APP_BUILD" "$CONTENTS/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :LSMinimumSystemVersion 15.0" "$CONTENTS/Info.plist"
+# UI strings and permission prompts: English and Simplified Chinese. Info.plist
+# declares both (CFBundleLocalizations), so macOS shows Chinese on a Chinese system
+# and English everywhere else. The .strings tables are plain resources: swiftc does
+# not compile .xcstrings, so they are copied here (the Xcode project adds the same files).
+for lang in en zh-Hans; do
+    mkdir -p "$CONTENTS/Resources/$lang.lproj"
+    cp -X "$PROJECT_DIR/VerbatimVoice/Resources/$lang.lproj/Localizable.strings" "$CONTENTS/Resources/$lang.lproj/Localizable.strings"
+    sed "s/\$(VERBATIM_APP_NAME)/$escaped_name/g" "$PROJECT_DIR/VerbatimVoice/Resources/$lang.lproj/InfoPlist.strings" \
+        > "$CONTENTS/Resources/$lang.lproj/InfoPlist.strings"
+done
 if [[ -n "$VERBATIM_APP_NAME_ZH" ]]; then
-    # Localized display name: English and Simplified Chinese.
+    # Localized display name.
     for lang in en:"$VERBATIM_APP_NAME" zh-Hans:"$VERBATIM_APP_NAME_ZH"; do
-        mkdir -p "$CONTENTS/Resources/${lang%%:*}.lproj"
         printf '"CFBundleDisplayName" = "%s";\n"CFBundleName" = "%s";\n' "${lang#*:}" "${lang#*:}" \
-            > "$CONTENTS/Resources/${lang%%:*}.lproj/InfoPlist.strings"
+            >> "$CONTENTS/Resources/${lang%%:*}.lproj/InfoPlist.strings"
     done
-    /usr/libexec/PlistBuddy -c "Add :CFBundleLocalizations array" "$CONTENTS/Info.plist"
-    /usr/libexec/PlistBuddy -c "Add :CFBundleLocalizations:0 string en" "$CONTENTS/Info.plist"
-    /usr/libexec/PlistBuddy -c "Add :CFBundleLocalizations:1 string zh-Hans" "$CONTENTS/Info.plist"
 fi
+plutil -lint "$CONTENTS/Resources/en.lproj/InfoPlist.strings" "$CONTENTS/Resources/zh-Hans.lproj/InfoPlist.strings" \
+    "$CONTENTS/Resources/en.lproj/Localizable.strings" "$CONTENTS/Resources/zh-Hans.lproj/Localizable.strings" >&2
 xattr -cr "$APP_PATH"
 
 SIGN_IDENTITY="$VERBATIM_SIGN_IDENTITY"

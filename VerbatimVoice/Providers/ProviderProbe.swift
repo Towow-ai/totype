@@ -45,7 +45,7 @@ enum ProviderProbe {
         case .completed(let outcome):
             result = outcome
         case .timedOut:
-            result = .failed(kind: .transient, message: "探测超时")
+            result = .failed(kind: .transient, message: String(localized: "探测超时"))
         }
         await provider.cancel()
         return result

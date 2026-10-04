@@ -117,14 +117,14 @@ enum ArchivedAudioReader {
         guard Int(format.sampleRate.rounded()) == 16_000,
               format.channelCount == 1 else {
             throw ASRProviderError.unavailable(
-                "历史音频格式不兼容：需要 16 kHz 单声道，实际为 \(Int(format.sampleRate)) Hz / \(format.channelCount) 声道"
+                String(localized: "历史音频格式不兼容：需要 16 kHz 单声道，实际为 \(Int(format.sampleRate), format: .number.grouping(.never)) Hz / \(format.channelCount) 声道")
             )
         }
         guard let buffer = AVAudioPCMBuffer(
             pcmFormat: format,
             frameCapacity: max(1, framesPerChunk)
         ) else {
-            throw ASRProviderError.unavailable("无法创建历史音频读取缓冲区")
+            throw ASRProviderError.unavailable(String(localized: "无法创建历史音频读取缓冲区"))
         }
 
         var chunks: [PCM16Chunk] = []
@@ -138,7 +138,7 @@ enum ArchivedAudioReader {
             guard buffer.frameLength > 0 else { break }
             let audioBuffer = buffer.audioBufferList.pointee.mBuffers
             guard let bytes = audioBuffer.mData else {
-                throw ASRProviderError.unavailable("历史音频没有可读取的 PCM 数据")
+                throw ASRProviderError.unavailable(String(localized: "历史音频没有可读取的 PCM 数据"))
             }
             sequence += 1
             chunks.append(PCM16Chunk(

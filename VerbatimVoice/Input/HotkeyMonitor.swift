@@ -3,19 +3,24 @@ import CoreGraphics
 import Foundation
 import OSLog
 
-/// Global right-Option / Escape monitor.
+/// Global trigger-key / Escape monitor. The trigger is a single tap of one
+/// modifier key (right Option by default; see `TriggerKey`).
 ///
 /// Both event taps live on a dedicated run-loop thread, never on the main
 /// thread. A tap serviced by the main run loop inherits every SwiftUI/AppKit
 /// stall; macOS then delays the user's keystrokes or disables the tap and the
-/// right-Option press that ends a recording is silently lost.
+/// trigger press that ends a recording is silently lost.
 ///
-/// The right-Option tap subscribes to flagsChanged only and never consumes an
+/// The modifier tap subscribes to flagsChanged only and never consumes an
 /// event, so ordinary typing (including input-method composition) never passes
 /// through this process. The Escape tap is the only one that consumes events
 /// and exists only while a recording is starting or listening.
 ///
-/// The right-Option tap is an active (`.defaultTap`) flagsChanged tap, which
+/// Switching the trigger key only swaps the key code and device masks the
+/// detector compares against; the tap already receives every flagsChanged
+/// event and is not recreated.
+///
+/// The modifier tap is an active (`.defaultTap`) flagsChanged tap, which
 /// Accessibility authorises. The Escape tap is different: any tap that receives
 /// keyDown needs Input Monitoring (`kTCCServiceListenEvent`). When that grant is
 /// missing or pinned to an obsolete code identity (the personal machine's record
@@ -24,20 +29,14 @@ import OSLog
 /// filtered out of it. Escape cancellation is therefore reported as available
 /// only when Input Monitoring preflights and a keyDown-only tap can be created;
 /// there is no wider-mask fallback that would hide the missing grant.
-final class RightOptionMonitor {
+final class HotkeyMonitor {
     var onPress: (() -> Void)?
-    var onRelease: (() -> Void)?
     var onCancel: (() -> Void)?
     var onFailure: ((String) -> Void)?
     /// Called on the main thread whenever the Escape self-check changes its answer
     /// (and once after the first check).
     var onEscapeCancelAvailabilityChanged: ((Bool) -> Void)?
 
-    /// `NX_DEVICERALTKEYMASK`. `.maskAlternate` is shared by both Option keys;
-    /// with left Option held, releasing right Option would still read as
-    /// "pressed" and toggle the recording again.
-    static let rightOptionDeviceMask: UInt64 = 0x40
-    static let rightOptionKeyCode: Int64 = 61
     static let escapeKeyCode: Int64 = 53
 
     private let tapThread = EventTapThread()
@@ -64,8 +63,11 @@ final class RightOptionMonitor {
     private var escapeAvailability: Bool?
     private let escapeAvailabilityLock = NSLock()
 
-    private var pressPolicy = ModifierPressEdgePolicy()
-    private let pressPolicyLock = NSLock()
+    // Device masks matter: `.maskAlternate` is shared by both Option keys, so
+    // with left Option held, releasing right Option would still read as
+    // "pressed". `ModifierKeySpec` compares the `NX_DEVICE*KEYMASK` bits.
+    private var tapDetector = ModifierTapDetector(key: TriggerKey.rightOption.modifierKeySpec)
+    private let tapDetectorLock = NSLock()
     private var cancelCaptureActive = false
     private let cancelCaptureLock = NSLock()
     private let logger = Logger(
@@ -80,6 +82,16 @@ final class RightOptionMonitor {
     @discardableResult
     static func requestInputMonitoringAccess() -> Bool {
         CGRequestListenEventAccess()
+    }
+
+    /// Changes the trigger key at once. The flagsChanged tap stays as it is;
+    /// only the detector's key code and device masks change.
+    func setTriggerKey(_ key: TriggerKey) {
+        tapDetectorLock.lock()
+        let changed = tapDetector.key != key.modifierKeySpec
+        if changed { tapDetector.setKey(key.modifierKeySpec) }
+        tapDetectorLock.unlock()
+        if changed { logger.notice("trigger key set to \(key.rawValue, privacy: .public)") }
     }
 
     /// Latest Escape self-check result; false until the first check has run.
@@ -141,7 +153,7 @@ final class RightOptionMonitor {
         // 157-159 ms apart and ended a new recording before its first PCM.
         installNSEventFallback()
         logger.error("hotkey backend fallback: NSEvent only")
-        onFailure?("无法创建全局事件监听，已切换到 NSEvent fallback；请检查辅助功能/输入监控权限")
+        onFailure?(String(localized: "无法创建全局事件监听，已切换到 NSEvent fallback；请检查辅助功能/输入监控权限"))
     }
 
     func restart() {
@@ -159,9 +171,9 @@ final class RightOptionMonitor {
         globalFallback = nil
         localFallback = nil
         isStarted = false
-        pressPolicyLock.lock()
-        pressPolicy.reset()
-        pressPolicyLock.unlock()
+        tapDetectorLock.lock()
+        tapDetector.reset()
+        tapDetectorLock.unlock()
         setCancelCaptureActive(false)
     }
 
@@ -184,7 +196,7 @@ final class RightOptionMonitor {
             eventsOfInterest: mask,
             callback: { _, type, event, userInfo in
                 guard let userInfo else { return Unmanaged.passUnretained(event) }
-                let monitor = Unmanaged<RightOptionMonitor>.fromOpaque(userInfo).takeUnretainedValue()
+                let monitor = Unmanaged<HotkeyMonitor>.fromOpaque(userInfo).takeUnretainedValue()
                 monitor.handleModifierTap(type: type, event: event)
                 return Unmanaged.passUnretained(event)
             },
@@ -292,7 +304,7 @@ final class RightOptionMonitor {
             eventsOfInterest: CGEventMask(1 << CGEventType.keyDown.rawValue),
             callback: { _, type, event, userInfo in
                 guard let userInfo else { return Unmanaged.passUnretained(event) }
-                let monitor = Unmanaged<RightOptionMonitor>.fromOpaque(userInfo).takeUnretainedValue()
+                let monitor = Unmanaged<HotkeyMonitor>.fromOpaque(userInfo).takeUnretainedValue()
                 return monitor.handleEscapeTap(type: type, event: event)
                     ? nil
                     : Unmanaged.passUnretained(event)
@@ -351,23 +363,15 @@ final class RightOptionMonitor {
             if let modifierTap { CGEvent.tapEnable(tap: modifierTap, enable: true) }
             return
         }
-        guard type == .flagsChanged,
-              event.getIntegerValueField(.keyboardEventKeycode) == Self.rightOptionKeyCode else { return }
-        // Read the state from the event currently being delivered. Querying
-        // CGEventSource.keyState here can lag behind flagsChanged on some
+        guard type == .flagsChanged else { return }
+        // Every modifier's flagsChanged goes to the detector so another
+        // modifier can interrupt a tap. Read the state from the event being
+        // delivered: CGEventSource.keyState can lag behind flagsChanged on some
         // keyboards/layouts and turn a real press into a no-op.
-        transition(to: Self.isRightOptionDown(rawFlags: event.flags.rawValue))
-    }
-
-    /// Prefer the right-Option device bit. Some keyboards/remappers do not set
-    /// device bits at all; then fall back to the shared Option flag.
-    static func isRightOptionDown(rawFlags: UInt64) -> Bool {
-        let leftOptionDeviceMask: UInt64 = 0x20
-        let optionFlag = CGEventFlags.maskAlternate.rawValue
-        if rawFlags & (leftOptionDeviceMask | rightOptionDeviceMask) == 0 {
-            return rawFlags & optionFlag != 0
-        }
-        return rawFlags & rightOptionDeviceMask != 0
+        transition(
+            keyCode: event.getIntegerValueField(.keyboardEventKeycode),
+            rawFlags: event.flags.rawValue
+        )
     }
 
     /// Returns true only when the event must be consumed by the active tap.
@@ -400,28 +404,55 @@ final class RightOptionMonitor {
             onCancel?()
             return true
         }
-        guard event.type == .flagsChanged, Int64(event.keyCode) == Self.rightOptionKeyCode else { return false }
-        transition(to: Self.isRightOptionDown(rawFlags: UInt64(event.modifierFlags.rawValue)))
+        guard event.type == .flagsChanged else { return false }
+        transition(keyCode: Int64(event.keyCode), rawFlags: UInt64(event.modifierFlags.rawValue))
         return false
     }
 
-    private func transition(to pressed: Bool) {
-        pressPolicyLock.lock()
-        let observation = pressPolicy.observe(
-            pressed: pressed,
-            nowNanoseconds: DispatchTime.now().uptimeNanoseconds
+    private func transition(keyCode: Int64, rawFlags: UInt64) {
+        let now = DispatchTime.now().uptimeNanoseconds
+        tapDetectorLock.lock()
+        let observation = tapDetector.observe(
+            keyCode: keyCode,
+            rawFlags: rawFlags,
+            nowNanoseconds: now,
+            lastOtherInput: { Self.lastOtherInputNanoseconds(now: now) }
         )
-        pressPolicyLock.unlock()
+        tapDetectorLock.unlock()
         switch observation {
-        case .acceptedPress:
-            logger.notice("right Option press accepted")
+        case .tap:
+            logger.notice("trigger press accepted")
             DispatchQueue.main.async { [weak self] in self?.onPress?() }
-        case .release:
-            logger.debug("right Option released")
-            DispatchQueue.main.async { [weak self] in self?.onRelease?() }
-        case .ignoredDuplicate:
-            logger.notice("right Option edge ignored (pressed=\(pressed, privacy: .public))")
+        case .released:
+            logger.debug("trigger released")
+        case .rejected(.duplicate):
+            logger.notice("trigger edge ignored as duplicate")
+        case .pressStarted:
+            logger.debug("trigger down")
+        case .pressRestarted:
+            logger.notice("trigger down again without an up event; press restarted")
+        case .rejected(let reason):
+            logger.notice("trigger release ignored: \(String(describing: reason), privacy: .public)")
+        case .unrelated:
+            break
         }
+    }
+
+    /// Latest physical key or mouse-button press, on the `DispatchTime` uptime
+    /// clock. A flagsChanged-only tap never sees these events, so the HID
+    /// system state answers whether one happened while a release-mode trigger
+    /// was down. The detector asks only on such a key's up event.
+    /// Scrolling is left out: trackpad momentum keeps posting scroll events
+    /// after the fingers lift and would swallow the tap that ends a recording.
+    private static func lastOtherInputNanoseconds(now: UInt64) -> UInt64? {
+        let types: [CGEventType] = [.keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown]
+        let seconds = types
+            .map { CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: $0) }
+            .min() ?? .infinity
+        guard seconds.isFinite, seconds >= 0 else { return nil }
+        let elapsed = seconds * 1_000_000_000
+        guard elapsed < Double(now) else { return nil }
+        return now - UInt64(elapsed)
     }
 
     private func installNSEventFallback() {
@@ -432,6 +463,18 @@ final class RightOptionMonitor {
         localFallback = NSEvent.addLocalMonitorForEvents(matching: events) { [weak self] event in
             let consumed = self?.handle(event, canConsumeCancel: true) ?? false
             return consumed ? nil : event
+        }
+    }
+}
+
+extension TriggerKey {
+    var modifierKeySpec: ModifierKeySpec {
+        switch self {
+        case .rightOption: return .rightOption
+        case .rightCommand: return .rightCommand
+        case .leftOption: return .leftOption
+        case .leftControl: return .leftControl
+        case .function: return .function
         }
     }
 }

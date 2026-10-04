@@ -303,7 +303,7 @@ enum DesignPreview {
                 state.detail = "再按一次右 Option 结束"
                 state.escapeCancelUnavailable = true
             }
-            let actions = MenuPanelActions(end: {}, cancel: {}, undoCancel: {}, start: {}, showHistory: {},
+            let actions = MenuPanelActions(end: {}, cancel: {}, undoCancel: {}, start: {}, showHistory: {}, showSettings: {}, showProfile: {},
                                            checkAccessibility: {}, checkInputMonitoring: {}, openDataFolder: {}, quit: {})
             let barFill = dark ? VVColor.hex(0x1E1E20, alpha: 0.72) : VVColor.hex(0xFFFFFF, alpha: 0.72)
             let ink = dark ? Color.white : Color.black
@@ -460,12 +460,12 @@ enum DesignPreview {
             calendar.date(byAdding: DateComponents(day: dayOffset, hour: hour, minute: minute), to: today) ?? today
         }
         let items: [(String, Date, String, Double)] = [
-            ("明天下午三点和设计团队过一下 onboarding 的流程，呃，还有一个，就是 Figma 里那版新的 dashboard 也一起看，先把上个月的 NPS 数据准备好。", at(0, 15, 24), "Notes", 9.2),
-            ("把这个 PR merge 一下，然后跑一遍 CI，呃，跑完把结果发到群里。", at(0, 15, 2), "微信", 11.1),
-            ("明天下午三点开会，记得带上季度报表。", at(0, 14, 37), "Mail", 7.0),
-            ("上个月的转化率是 4.2%，先别下结论，等完整数据出来再说。", at(0, 11, 15), "Notion", 12.0),
-            ("这个接口的 timeout 再调长一点，现在 retry 太频繁了。", at(0, 10, 48), "Terminal", 5.0),
-            ("把退款流程的三个状态写成表，别加解释。", at(-1, 22, 40), "Notes", 6.0),
+            (sample("明天下午三点和设计团队过一下 onboarding 的流程，呃，还有一个，就是 Figma 里那版新的 dashboard 也一起看，先把上个月的 NPS 数据准备好。", "Tomorrow at three I want to go through the onboarding flow with the design team, um, and also the new dashboard in Figma, so please get last month's NPS numbers ready."), at(0, 15, 24), "Notes", 9.2),
+            (sample("把这个 PR merge 一下，然后跑一遍 CI，呃，跑完把结果发到群里。", "Merge this PR, then run CI, um, and post the result in the channel when it's done."), at(0, 15, 2), sample("微信", "Slack"), 11.1),
+            (sample("明天下午三点开会，记得带上季度报表。", "Meeting tomorrow at three, remember to bring the quarterly report."), at(0, 14, 37), "Mail", 7.0),
+            (sample("上个月的转化率是 4.2%，先别下结论，等完整数据出来再说。", "Last month's conversion rate was 4.2%. Don't draw conclusions yet, wait for the full data."), at(0, 11, 15), "Notion", 12.0),
+            (sample("这个接口的 timeout 再调长一点，现在 retry 太频繁了。", "Raise the timeout on this endpoint a bit, it retries way too often right now."), at(0, 10, 48), "Terminal", 5.0),
+            (sample("把退款流程的三个状态写成表，别加解释。", "Put the three states of the refund flow in a table, no explanations."), at(-1, 22, 40), "Notes", 6.0),
         ]
         return items.map { text, start, app, seconds in
             let stopNanos = Int64(seconds * 1_000_000_000)
@@ -488,7 +488,7 @@ enum DesignPreview {
                                          firstPartialLatencyMilliseconds: 180, finalizeLatencyMilliseconds: 550,
                                          error: nil, transportMetrics: nil),
                 appleBaseline: nil,
-                comparisons: [ProviderSummary(providerID: "aliyun-qwen-audio-asr", model: "百炼", text: text,
+                comparisons: [ProviderSummary(providerID: "aliyun-qwen-audio-asr", model: sample("百炼", "Alibaba Cloud"), text: text,
                                               firstPartialLatencyMilliseconds: nil, finalizeLatencyMilliseconds: nil,
                                               error: nil, transportMetrics: nil)],
                 insertedText: text,
@@ -508,17 +508,24 @@ enum DesignPreview {
 
     private static let shotShadowPad: CGFloat = 30
 
+    /// `VERBATIM_DESIGN_PREVIEW_LANG=en` renders the English set (docs/images/en): interface text comes
+    /// from the string tables (run with `-AppleLanguages "(en)"`), and the fictional sample content
+    /// switches to English here. Chinese stays the default.
+    private static let englishSamples = ProcessInfo.processInfo.environment["VERBATIM_DESIGN_PREVIEW_LANG"] == "en"
+
+    private static func sample(_ chinese: String, _ english: String) -> String { englishSamples ? english : chinese }
+
     private static func docScreenshots(to dir: URL) throws {
         let light = false
         // 1. Menu-bar panel, recording.
         do {
             let now = Date()
             let state = MenuPanelState(
-                phase: .capturing, title: "正在听", detail: "再按一次右 Option 结束 · Esc 取消",
+                phase: .capturing, title: String(localized: "正在听"), detail: String(localized: "再按一次\(String(localized: "右 Option"))结束 · Esc 取消"),
                 recordingStartedAt: now.addingTimeInterval(-7.2),
-                provisionalText: "把这个 PR merge 一下，然后跑一遍 CI…",
-                engine: "Soniox", insertion: "辅助功能 · 可用", microphone: "录音中", error: nil)
-            let actions = MenuPanelActions(end: {}, cancel: {}, undoCancel: {}, start: {}, showHistory: {},
+                provisionalText: sample("把这个 PR merge 一下，然后跑一遍 CI…", "Merge this PR, then run CI…"),
+                engine: "Soniox", insertion: String(localized: "辅助功能 · 可用"), microphone: String(localized: "录音中"), error: nil)
+            let actions = MenuPanelActions(end: {}, cancel: {}, undoCancel: {}, start: {}, showHistory: {}, showSettings: {}, showProfile: {},
                                            checkAccessibility: {}, checkInputMonitoring: {}, openDataFolder: {}, quit: {})
             let panel = MenuPanelContent(state: state, actions: actions, frozenNow: now)
             let size = NSHostingView(rootView: panel).fittingSize
@@ -532,8 +539,8 @@ enum DesignPreview {
             HistoryWindowContent(
                 records: records, destination: .constant(destination), selectedRecordID: .constant(selected),
                 searchText: .constant(""), expandedHistoryIDs: [], retranscribingIDs: [], operationStatus: "",
-                overview: HistoryOverviewState(title: "待命", hint: "", actionTitle: "开始录音", actionEnabled: true, error: nil),
-                copyLabel: { _ in "复制" }, providerSelection: { _ in .constant(.automatic) },
+                overview: HistoryOverviewState(title: String(localized: "待命"), hint: "", actionTitle: String(localized: "开始录音"), actionEnabled: true, error: nil),
+                copyLabel: { _ in String(localized: "复制") }, providerSelection: { _ in .constant(.automatic) },
                 onActivate: { _ in }, onCopy: { _ in }, onToggleDetails: { _ in },
                 onPlay: { _ in }, onRetranscribe: { _ in }, onPrimaryAction: {}, settingsPane: pane)
         }
@@ -544,14 +551,14 @@ enum DesignPreview {
         let defaults = UserDefaults(suiteName: "verbatim-design-preview")!
         defaults.removePersistentDomain(forName: "verbatim-design-preview")
         let settings = AppSettings(defaults: defaults)
-        settings.speakerBackground = "说话人是一名产品经理，常谈用户研究、季度规划和数据看板，偶尔提到 Figma、Notion 和 OKR。"
+        settings.speakerBackground = sample("说话人是一名产品经理，常谈用户研究、季度规划和数据看板，偶尔提到 Figma、Notion 和 OKR。", "The speaker is a product manager who often talks about user research, quarterly planning and data dashboards, and sometimes mentions Figma, Notion and OKRs.")
         settings.glossaryText = "Figma\nNotion\nOKR\nNPS\nRoadmap"
         settings.removeChatTerminalPeriod = true
         settings.appendTrailingSpaceAfterEnglish = false
         let terms = [
-            PersonalTerm(canonical: "Figma", aliases: ["菲格玛", "Figure"]),
-            PersonalTerm(canonical: "OKR", aliases: ["欧克阿", "O K R"]),
-            PersonalTerm(canonical: "季度规划", aliases: ["计度规划"]),
+            PersonalTerm(canonical: "Figma", aliases: [sample("菲格玛", "Fig Ma"), "Figure"]),
+            PersonalTerm(canonical: "OKR", aliases: [sample("欧克阿", "Okay R"), "O K R"]),
+            PersonalTerm(canonical: sample("季度规划", "Roadmap"), aliases: [sample("计度规划", "Road map")]),
         ]
         let profileSize = CGSize(width: 780, height: 896)
         try shot(console(destination: .profile, selected: nil) {
@@ -600,7 +607,7 @@ enum DesignPreview {
                     Picker("阿里云区域", selection: $settings.aliyunRegion) {
                         ForEach(AliyunRegion.allCases) { Text($0.displayName).tag($0) }
                     }
-                    keyRow(title: "阿里云百炼", configured: false, key: .constant(""))
+                    keyRow(title: String(localized: "阿里云百炼"), configured: false, key: .constant(""))
                     HStack(spacing: 8) {
                         Button("测试阿里云连接") {}.buttonStyle(VVButtonStyle()).disabled(true)
                         Button("获取 Key") {}.buttonStyle(VVButtonStyle())

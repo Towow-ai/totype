@@ -29,12 +29,19 @@
 | `VERBATIM_SDK_PATH` | `xcrun` 的结果 | 指定 SDK |
 | `VERBATIM_SENSEVOICE_DIR` | 空 | 已下载的模型与运行程序目录 |
 
+## 界面语言
+
+应用带英文和简体中文两套界面：系统语言是中文时显示中文，其他语言显示英文。代码里的中文原文就是查表的键（`String(localized: "已插入 \(n) 字")`），所以没有字符串表的构建（比如目前的 iPhone 目标）会原样回落成中文。表在 `VerbatimVoice/Resources/en.lproj/Localizable.strings`（改这一份）和 `zh-Hans.lproj/Localizable.strings`（由 `scripts/l10n.py sync-zh` 生成，值等于键）；权限用途说明在同目录的 `InfoPlist.strings`。`swiftc` 不编译 `.xcstrings`，所以 `scripts/build.sh` 负责拷贝 `.strings`，Xcode 工程里把它们列为资源。
+
+新增或修改文案：用 `String(localized:)` 包住（SwiftUI 的 `Text("…")` 字面量自己会查表），补英文条目，运行 `scripts/l10n.py sync-zh`，再运行 `scripts/check_l10n.sh`。两张表键不一致、键和译文的格式符不一致、代码里的本地化调用没有条目时检查失败；没走本地化的中文字面量只给警告（日志和比较用的在行尾加 `// l10n:ignore`）。会被存储、写进给脚本读的日志、用于比较或发给识别引擎的字符串不要本地化。`scripts/design_preview.sh docs-en` 渲染 `docs/images/en` 里的英文截图。
+
 ## 仓库结构
 
 ```text
 VerbatimVoice/            应用：AppKit/SwiftUI 界面、音频、识别引擎适配、插入
 VerbatimVoiceCore/        纯 Swift 核心：个人资料、误听恢复、文本拼接、超时策略
 VerbatimVoice.xcodeproj   Xcode 工程
+VerbatimVoiceMobile/      iPhone 版：主 App、键盘、小组件，见 11 iPhone 版
 scripts/                  构建、安装、验证和各类自测程序
 config/                   本地配置示例
 tools/history_report.py   从 history.jsonl 生成使用统计

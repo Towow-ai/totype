@@ -29,7 +29,7 @@ xattr -dr com.apple.quarantine /Applications/Totype.app
 1. 安装命令行工具：`xcode-select --install`。
 2. 克隆仓库：`git clone https://github.com/Towow-ai/totype.git`，进入目录。
 3. 可选：复制 `config/local.env.example` 为 `config/local.env`，按需修改应用名、Bundle ID 和签名身份（见下文“签名与授权稳定性”）。
-4. 运行 `scripts/install.sh`。它会构建应用，安装到 `/Applications/Totype.app`，已有版本会先备份，并在安装后启动。
+4. 运行 `scripts/install.sh`。它会构建应用，安装到 `/Applications/Totype.app`，已有版本会先备份（只保留最近一个备份，更早的会自动删掉），并在安装后启动。
 5. 只想构建、不安装时运行 `scripts/build.sh`，结果在 `build/` 目录下。这个产物带 `.disabled` 后缀，不能直接双击运行，需要用 `scripts/install.sh` 安装。
 
 首次构建会下载约 246 MB 的运行程序和模型，并校验固定的 SHA-256，下载缓存在 `.build/downloads/`。网络慢或需要代理时，可以先自行下载到一个目录，再用环境变量 `VERBATIM_SENSEVOICE_DIR` 指向它。该目录需要包含 `llama-funasr-sensevoice`、`sensevoice-small-q8.gguf` 和 `fsmn-vad.gguf` 三个文件。

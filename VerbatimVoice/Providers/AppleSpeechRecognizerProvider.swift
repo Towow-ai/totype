@@ -28,13 +28,13 @@ actor AppleSpeechRecognizerProvider: ASRProvider {
     func prepare(context: ASRContext) async throws {
         let authorization = await Self.requestAuthorizationIfNeeded()
         guard authorization == .authorized else {
-            throw ASRProviderError.unavailable("Apple 语音识别权限未授予")
+            throw ASRProviderError.unavailable(String(localized: "Apple 语音识别权限未授予"))
         }
         guard let recognizer = SFSpeechRecognizer(locale: locale) else {
-            throw ASRProviderError.unavailable("当前 Mac 无法创建简体中文语音识别器")
+            throw ASRProviderError.unavailable(String(localized: "当前 Mac 无法创建简体中文语音识别器"))
         }
         guard recognizer.isAvailable else {
-            throw ASRProviderError.unavailable("Apple 语音识别当前不可用")
+            throw ASRProviderError.unavailable(String(localized: "Apple 语音识别当前不可用"))
         }
         self.recognizer = recognizer
         prefersOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
@@ -77,10 +77,10 @@ actor AppleSpeechRecognizerProvider: ASRProvider {
 
     func finalize() async throws -> TranscriptResult {
         guard request != nil, startedAt != nil else {
-            throw ASRProviderError.invalidState("Apple 语音识别没有活动口述")
+            throw ASRProviderError.invalidState(String(localized: "Apple 语音识别没有活动口述"))
         }
         guard finalizeContinuation == nil else {
-            throw ASRProviderError.invalidState("Apple 语音识别已经在定稿")
+            throw ASRProviderError.invalidState(String(localized: "Apple 语音识别已经在定稿"))
         }
 
         finalizeRequestedAt = Date()
@@ -143,10 +143,10 @@ actor AppleSpeechRecognizerProvider: ASRProvider {
         timeoutTask = nil
         if !latestText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             let transcript = finishSuccessfully()
-            eventHandler?(.warning(providerID: id, message: "Apple 定稿超时，已保留最后一版转写"))
+            eventHandler?(.warning(providerID: id, message: String(localized: "Apple 定稿超时，已保留最后一版转写")))
             continuation.resume(returning: transcript)
         } else {
-            let error = ASRProviderError.timeout("Apple 语音识别未在 8 秒内返回结果")
+            let error = ASRProviderError.timeout(String(localized: "Apple 语音识别未在 8 秒内返回结果"))
             eventHandler?(.failed(providerID: id, message: error.localizedDescription))
             clearSession()
             continuation.resume(throwing: error)
@@ -211,12 +211,12 @@ actor AppleSpeechRecognizerProvider: ASRProvider {
             channels: AVAudioChannelCount(chunk.channels),
             interleaved: false
         ) else {
-            throw ASRProviderError.invalidState("无法创建 Apple Speech PCM16 输入格式")
+            throw ASRProviderError.invalidState(String(localized: "无法创建 Apple Speech PCM16 输入格式"))
         }
         let frames = chunk.data.count / MemoryLayout<Int16>.size / max(1, chunk.channels)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)),
               let destination = buffer.int16ChannelData?.pointee else {
-            throw ASRProviderError.invalidState("无法创建 Apple Speech PCM16 输入缓冲")
+            throw ASRProviderError.invalidState(String(localized: "无法创建 Apple Speech PCM16 输入缓冲"))
         }
         buffer.frameLength = AVAudioFrameCount(frames)
         chunk.data.withUnsafeBytes { raw in

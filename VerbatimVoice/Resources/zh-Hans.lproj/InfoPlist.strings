@@ -1,0 +1,4 @@
+/* 权限用途说明。$(VERBATIM_APP_NAME) 由 scripts/build.sh（以及 Xcode 的 “Localize Info.plist strings” 构建阶段）替换为应用名。 */
+"NSMicrophoneUsageDescription" = "$(VERBATIM_APP_NAME) 只在你主动开始录音后使用麦克风进行语音转写，结束或取消后立即释放。";
+"NSInputMonitoringUsageDescription" = "$(VERBATIM_APP_NAME) 使用一个可设置的修饰键（默认右 Option）作为全局单击启停录音快捷键，并使用 Escape 取消。";
+"NSSpeechRecognitionUsageDescription" = "$(VERBATIM_APP_NAME) 使用 Apple 系统语音识别生成原话转写；支持时优先在设备端完成。";

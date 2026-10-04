@@ -9,11 +9,11 @@ actor PersonalLexiconStore {
         var errorDescription: String? {
             switch self {
             case .unsupportedReader(let required, let supported):
-                return "个人词库需要 reader \(required)，当前仅支持 \(supported)"
+                return String(localized: "个人词库需要 reader \(required)，当前仅支持 \(supported)")
             case .corruptLine(let line):
-                return "个人词库第 \(line) 行无法解码"
+                return String(localized: "个人词库第 \(line, format: .number.grouping(.never)) 行无法解码")
             case .invalidEvent(let line):
-                return "个人词库第 \(line) 行事件不完整"
+                return String(localized: "个人词库第 \(line, format: .number.grouping(.never)) 行事件不完整")
             }
         }
     }

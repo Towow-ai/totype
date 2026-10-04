@@ -1,0 +1,21 @@
+// Copy to Config/Local.xcconfig (git-ignored) and fill in your own values.
+// Shared.xcconfig documents every setting.
+
+// Your Team ID: Xcode > Settings > Accounts > your Apple ID > Team. A free
+// Personal Team works; its profiles expire after 7 days.
+DEVELOPMENT_TEAM = ABCDE12345
+
+// Use a reverse-DNS prefix you own, or any unique one such as your Apple ID name.
+// Changing these later creates a different app: the phone keeps the old one's
+// history, keyboard permission and saved keys apart from the new one.
+TOTYPE_BUNDLE_ID = com.example.totype
+TOTYPE_APP_GROUP = group.com.example.totype
+
+// Optional.
+// TOTYPE_URL_SCHEME = totype
+// TOTYPE_DISPLAY_NAME = Totype
+
+// Private-API return to the previous app. Read the iPhone chapter of the manual
+// first: it may stop working after an iOS update, and such a build can only be
+// installed from source with your own signature.
+// TOTYPE_PRIVATE_HOST_RETURN = YES

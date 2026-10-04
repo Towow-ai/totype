@@ -127,9 +127,13 @@ With the local engine nothing leaves your Mac. With a cloud engine, your audio, 
 
 The full list of known limits is in [Glossary and limits](docs/manual/en/10-glossary-and-limits.md).
 
+## iPhone version (build from source, preview)
+
+The repository also holds an iPhone version: the app records and transcribes, a custom keyboard inserts the text into any field, and the Dynamic Island and Control Center show the recording state. It needs the full Xcode, XcodeGen and your own Apple ID, and you install it on your own phone with your own signature; free-account signatures expire after 7 days and need a reinstall. Without a cloud key it uses the iPhone's on-device recognition, which is less accurate than the cloud engines. Returning to the previous app after recording starts relies on private APIs, is left out of the build by default, and once turned on rules out the App Store and TestFlight. Steps and risks are in [iPhone](docs/manual/en/11-iphone.md).
+
 ## Documentation
 
-[Manual](docs/manual/en/00-overview.md): install, first run, daily use, engines and keys, personalization, insertion rules, data and privacy, troubleshooting, build and contribute.
+[Manual](docs/manual/en/00-overview.md): install, first run, daily use, engines and keys, personalization, insertion rules, data and privacy, troubleshooting, build and contribute, iPhone.
 
 ## Contributing
 

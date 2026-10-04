@@ -1,0 +1,34 @@
+// Build settings shared by the three targets. The values below are the public
+// identity. To build for your own iPhone, copy Local.xcconfig.example to
+// Config/Local.xcconfig (git-ignored) and set your team and your own prefix:
+// a bundle ID and an App Group are unique across all Apple developer accounts,
+// so ai.towow.totype cannot be signed by anyone else.
+
+// Main app bundle ID. The keyboard is $(TOTYPE_BUNDLE_ID).keyboard, the widgets
+// $(TOTYPE_BUNDLE_ID).widgets, the shared keychain group
+// $(AppIdentifierPrefix)$(TOTYPE_BUNDLE_ID).shared.
+TOTYPE_BUNDLE_ID = ai.towow.totype
+// App Group shared by the app, keyboard and widgets (mailbox, session state,
+// lexicon). Must start with "group.".
+TOTYPE_APP_GROUP = group.ai.towow.totype
+// URL scheme the keyboard uses to open the app (totype://record?...).
+TOTYPE_URL_SCHEME = totype
+// Name on the home screen, in the keyboard list and in the app's own text.
+TOTYPE_DISPLAY_NAME = Totype
+
+// YES compiles the two private-API paths that return to the previous app after
+// the keyboard opened Totype (Keyboard/HostIdentity.m, App/HostReturn.swift).
+// NO (default) leaves them out of the binary; the app then shows its "go back
+// with the top-left link" page. See docs/manual/en/11-iphone.md before turning
+// it on: such a build can never go through App Store or TestFlight review.
+TOTYPE_PRIVATE_HOST_RETURN = NO
+TOTYPE_HOST_RETURN_SWIFT_YES = TOTYPE_PRIVATE_HOST_RETURN
+TOTYPE_HOST_RETURN_SWIFT_NO =
+TOTYPE_HOST_RETURN_OBJC_YES = TOTYPE_PRIVATE_HOST_RETURN=1
+TOTYPE_HOST_RETURN_OBJC_NO =
+TOTYPE_HOST_RETURN_SWIFT = $(TOTYPE_HOST_RETURN_SWIFT_$(TOTYPE_PRIVATE_HOST_RETURN))
+TOTYPE_HOST_RETURN_OBJC = $(TOTYPE_HOST_RETURN_OBJC_$(TOTYPE_PRIVATE_HOST_RETURN))
+
+// Signing team: set DEVELOPMENT_TEAM in Local.xcconfig, or pass it on the
+// command line (xcodebuild ... DEVELOPMENT_TEAM=ABCDE12345).
+#include? "Local.xcconfig"

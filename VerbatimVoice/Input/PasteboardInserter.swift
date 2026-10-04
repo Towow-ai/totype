@@ -43,20 +43,20 @@ final class PasteboardInserter {
         onDispatched: (() -> Void)? = nil
     ) async -> InsertionResult {
         guard !text.isEmpty else {
-            return InsertionResult(status: .failed, message: "转写结果为空", clipboardRestored: true)
+            return InsertionResult(status: .failed, message: String(localized: "转写结果为空"), clipboardRestored: true)
         }
 
         guard let application = NSRunningApplication(processIdentifier: target.processIdentifier) else {
-            return InsertionResult(status: .previewOnly, message: "原输入应用已经退出", clipboardRestored: true)
+            return InsertionResult(status: .previewOnly, message: String(localized: "原输入应用已经退出"), clipboardRestored: true)
         }
         guard application.bundleIdentifier == target.bundleIdentifier else {
-            return InsertionResult(status: .previewOnly, message: "原输入应用身份已经变化", clipboardRestored: true)
+            return InsertionResult(status: .previewOnly, message: String(localized: "原输入应用身份已经变化"), clipboardRestored: true)
         }
         if !application.isActive {
             guard await activateAndWait(application) else {
                 return InsertionResult(
                     status: .previewOnly,
-                    message: "无法重新激活原输入应用",
+                    message: String(localized: "无法重新激活原输入应用"),
                     clipboardRestored: true
                 )
             }
@@ -100,8 +100,8 @@ final class PasteboardInserter {
                 transport: .unicodeKeyboard,
                 outcome: .unverifiable,
                 detail: resolvedTarget == nil
-                    ? "目标应用不暴露可编辑 AX 控件；已向当前键盘焦点发送 Unicode 事件"
-                    : "Unicode 事件已发送；Accessibility 验证已移出用户关键路径"
+                    ? String(localized: "目标应用不暴露可编辑 AX 控件；已向当前键盘焦点发送 Unicode 事件")
+                    : String(localized: "Unicode 事件已发送；Accessibility 验证已移出用户关键路径")
             ))
 
             // Dispatch is the terminal success condition. Accessibility is an
@@ -115,8 +115,8 @@ final class PasteboardInserter {
             return InsertionResult(
                 status: .dispatched,
                 message: terminalTarget
-                    ? "已向终端发送 Unicode 键盘输入；未使用剪贴板"
-                    : "已发送 Unicode 键盘输入；未使用剪贴板",
+                    ? String(localized: "已向终端发送 Unicode 键盘输入；未使用剪贴板")
+                    : String(localized: "已发送 Unicode 键盘输入；未使用剪贴板"),
                 clipboardRestored: true,
                 transport: .unicodeKeyboard,
                 attempts: attempts,
@@ -126,7 +126,7 @@ final class PasteboardInserter {
             attempts.append(InsertionAttemptSummary(
                 transport: .unicodeKeyboard,
                 outcome: .dispatchFailed,
-                detail: "无法创建或发送 Unicode 键盘事件"
+                detail: String(localized: "无法创建或发送 Unicode 键盘事件")
             ))
         }
 
@@ -138,7 +138,7 @@ final class PasteboardInserter {
         // the clipboard.
         return InsertionResult(
             status: .previewOnly,
-            message: "当前应用没有接收直接输入；为保护通用剪贴板，未自动改用粘贴",
+            message: String(localized: "当前应用没有接收直接输入；为保护通用剪贴板，未自动改用粘贴"),
             clipboardRestored: true,
             transport: .unicodeKeyboard,
             attempts: attempts,
@@ -161,22 +161,22 @@ final class PasteboardInserter {
 
         switch InputTargetLeasePolicy.resolve(evidence) {
         case .liveEditableTarget:
-            guard let liveTarget else { return .rejected("当前输入目标暂时不可用") }
+            guard let liveTarget else { return .rejected(String(localized: "当前输入目标暂时不可用")) }
             return .editable(liveTarget)
         case .keyboardFocus:
             return .keyboardFocus
         case .reject(.applicationExited):
-            return .rejected("原输入应用已经退出")
+            return .rejected(String(localized: "原输入应用已经退出"))
         case .reject(.applicationIdentityChanged):
-            return .rejected("原输入应用身份已经变化")
+            return .rejected(String(localized: "原输入应用身份已经变化"))
         case .reject(.applicationNotFrontmost):
-            return .rejected("原输入应用不再位于前台")
+            return .rejected(String(localized: "原输入应用不再位于前台"))
         case .reject(.secureInputEnabled):
-            return .rejected("系统 Secure Input 正在占用键盘事件")
+            return .rejected(String(localized: "系统 Secure Input 正在占用键盘事件"))
         case .reject(.secureField):
-            return .rejected("当前是安全输入字段")
+            return .rejected(String(localized: "当前是安全输入字段"))
         case .reject(.compositionActive):
-            return .rejected("检测到可能尚未上屏的中文输入法组合文本")
+            return .rejected(String(localized: "检测到可能尚未上屏的中文输入法组合文本"))
         }
     }
 
@@ -185,10 +185,10 @@ final class PasteboardInserter {
         onDispatched: (() -> Void)? = nil
     ) async -> InsertionResult {
         guard !text.isEmpty else {
-            return InsertionResult(status: .failed, message: "转写结果为空", clipboardRestored: true)
+            return InsertionResult(status: .failed, message: String(localized: "转写结果为空"), clipboardRestored: true)
         }
         guard !SecureInputMonitor.isEnabled else {
-            return InsertionResult(status: .previewOnly, message: "系统 Secure Input 正在占用键盘事件", clipboardRestored: true)
+            return InsertionResult(status: .previewOnly, message: String(localized: "系统 Secure Input 正在占用键盘事件"), clipboardRestored: true)
         }
 
         if let target = targetService.capture() {
@@ -200,7 +200,7 @@ final class PasteboardInserter {
         }
         guard let application = NSWorkspace.shared.frontmostApplication,
               application.bundleIdentifier != Bundle.main.bundleIdentifier else {
-            return InsertionResult(status: .previewOnly, message: "当前没有可接收文字的前台应用", clipboardRestored: true)
+            return InsertionResult(status: .previewOnly, message: String(localized: "当前没有可接收文字的前台应用"), clipboardRestored: true)
         }
 
         return await insertAtApplication(
@@ -218,21 +218,23 @@ final class PasteboardInserter {
         onDispatched: (() -> Void)? = nil
     ) async -> InsertionResult {
         guard !text.isEmpty else {
-            return InsertionResult(status: .failed, message: "转写结果为空", clipboardRestored: true)
+            return InsertionResult(status: .failed, message: String(localized: "转写结果为空"), clipboardRestored: true)
         }
         guard !SecureInputMonitor.isEnabled else {
-            return InsertionResult(status: .previewOnly, message: "系统 Secure Input 正在占用键盘事件", clipboardRestored: true)
+            return InsertionResult(status: .previewOnly, message: String(localized: "系统 Secure Input 正在占用键盘事件"), clipboardRestored: true)
         }
         guard let application = NSRunningApplication(processIdentifier: processIdentifier),
               application.bundleIdentifier != Bundle.main.bundleIdentifier else {
-            return InsertionResult(status: .previewOnly, message: "原输入应用已经退出", clipboardRestored: true)
+            return InsertionResult(status: .previewOnly, message: String(localized: "原输入应用已经退出"), clipboardRestored: true)
         }
 
         let activated = await activateAndWait(application)
         guard activated else {
             return InsertionResult(
                 status: .previewOnly,
-                message: "无法重新激活原输入应用；诊断：辅助功能=\(AccessibilityTargetService.isTrusted ? "已授权" : "未授权")，目标激活=否",
+                message: AccessibilityTargetService.isTrusted
+                    ? String(localized: "无法重新激活原输入应用；诊断：辅助功能=已授权，目标激活=否")
+                    : String(localized: "无法重新激活原输入应用；诊断：辅助功能=未授权，目标激活=否"),
                 clipboardRestored: true
             )
         }
@@ -241,13 +243,13 @@ final class PasteboardInserter {
         guard trusted else {
             return InsertionResult(
                 status: .previewOnly,
-                message: "运行中的 \(AppIdentity.displayName) 没有实际获得辅助功能控制；诊断：辅助功能=未授权，目标激活=是，未发送粘贴",
+                message: String(localized: "运行中的 \(AppIdentity.displayName) 没有实际获得辅助功能控制；诊断：辅助功能=未授权，目标激活=是，未发送粘贴"),
                 clipboardRestored: true
             )
         }
 
         let expectedPID = processIdentifier
-        let resolvedApplicationName = applicationName ?? application.localizedName ?? application.bundleIdentifier ?? "当前应用"
+        let resolvedApplicationName = applicationName ?? application.localizedName ?? application.bundleIdentifier ?? String(localized: "当前应用")
         NSLog(
             "[VerbatimVoice] using direct application keyboard route: app=%@ pid=%d",
             application.bundleIdentifier ?? "unknown",
@@ -265,11 +267,11 @@ final class PasteboardInserter {
             let attempt = InsertionAttemptSummary(
                 transport: .unicodeKeyboard,
                 outcome: .unverifiable,
-                detail: "已按会话锁定的应用进程发送 Unicode；AX 扫描不在用户关键路径"
+                detail: String(localized: "已按会话锁定的应用进程发送 Unicode；AX 扫描不在用户关键路径")
             )
             return InsertionResult(
                 status: .dispatched,
-                message: "已向\(resolvedApplicationName)发送 Unicode 键盘输入；该界面不提供本机可验证文本状态",
+                message: String(localized: "已向\(resolvedApplicationName)发送 Unicode 键盘输入；该界面不提供本机可验证文本状态"),
                 clipboardRestored: true,
                 transport: .unicodeKeyboard,
                 attempts: [attempt]
@@ -278,13 +280,13 @@ final class PasteboardInserter {
 
         return InsertionResult(
             status: .previewOnly,
-            message: "\(resolvedApplicationName)没有接收直接输入；为保护通用剪贴板，未自动改用粘贴",
+            message: String(localized: "\(resolvedApplicationName)没有接收直接输入；为保护通用剪贴板，未自动改用粘贴"),
             clipboardRestored: true,
             transport: .unicodeKeyboard,
             attempts: [InsertionAttemptSummary(
                 transport: .unicodeKeyboard,
                 outcome: .dispatchFailed,
-                detail: "无法创建或发送 Unicode 键盘事件"
+                detail: String(localized: "无法创建或发送 Unicode 键盘事件")
             )]
         )
     }
@@ -330,7 +332,7 @@ final class PasteboardInserter {
         let success = pasteboard.setString(text, forType: .string)
         return InsertionResult(
             status: success ? .copied : .failed,
-            message: success ? "已复制" : "复制失败",
+            message: success ? String(localized: "已复制") : String(localized: "复制失败"),
             clipboardRestored: false,
             transport: .clipboardCopy
         )

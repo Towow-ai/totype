@@ -127,9 +127,13 @@ scripts/install.sh      # 构建并安装到 /Applications/Totype.app，已有�
 
 已知限制的完整列表见[名词与限制](docs/manual/zh-CN/10-glossary-and-limits.md)。
 
+## iPhone 版（源码安装，预览）
+
+仓库里还有一个 iPhone 版：主 App 录音识别，自定义键盘把文字插进任何输入框，灵动岛和控制中心显示录音状态。它需要完整的 Xcode、XcodeGen 和你自己的 Apple ID，用你自己的签名装到你自己的手机上；免费账号的签名 7 天过期，到期后重新安装。没有云端 Key 时用 iPhone 本机识别，准确率不如云端。“录音后自动返回原 App”用到私有 API，默认不编译，打开后无法上架 App Store 或 TestFlight。步骤和风险见 [iPhone 版](docs/manual/zh-CN/11-iphone.md)。
+
 ## 文档
 
-[使用说明书](docs/manual/zh-CN/00-overview.md)：安装、首次运行、日常使用、引擎与 Key、个性化、插入规则、数据与隐私、故障排查、构建与贡献。
+[使用说明书](docs/manual/zh-CN/00-overview.md)：安装、首次运行、日常使用、引擎与 Key、个性化、插入规则、数据与隐私、故障排查、构建与贡献、iPhone 版。
 
 ## 参与贡献
 

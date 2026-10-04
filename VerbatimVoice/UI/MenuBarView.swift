@@ -13,7 +13,9 @@ struct MenuBarView: View {
                 cancel: { model.cancelDictation() },
                 undoCancel: { model.undoCancel() },
                 start: { model.toggleDictation() },
-                showHistory: { model.showSettingsWindow() },
+                showHistory: { model.showSettingsWindow(.history) },
+                showSettings: { model.showSettingsWindow(.settings) },
+                showProfile: { model.showSettingsWindow(.profile) },
                 checkAccessibility: { model.requestAccessibilityPermission() },
                 checkInputMonitoring: { model.requestInputMonitoringPermission() },
                 openDataFolder: { model.openDataFolder() },
@@ -32,9 +34,11 @@ struct MenuBarView: View {
             detail: statusDetail,
             recordingStartedAt: model.recordingStartedAt,
             provisionalText: model.provisionalText,
-            engine: model.settings.primaryProvider.shortName + (primaryReady ? "" : " · 未配置"),
-            insertion: model.accessibilityTrusted ? "辅助功能 · 可用" : "辅助功能 · 需检查",
-            microphone: model.microphoneReady ? "录音中" : "按需释放",
+            engine: primaryReady
+                ? model.settings.primaryProvider.shortName
+                : String(localized: "\(model.settings.primaryProvider.shortName) · 未配置"),
+            insertion: model.accessibilityTrusted ? String(localized: "辅助功能 · 可用") : String(localized: "辅助功能 · 需检查"),
+            microphone: model.microphoneReady ? String(localized: "录音中") : String(localized: "按需释放"),
             error: model.lastError,
             outage: model.providerOutageStatus.map {
                 MenuPanelState.Outage(
@@ -59,13 +63,13 @@ struct MenuBarView: View {
 
     private var stateTitle: String {
         switch model.state {
-        case .starting: return "正在启动"
-        case .listening: return "正在听"
-        case .cancelPending: return "已取消"
-        case .finalizing, .inserting: return "识别中"
-        case .preview: return "待插入"
-        case .failed: return "没插入"
-        case .idle: return "待命"
+        case .starting: return String(localized: "正在启动")
+        case .listening: return String(localized: "正在听")
+        case .cancelPending: return String(localized: "已取消")
+        case .finalizing, .inserting: return String(localized: "识别中")
+        case .preview: return String(localized: "待插入")
+        case .failed: return String(localized: "没插入")
+        case .idle: return String(localized: "待命")
         }
     }
 
@@ -80,11 +84,12 @@ struct MenuBarView: View {
     private var statusDetail: String {
         switch model.state {
         case .starting, .listening:
-            return model.escapeCancelAvailable ? "再按一次右 Option 结束 · Esc 取消" : "再按一次右 Option 结束"
-        case .cancelPending: return "5 秒内可以撤销；之后仍可从历史重新转写"
-        case .finalizing, .inserting: return "正在选择结果并发送到输入框"
+            let key = model.settings.triggerKey.displayName
+            return model.escapeCancelAvailable ? String(localized: "再按一次\(key)结束 · Esc 取消") : String(localized: "再按一次\(key)结束")
+        case .cancelPending: return String(localized: "5 秒内可以撤销；之后仍可从历史重新转写")
+        case .finalizing, .inserting: return String(localized: "正在选择结果并发送到输入框")
         case .preview, .failed: return model.statusMessage
-        case .idle: return "右 Option 单击开始"
+        case .idle: return String(localized: "\(model.settings.triggerKey.displayName) 单击开始")
         }
     }
 }
@@ -119,6 +124,8 @@ struct MenuPanelActions {
     var undoCancel: () -> Void
     var start: () -> Void
     var showHistory: () -> Void
+    var showSettings: () -> Void
+    var showProfile: () -> Void
     var checkAccessibility: () -> Void
     var checkInputMonitoring: () -> Void
     var openDataFolder: () -> Void
@@ -188,9 +195,9 @@ struct MenuPanelContent: View {
             Hairline(color: VVMac.panelHairline)
 
             HStack(alignment: .top, spacing: 18) {
-                metaColumn("主引擎", value: state.engine)
-                metaColumn("插入", value: state.insertion)
-                metaColumn("麦克风", value: state.microphone)
+                metaColumn(String(localized: "主引擎"), value: state.engine)
+                metaColumn(String(localized: "插入"), value: state.insertion)
+                metaColumn(String(localized: "麦克风"), value: state.microphone)
             }
 
             if let error = state.error, !error.isEmpty {
@@ -207,8 +214,16 @@ struct MenuPanelContent: View {
                     .buttonStyle(.plain)
                     .lineHeight(18, fontSize: 13)
                     .foregroundStyle(VVColor.fgSecondary)
+                Button("设置…", action: actions.showSettings)
+                    .buttonStyle(.plain)
+                    .lineHeight(18, fontSize: 13)
+                    .foregroundStyle(VVColor.fgSecondary)
+                    .keyboardShortcut(",", modifiers: .command)
+                    .padding(.leading, 12)
                 Spacer()
                 Menu {
+                    Button("个人资料…", action: actions.showProfile)
+                    Divider()
                     Button("检查辅助功能", action: actions.checkAccessibility)
                     Button("检查输入监控", action: actions.checkInputMonitoring)
                     Button("打开数据目录", action: actions.openDataFolder)
@@ -223,7 +238,7 @@ struct MenuPanelContent: View {
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
                 .fixedSize()
-                .accessibilityLabel("更多")
+                .accessibilityLabel(String(localized: "更多"))
             }
         }
         .font(VVMac.menuFont)
@@ -286,7 +301,7 @@ struct MenuPanelContent: View {
                 // A plain button, not `Link`: Link would tint the text with the accent hue.
                 Button(outage.actionTitle) { NSWorkspace.shared.open(outage.actionURL) }
                     .buttonStyle(.plain)
-                Button(outage.probing ? "正在检查…" : "重试", action: actions.retryProvider)
+                Button(outage.probing ? String(localized: "正在检查…") : String(localized: "重试"), action: actions.retryProvider)
                     .buttonStyle(.plain)
                     .disabled(outage.probing)
             }
@@ -320,13 +335,18 @@ struct MenuPanelContent: View {
             Text(title)
                 .font(.system(size: 11))
                 .foregroundStyle(VVColor.fgSecondary)
+                .lineLimit(1)
                 .lineHeight(16, fontSize: 11)
             Text(value)
                 .font(.system(size: 12))
                 .lineLimit(1)
+                // English values ("Accessibility · Check") are wider than the Chinese ones;
+                // when the three columns no longer fit the 272pt row they shrink a little
+                // instead of overflowing. Chinese fits at natural size and is unaffected.
+                .minimumScaleFactor(0.8)
                 .lineHeight(16, fontSize: 12)
         }
-        .fixedSize()
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 

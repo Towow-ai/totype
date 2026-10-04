@@ -24,7 +24,7 @@
 		CFB80231C2169B68E7876C40 /* WarmAudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89C8B0378D0A91FD1C34BDC7 /* WarmAudioEngine.swift */; };
 		635ACE6541530747AFF68B7D /* AccessibilityTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F68482D7B41500F74F132A /* AccessibilityTarget.swift */; };
 		2F9C13AFFDB62B4B443B9603 /* PasteboardInserter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 351096D843BB22B7704D1D5F /* PasteboardInserter.swift */; };
-		CDD6C8378D48069F6EC914C4 /* RightOptionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 734A8C9AB3200298030135E5 /* RightOptionMonitor.swift */; };
+		CDD6C8378D48069F6EC914C4 /* HotkeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 734A8C9AB3200298030135E5 /* HotkeyMonitor.swift */; };
 		B7410803AF67851BD5F984E2 /* SecureInputMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B277D7BCEAE148E96D651A /* SecureInputMonitor.swift */; };
 		0D9D02119BB7C5B0C21FA1A6 /* TranscriptionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D00900CB53084EA59D02E9 /* TranscriptionModels.swift */; };
 		2EB8B4D6062413B8096ACCBD /* ASRProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78A53E981EA334E83D76D77 /* ASRProvider.swift */; };
@@ -53,6 +53,7 @@
 		8C3F19C44D8E4A70A5D60007 /* ProviderContextCompiler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C3F19C44D8E4A70A5D60008 /* ProviderContextCompiler.swift */; };
 		8C3F19C44D8E4A70A5D60009 /* PCMFrameBatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C3F19C44D8E4A70A5D6000A /* PCMFrameBatcher.swift */; };
 		8C3F19C44D8E4A70A5D6000B /* RealtimeCompletionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C3F19C44D8E4A70A5D6000C /* RealtimeCompletionPolicy.swift */; };
+		8C3F19C44D8E4A70A5D60101 /* ModifierTapDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C3F19C44D8E4A70A5D60102 /* ModifierTapDetector.swift */; };
 		42F99CDCFF05AEF58002F8E3 /* TextJoinPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BE6F772194151F156744EA /* TextJoinPolicy.swift */; };
 		5A1C0E7B2E9F4A10B3D2C601 /* MisrecognitionNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0E7B2E9F4A10B3D2C602 /* MisrecognitionNormalizer.swift */; };
 		A41D2B3C4E5F60718293A4B5 /* InputTargetLeasePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51D2B3C4E5F60718293A4B5 /* InputTargetLeasePolicy.swift */; };
@@ -71,6 +72,8 @@
 		013CA7859E4EC9C4EB3B0170 /* LocalModelStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEC055192842B7B098B1220E /* LocalModelStatusView.swift */; };
 		02A1CC3C62F03273591EABCD /* LocalModelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA24C864C47468B372352946 /* LocalModelStore.swift */; };
 		C37E865464D8807518FC3CCD /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335C10E106D169DE3E370F43 /* OnboardingView.swift */; };
+		B10C0A11E0000000000000A4 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = B10C0A11E0000000000000A3 /* Localizable.strings */; };
+		B10C0A11E0000000000000B4 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B10C0A11E0000000000000B3 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -91,7 +94,7 @@
 		89C8B0378D0A91FD1C34BDC7 /* WarmAudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarmAudioEngine.swift; sourceTree = "<group>"; };
 		69F68482D7B41500F74F132A /* AccessibilityTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityTarget.swift; sourceTree = "<group>"; };
 		351096D843BB22B7704D1D5F /* PasteboardInserter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardInserter.swift; sourceTree = "<group>"; };
-		734A8C9AB3200298030135E5 /* RightOptionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightOptionMonitor.swift; sourceTree = "<group>"; };
+		734A8C9AB3200298030135E5 /* HotkeyMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyMonitor.swift; sourceTree = "<group>"; };
 		53B277D7BCEAE148E96D651A /* SecureInputMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureInputMonitor.swift; sourceTree = "<group>"; };
 		F3D00900CB53084EA59D02E9 /* TranscriptionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionModels.swift; sourceTree = "<group>"; };
 		D78A53E981EA334E83D76D77 /* ASRProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRProvider.swift; sourceTree = "<group>"; };
@@ -120,6 +123,7 @@
 		8C3F19C44D8E4A70A5D60008 /* ProviderContextCompiler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderContextCompiler.swift; sourceTree = "<group>"; };
 		8C3F19C44D8E4A70A5D6000A /* PCMFrameBatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCMFrameBatcher.swift; sourceTree = "<group>"; };
 		8C3F19C44D8E4A70A5D6000C /* RealtimeCompletionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeCompletionPolicy.swift; sourceTree = "<group>"; };
+		8C3F19C44D8E4A70A5D60102 /* ModifierTapDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModifierTapDetector.swift; sourceTree = "<group>"; };
 		D6BE6F772194151F156744EA /* TextJoinPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextJoinPolicy.swift; sourceTree = "<group>"; };
 		5A1C0E7B2E9F4A10B3D2C602 /* MisrecognitionNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MisrecognitionNormalizer.swift; sourceTree = "<group>"; };
 		B51D2B3C4E5F60718293A4B5 /* InputTargetLeasePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputTargetLeasePolicy.swift; sourceTree = "<group>"; };
@@ -142,6 +146,10 @@
 		CEC055192842B7B098B1220E /* LocalModelStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModelStatusView.swift; sourceTree = "<group>"; };
 		DA24C864C47468B372352946 /* LocalModelStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalModelStore.swift; sourceTree = "<group>"; };
 		335C10E106D169DE3E370F43 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		B10C0A11E0000000000000A1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		B10C0A11E0000000000000A2 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		B10C0A11E0000000000000B1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		B10C0A11E0000000000000B2 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -222,7 +230,7 @@
 			children = (
 				69F68482D7B41500F74F132A /* AccessibilityTarget.swift */,
 				351096D843BB22B7704D1D5F /* PasteboardInserter.swift */,
-				734A8C9AB3200298030135E5 /* RightOptionMonitor.swift */,
+				734A8C9AB3200298030135E5 /* HotkeyMonitor.swift */,
 				53B277D7BCEAE148E96D651A /* SecureInputMonitor.swift */,
 			);
 			path = Input;
@@ -303,6 +311,8 @@
 				2D2066CF1C93F62ED93AADE7 /* Info.plist */,
 				C1D2E3F405162738495A6B7C /* VerbatimVoice.entitlements */,
 				D39E53036239170C9A2AB1C6 /* AppIcon.icns */,
+				B10C0A11E0000000000000A3 /* Localizable.strings */,
+				B10C0A11E0000000000000B3 /* InfoPlist.strings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -319,6 +329,7 @@
 				8C3F19C44D8E4A70A5D60012 /* PersonalProfile.swift */,
 				8C3F19C44D8E4A70A5D6000A /* PCMFrameBatcher.swift */,
 				8C3F19C44D8E4A70A5D6000C /* RealtimeCompletionPolicy.swift */,
+				8C3F19C44D8E4A70A5D60102 /* ModifierTapDetector.swift */,
 				D6BE6F772194151F156744EA /* TextJoinPolicy.swift */,
 				5A1C0E7B2E9F4A10B3D2C602 /* MisrecognitionNormalizer.swift */,
 				B51D2B3C4E5F60718293A4B5 /* InputTargetLeasePolicy.swift */,
@@ -353,6 +364,27 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXVariantGroup section */
+		B10C0A11E0000000000000A3 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B10C0A11E0000000000000A1 /* en */,
+				B10C0A11E0000000000000A2 /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		B10C0A11E0000000000000B3 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B10C0A11E0000000000000B1 /* en */,
+				B10C0A11E0000000000000B2 /* zh-Hans */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin PBXNativeTarget section */
 		0E8A3AD980EC179856012B7E /* VerbatimVoice */ = {
 			isa = PBXNativeTarget;
@@ -361,6 +393,7 @@
 				1CDF2F71A52B082132B04DFF /* Sources */,
 				CF5BDB0BEAFE176F9629192A /* Frameworks */,
 				C02F1309AF4906C92F1EAD44 /* Resources */,
+				B10C0A11E0000000000000C1 /* Localize Info.plist strings */,
 				AA11223344556677889900BB /* Embed Local SenseVoice */,
 			);
 			buildRules = (
@@ -407,6 +440,8 @@
 				DB1BB63F7A3474DC19911111 /* THIRD_PARTY_NOTICES.md in Resources */,
 				5F902F95521C0756234E5997 /* starter-glossary-developer.json in Resources */,
 				C707077C1B042CE442ECF594 /* AppIcon.icns in Resources */,
+				B10C0A11E0000000000000A4 /* Localizable.strings in Resources */,
+				B10C0A11E0000000000000B4 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -431,6 +466,21 @@
 			shellPath = /bin/bash;
 			shellScript = "set -euo pipefail\nif [[ \"${VERBATIM_BUNDLE_MODEL:-1}\" == \"0\" ]]; then exit 0; fi\nRUNTIME_DIR=\"$(\"$SRCROOT/scripts/setup_local_sensevoice.sh\" | tail -n 1)\"\nDEST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/SenseVoice\"\nmkdir -p \"$DEST\"\ninstall -m 755 \"$RUNTIME_DIR/llama-funasr-sensevoice\" \"$DEST/llama-funasr-sensevoice\"\ncp -X \"$RUNTIME_DIR/sensevoice-small-q8.gguf\" \"$DEST/sensevoice-small-q8.gguf\"\ncp -X \"$RUNTIME_DIR/fsmn-vad.gguf\" \"$DEST/fsmn-vad.gguf\"\nIDENTITY=\"${EXPANDED_CODE_SIGN_IDENTITY:--}\"\nif [[ -z \"$IDENTITY\" ]]; then IDENTITY=-; fi\ncodesign --force --sign \"$IDENTITY\" --options runtime \"$DEST/llama-funasr-sensevoice\"\n";
 		};
+		B10C0A11E0000000000000C1 /* Localize Info.plist strings */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Localize Info.plist strings";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "# Xcode copies InfoPlist.strings verbatim; substitute the app name into the permission prompts like scripts/build.sh does.\nset -euo pipefail\nfor f in \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"/*.lproj/InfoPlist.strings; do\n  [[ -f \"$f\" ]] || continue\n  NAME=\"${VERBATIM_APP_NAME:-Totype}\"\n  ESCAPED=\"$(printf '%s' \"$NAME\" | sed -e 's/[\\/&]/\\\\&/g')\"\n  sed -i '' \"s/\\$(VERBATIM_APP_NAME)/$ESCAPED/g\" \"$f\"\ndone\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -454,7 +504,7 @@
 				CFB80231C2169B68E7876C40 /* WarmAudioEngine.swift in Sources */,
 				635ACE6541530747AFF68B7D /* AccessibilityTarget.swift in Sources */,
 				2F9C13AFFDB62B4B443B9603 /* PasteboardInserter.swift in Sources */,
-				CDD6C8378D48069F6EC914C4 /* RightOptionMonitor.swift in Sources */,
+				CDD6C8378D48069F6EC914C4 /* HotkeyMonitor.swift in Sources */,
 				B7410803AF67851BD5F984E2 /* SecureInputMonitor.swift in Sources */,
 				0D9D02119BB7C5B0C21FA1A6 /* TranscriptionModels.swift in Sources */,
 				2EB8B4D6062413B8096ACCBD /* ASRProvider.swift in Sources */,
@@ -487,6 +537,7 @@
 				8C3F19C44D8E4A70A5D60007 /* ProviderContextCompiler.swift in Sources */,
 				8C3F19C44D8E4A70A5D60009 /* PCMFrameBatcher.swift in Sources */,
 				8C3F19C44D8E4A70A5D6000B /* RealtimeCompletionPolicy.swift in Sources */,
+				8C3F19C44D8E4A70A5D60101 /* ModifierTapDetector.swift in Sources */,
 				42F99CDCFF05AEF58002F8E3 /* TextJoinPolicy.swift in Sources */,
 				5A1C0E7B2E9F4A10B3D2C601 /* MisrecognitionNormalizer.swift in Sources */,
 				A41D2B3C4E5F60718293A4B5 /* InputTargetLeasePolicy.swift in Sources */,
@@ -603,7 +654,7 @@
 				CODE_SIGN_ENTITLEMENTS = VerbatimVoice/Resources/VerbatimVoice.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 86;
+				CURRENT_PROJECT_VERSION = 87;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -611,7 +662,7 @@
 				INFOPLIST_FILE = VerbatimVoice/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = ( "$(inherited)", "@executable_path/../Frameworks", );
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.4.0;
+				MARKETING_VERSION = 0.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(VERBATIM_BUNDLE_ID)";
 				PRODUCT_NAME = "$(VERBATIM_APP_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -626,7 +677,7 @@
 				CODE_SIGN_ENTITLEMENTS = VerbatimVoice/Resources/VerbatimVoice.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 86;
+				CURRENT_PROJECT_VERSION = 87;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -634,7 +685,7 @@
 				INFOPLIST_FILE = VerbatimVoice/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = ( "$(inherited)", "@executable_path/../Frameworks", );
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 0.4.0;
+				MARKETING_VERSION = 0.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(VERBATIM_BUNDLE_ID)";
 				PRODUCT_NAME = "$(VERBATIM_APP_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

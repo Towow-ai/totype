@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key>
-    <string>zh_CN</string>
+    <string>en</string>
     <key>CFBundleDisplayName</key>
     <string>$(VERBATIM_APP_NAME)</string>
     <key>CFBundleExecutable</key>
@@ -14,6 +14,11 @@
     <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>zh-Hans</string>
+    </array>
     <key>CFBundleName</key>
     <string>$(PRODUCT_NAME)</string>
     <key>CFBundlePackageType</key>
@@ -33,11 +38,11 @@
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSMicrophoneUsageDescription</key>
-    <string>$(VERBATIM_APP_NAME) 只在你主动开始录音后使用麦克风进行语音转写，结束或取消后立即释放。</string>
+    <string>$(VERBATIM_APP_NAME) uses the microphone only after you start recording, and releases it as soon as you finish or cancel.</string>
     <key>NSInputMonitoringUsageDescription</key>
-    <string>$(VERBATIM_APP_NAME) 使用右 Option 作为全局单击启停录音快捷键，并使用 Escape 取消。</string>
+    <string>$(VERBATIM_APP_NAME) uses a configurable modifier key (Right Option by default) as the global shortcut that starts and stops recording with a single tap, and Escape to cancel.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>$(VERBATIM_APP_NAME) 使用 Apple 系统语音识别生成原话转写；支持时优先在设备端完成。</string>
+	<string>$(VERBATIM_APP_NAME) uses Apple's speech recognition to create verbatim transcripts, and prefers recognition on the device when it is supported.</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 </dict>

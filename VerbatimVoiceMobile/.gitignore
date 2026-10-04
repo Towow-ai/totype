@@ -1,0 +1,8 @@
+.build/
+build/
+*.xcodeproj/
+Config/Local.xcconfig
+Config/*-Info.plist
+Config/*.entitlements
+Seed/personal-lexicon-seed.jsonl
+Seed/personal-profile-seed.json

@@ -206,13 +206,13 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
 
         var errorDescription: String? {
             switch self {
-            case .microphoneDenied: return "麦克风权限未授予"
-            case .noInputChannels: return "当前没有可用的麦克风输入声道"
-            case .engineStartTimedOut: return "系统麦克风启动超时，正在等待音频设备释放"
-            case let .engineStartFailed(message): return "系统麦克风启动失败：\(message)"
-            case .firstAudioTimedOut: return "麦克风已连接但没有收到音频；请检查是否仍被电话或其他应用占用"
-            case .startAttemptsQuarantined: return "系统仍有卡住的麦克风启动请求，正在等待它们退出"
-            case .startSuperseded: return "麦克风启动已被更新的设备状态取代"
+            case .microphoneDenied: return String(localized: "麦克风权限未授予")
+            case .noInputChannels: return String(localized: "当前没有可用的麦克风输入声道")
+            case .engineStartTimedOut: return String(localized: "系统麦克风启动超时，正在等待音频设备释放")
+            case let .engineStartFailed(message): return String(localized: "系统麦克风启动失败：\(message)")
+            case .firstAudioTimedOut: return String(localized: "麦克风已连接但没有收到音频；请检查是否仍被电话或其他应用占用")
+            case .startAttemptsQuarantined: return String(localized: "系统仍有卡住的麦克风启动请求，正在等待它们退出")
+            case .startSuperseded: return String(localized: "麦克风启动已被更新的设备状态取代")
             }
         }
     }
@@ -282,10 +282,10 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
             let shouldContinue = await MainActor.run {
                 let alert = NSAlert()
                 alert.alertStyle = .informational
-                alert.messageText = "启用本地语音输入"
-                alert.informativeText = "\(AppIdentity.displayName) 需要麦克风来录制你的口述。声音默认只在这台 Mac 上交给本地 SenseVoice 识别。接下来 macOS 会再显示一次系统授权框。"
-                alert.addButton(withTitle: "继续")
-                alert.addButton(withTitle: "暂不")
+                alert.messageText = String(localized: "启用本地语音输入")
+                alert.informativeText = String(localized: "\(AppIdentity.displayName) 需要麦克风来录制你的口述。声音默认只在这台 Mac 上交给本地 SenseVoice 识别。接下来 macOS 会再显示一次系统授权框。")
+                alert.addButton(withTitle: String(localized: "继续"))
+                alert.addButton(withTitle: String(localized: "暂不"))
                 return alert.runModal() == .alertFirstButtonReturn
             }
             granted = shouldContinue
@@ -318,7 +318,7 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
             try await startFreshEngine()
             ensureWatchdog()
         } catch {
-            scheduleRecovery(reason: "麦克风启动失败")
+            scheduleRecovery(reason: .startFailed)
             throw error
         }
     }
@@ -427,7 +427,7 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
 
     func recoverIfStalled() {
         guard wantsToRun, !hasRecentAudioFrames() else { return }
-        scheduleRecovery(reason: "检测到麦克风没有持续音频帧")
+        scheduleRecovery(reason: .noContinuousFrames)
     }
 
     private var lastFrameUptimeNanoseconds: UInt64 = 0
@@ -499,17 +499,49 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
             queue: .main
         ) { [weak self] _ in
             guard let self, self.wantsToRun else { return }
-            self.scheduleRecovery(reason: "检测到输入设备变化")
+            self.scheduleRecovery(reason: .deviceChanged)
         }
     }
 
-    private func scheduleRecovery(reason: String) {
+    private enum RecoveryReason {
+        case startFailed
+        case noContinuousFrames
+        case deviceChanged
+        case audioStreamStopped
+        case notRunning
+        case startRequestReleased
+
+        /// Log text; never shown to the user.
+        var logText: String {
+            switch self {
+            case .startFailed: return "麦克风启动失败" // l10n:ignore
+            case .noContinuousFrames: return "检测到麦克风没有持续音频帧" // l10n:ignore
+            case .deviceChanged: return "检测到输入设备变化" // l10n:ignore
+            case .audioStreamStopped: return "检测到麦克风音频断流" // l10n:ignore
+            case .notRunning: return "检测到麦克风未运行" // l10n:ignore
+            case .startRequestReleased: return "系统麦克风启动请求已释放" // l10n:ignore
+            }
+        }
+
+        var recoveringMessage: String {
+            switch self {
+            case .startFailed: return String(localized: "麦克风启动失败，正在恢复麦克风")
+            case .noContinuousFrames: return String(localized: "检测到麦克风没有持续音频帧，正在恢复麦克风")
+            case .deviceChanged: return String(localized: "检测到输入设备变化，正在恢复麦克风")
+            case .audioStreamStopped: return String(localized: "检测到麦克风音频断流，正在恢复麦克风")
+            case .notRunning: return String(localized: "检测到麦克风未运行，正在恢复麦克风")
+            case .startRequestReleased: return String(localized: "系统麦克风启动请求已释放，正在恢复麦克风")
+            }
+        }
+    }
+
+    private func scheduleRecovery(reason: RecoveryReason) {
         recoveryGeneration &+= 1
         let scheduledGeneration = recoveryGeneration
         recoveryTask?.cancel()
         tearDownEngine()
-        lastError = "\(reason)，正在恢复麦克风"
-        logger.error("audio recovery scheduled: \(reason, privacy: .public)")
+        lastError = reason.recoveringMessage
+        logger.error("audio recovery scheduled: \(reason.logText, privacy: .public)")
         recoveryTask = Task { @MainActor [weak self] in
             guard let self else { return }
             var recoveryCycle = 0
@@ -558,14 +590,14 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
                             return
                         }
                         self.tearDownEngine()
-                        self.lastError = "麦克风已连接但没有音频，正在重试（\(index + 1)/\(AudioInputRecoveryPolicy.delaysNanoseconds.count)）"
+                        self.lastError = String(localized: "麦克风已连接但没有音频，正在重试（\(index + 1)/\(AudioInputRecoveryPolicy.delaysNanoseconds.count)）")
                         self.logger.error("audio recovery produced no PCM: cycle=\(recoveryCycle, privacy: .public) attempt=\(index + 1, privacy: .public)")
                     } catch {
                         guard self.wantsToRun,
                               self.recoveryGeneration == scheduledGeneration,
                               !Task.isCancelled else { return }
                         self.tearDownEngine()
-                        self.lastError = "音频设备尚未就绪，正在重试（\(index + 1)/\(AudioInputRecoveryPolicy.delaysNanoseconds.count)）：\(error.localizedDescription)"
+                        self.lastError = String(localized: "音频设备尚未就绪，正在重试（\(index + 1)/\(AudioInputRecoveryPolicy.delaysNanoseconds.count)）：\(error.localizedDescription)")
                         self.logger.error("audio recovery start failed: cycle=\(recoveryCycle, privacy: .public) attempt=\(index + 1, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
                     }
                 }
@@ -573,7 +605,7 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
                 guard self.wantsToRun,
                       self.recoveryGeneration == scheduledGeneration,
                       !Task.isCancelled else { return }
-                self.lastError = "系统输入设备仍未恢复；\(AppIdentity.displayName) 会继续自动重试"
+                self.lastError = String(localized: "系统输入设备仍未恢复；\(AppIdentity.displayName) 会继续自动重试")
                 self.logger.error("audio recovery cycle exhausted; retrying after cooldown")
                 do {
                     try await Task.sleep(nanoseconds: AudioInputWatchdogPolicy.recoveryCyclePauseNanoseconds)
@@ -611,9 +643,9 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
                 if staleProbeCount >= AudioInputWatchdogPolicy.staleProbeLimit {
                     self.logger.error("audio watchdog detected a silent tap; forcing engine rebuild")
                     staleProbeCount = 0
-                    self.scheduleRecovery(reason: "检测到麦克风音频断流")
+                    self.scheduleRecovery(reason: .audioStreamStopped)
                 } else if !self.isRunning, self.recoveryTask == nil {
-                    self.scheduleRecovery(reason: "检测到麦克风未运行")
+                    self.scheduleRecovery(reason: .notRunning)
                 }
             }
         }
@@ -736,7 +768,7 @@ final class WarmAudioEngine: ObservableObject, @unchecked Sendable {
                           wasOutstanding,
                           self.wantsToRun,
                           self.activeEngine == nil else { return }
-                    self.scheduleRecovery(reason: "系统麦克风启动请求已释放")
+                    self.scheduleRecovery(reason: .startRequestReleased)
                 }
             }
         )

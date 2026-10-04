@@ -47,21 +47,22 @@ struct LocalModelStatusRow: View {
     private var summary: String {
         switch status {
         case .bundled:
-            return "已内置"
+            return String(localized: "已内置")
         case .installed:
-            return "已下载"
+            return String(localized: "已下载")
         case .notInstalled:
-            return "未安装 · 约 \(LocalModelFiles.megabytes(LocalModelFiles.approximateTotalBytes))"
+            return String(localized: "未安装 · 约 \(LocalModelFiles.megabytes(LocalModelFiles.approximateTotalBytes))")
         case .downloading(let progress) where progress.receivedBytes == 0:
-            return "正在连接，没有网络时会等待 · 约 \(LocalModelFiles.megabytes(progress.totalBytes))"
+            return String(localized: "正在连接，没有网络时会等待 · 约 \(LocalModelFiles.megabytes(progress.totalBytes))")
         case .downloading(let progress):
             let received = LocalModelFiles.megabytes(progress.receivedBytes)
             let total = LocalModelFiles.megabytes(progress.totalBytes)
-            return "下载中 \(Int(progress.fraction * 100))% · \(received) / \(total)"
+            let percent = Int(progress.fraction * 100)
+            return String(localized: "下载中 \(percent)% · \(received) / \(total)")
         case .verifying:
-            return "正在校验…"
+            return String(localized: "正在校验…")
         case .failed(let kind, let message):
-            return kind == .checksum ? "校验失败 · \(message)" : "下载失败 · \(message)"
+            return kind == .checksum ? String(localized: "校验失败 · \(message)") : String(localized: "下载失败 · \(message)")
         }
     }
 

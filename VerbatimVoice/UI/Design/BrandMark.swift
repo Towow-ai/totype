@@ -37,7 +37,7 @@ enum BrandMark {
             return true
         }
         image.isTemplate = true
-        image.accessibilityDescription = recording ? "\(AppIdentity.displayName) 正在录音" : AppIdentity.displayName
+        image.accessibilityDescription = recording ? String(localized: "\(AppIdentity.displayName) 正在录音") : AppIdentity.displayName
         return image
     }
 

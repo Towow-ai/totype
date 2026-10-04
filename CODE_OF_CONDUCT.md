@@ -40,7 +40,7 @@
 
 ## 执行
 
-对于辱骂、骚扰或其他不可接受的行为，请通过 GitHub 的私密报告渠道向维护者举报：打开本仓库的 [Security 页面](https://github.com/Towow-ai/totype/security/advisories/new)，选择“Report a vulnerability”，标题以 `[Conduct]` 开头。所有投诉都会得到及时、公正的审查和调查。
+对于辱骂、骚扰或其他不可接受的行为，请发邮件到 contact@natureblueee.com 向维护者举报，标题以 `[Conduct]` 开头。所有投诉都会得到及时、公正的审查和调查。
 
 所有社区领导者都有义务尊重任何事件举报人的隐私和安全。
 
@@ -120,7 +120,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement through GitHub's private reporting channel: open the repository's [Security page](https://github.com/Towow-ai/totype/security/advisories/new), choose "Report a vulnerability", and start the title with `[Conduct]`. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement by email at contact@natureblueee.com, with a subject starting with `[Conduct]`. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 

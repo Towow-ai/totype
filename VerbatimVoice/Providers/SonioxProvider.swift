@@ -3,7 +3,7 @@ import os
 
 actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
     nonisolated let id = "soniox"
-    nonisolated let displayName = "Soniox stt-rt-v5（云端）"
+    nonisolated let displayName = String(localized: "Soniox stt-rt-v5（云端）")
 
     private enum State {
         case disconnected
@@ -46,7 +46,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
 
         var errorDescription: String? {
             let request = requestID.map { " request_id=\($0)" } ?? ""
-            return "服务端错误：\(type): \(message)\(request)"
+            return String(localized: "服务端错误：\(type): \(message)\(request)")
         }
 
         var isRetryable: Bool {
@@ -184,7 +184,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
         eventHandler: @escaping @Sendable (ASREvent) -> Void
     ) async throws {
         guard finalizeContinuation == nil else {
-            throw ASRProviderError.invalidState("上一段仍在等待 finalization")
+            throw ASRProviderError.invalidState(String(localized: "上一段仍在等待 finalization"))
         }
 
         self.eventHandler = eventHandler
@@ -270,7 +270,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
         if degradedTransportError != nil { return }
 
         guard let socket else {
-            degradedTransportError = ASRProviderError.connectionFailed("Soniox WebSocket 已断开；结束录音时将重建并回放")
+            degradedTransportError = ASRProviderError.connectionFailed(String(localized: "Soniox WebSocket 已断开；结束录音时将重建并回放"))
             liveness?.markFailed()
             return
         }
@@ -289,17 +289,17 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
             }
             degradedTransportError = ASRProviderError.connectionFailed(error.localizedDescription)
             liveness?.markFailed()
-            eventHandler?(.warning(providerID: id, message: "Soniox 实时连接中断；已保留完整音频，结束时自动恢复一次"))
+            eventHandler?(.warning(providerID: id, message: String(localized: "Soniox 实时连接中断；已保留完整音频，结束时自动恢复一次")))
             invalidateCurrentConnection()
         }
     }
 
     func finalize() async throws -> TranscriptResult {
         guard utteranceStartedAt != nil else {
-            throw ASRProviderError.invalidState("没有活动口述")
+            throw ASRProviderError.invalidState(String(localized: "没有活动口述"))
         }
         guard finalizeContinuation == nil else {
-            throw ASRProviderError.invalidState("已经请求 finalization")
+            throw ASRProviderError.invalidState(String(localized: "已经请求 finalization"))
         }
 
         if let degradedTransportError {
@@ -320,13 +320,13 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
     private func finalizeCurrentConnection() async throws -> TranscriptResult {
         if let terminalError { throw terminalError }
         guard let socket else {
-            throw ASRProviderError.invalidState("WebSocket 尚未连接")
+            throw ASRProviderError.invalidState(String(localized: "WebSocket 尚未连接"))
         }
         guard utteranceStartedAt != nil else {
-            throw ASRProviderError.invalidState("没有活动口述")
+            throw ASRProviderError.invalidState(String(localized: "没有活动口述"))
         }
         guard finalizeContinuation == nil else {
-            throw ASRProviderError.invalidState("已经请求 finalization")
+            throw ASRProviderError.invalidState(String(localized: "已经请求 finalization"))
         }
 
         state = .finalizing
@@ -380,17 +380,17 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
         }
         guard !replayAudioTruncated, !replayAudio.isEmpty else {
             throw ASRProviderError.connectionFailed(
-                "Soniox 无法安全重试：完整会话音频不可用；原错误：\(error.localizedDescription)"
+                String(localized: "Soniox 无法安全重试：完整会话音频不可用；原错误：\(error.localizedDescription)")
             )
         }
         guard let context = preparedContext else {
-            throw ASRProviderError.invalidState("Soniox 重试缺少会话上下文")
+            throw ASRProviderError.invalidState(String(localized: "Soniox 重试缺少会话上下文"))
         }
 
         recoveryAttemptCount += 1
         eventHandler?(.warning(
             providerID: id,
-            message: "Soniox 出现可恢复故障，正在用完整音频建立一次新请求"
+            message: String(localized: "Soniox 出现可恢复故障，正在用完整音频建立一次新请求")
         ))
         invalidateCurrentConnection()
         finalizeTimeoutTask?.cancel()
@@ -408,7 +408,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
         try await Task.sleep(nanoseconds: SonioxRecoveryPolicy.recoveryBackoffNanoseconds)
         try await connect(context: context)
         guard let socket else {
-            throw ASRProviderError.connectionFailed("Soniox 重试连接未建立")
+            throw ASRProviderError.connectionFailed(String(localized: "Soniox 重试连接未建立"))
         }
 
         for offset in stride(from: 0, to: replayAudio.count, by: 3_840) {
@@ -487,7 +487,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
         }
         guard connectionGeneration == generation, socket == nil else {
             opened.socket.cancel(with: .goingAway, reason: nil)
-            throw ASRProviderError.connectionFailed("Soniox 连接在配置期间失效")
+            throw ASRProviderError.connectionFailed(String(localized: "Soniox 连接在配置期间失效"))
         }
 
         // The configuration is on the wire. Only now does this socket get a
@@ -555,7 +555,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
                             race.succeed(socket, attempt: index)
                         } catch {
                             race.fail(ASRProviderError.connectionFailed(
-                                "Soniox 连接配置失败：\(error.localizedDescription)"
+                                String(localized: "Soniox 连接配置失败：\(error.localizedDescription)")
                             ))
                         }
                     }
@@ -568,7 +568,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
                 Task {
                     try? await Task.sleep(nanoseconds: deadlineNanoseconds)
                     race.fail(
-                        ASRProviderError.timeout("Soniox 连接配置超过 \(deadlineNanoseconds / 1_000_000) ms"),
+                        ASRProviderError.timeout(String(localized: "Soniox 连接配置超过 \(Int(deadlineNanoseconds / 1_000_000), format: .number.grouping(.never)) ms")),
                         final: true
                     )
                 }
@@ -600,7 +600,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
             over: socket,
             generation: generation,
             timeoutNanoseconds: SonioxRecoveryPolicy.audioSendDeadlineNanoseconds,
-            stage: "音频发送"
+            stage: String(localized: "音频发送")
         )
         let elapsed = started.duration(to: .now)
         let components = elapsed.components
@@ -625,7 +625,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
         stage: String
     ) async throws {
         guard connectionGeneration == generation, self.socket === socket else {
-            throw ASRProviderError.connectionFailed("Soniox \(stage)使用了失效连接")
+            throw ASRProviderError.connectionFailed(String(localized: "Soniox \(stage)使用了失效连接"))
         }
         let task = Task<Result<Void, Error>, Never> {
             do {
@@ -645,13 +645,13 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
         switch deadline {
         case .completed(.success):
             guard connectionGeneration == generation, self.socket === socket else {
-                throw ASRProviderError.connectionFailed("Soniox \(stage)完成前连接已失效")
+                throw ASRProviderError.connectionFailed(String(localized: "Soniox \(stage)完成前连接已失效"))
             }
             if let terminalError { throw terminalError }
         case .completed(.failure(let error)):
-            throw ASRProviderError.connectionFailed("Soniox \(stage)失败：\(error.localizedDescription)")
+            throw ASRProviderError.connectionFailed(String(localized: "Soniox \(stage)失败：\(error.localizedDescription)"))
         case .timedOut:
-            throw ASRProviderError.timeout("Soniox \(stage)超过 \(timeoutNanoseconds / 1_000_000) ms")
+            throw ASRProviderError.timeout(String(localized: "Soniox \(stage)超过 \(Int(timeoutNanoseconds / 1_000_000), format: .number.grouping(.never)) ms"))
         }
     }
 
@@ -732,7 +732,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
                     degradedTransportError = failure
                     eventHandler?(.warning(
                         providerID: id,
-                        message: "Soniox 连接提前关闭；完整音频已保留，结束时自动恢复一次"
+                        message: String(localized: "Soniox 连接提前关闭；完整音频已保留，结束时自动恢复一次")
                     ))
                 }
             }
@@ -745,7 +745,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
         liveness?.markServerMessage()
         let decoder = JSONDecoder()
         guard let response = try? decoder.decode(Response.self, from: data) else {
-            eventHandler?(.warning(providerID: id, message: "收到无法解析的 Soniox 响应"))
+            eventHandler?(.warning(providerID: id, message: String(localized: "收到无法解析的 Soniox 响应")))
             return
         }
 
@@ -760,7 +760,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
                 degradedTransportError = error
                 eventHandler?(.warning(
                     providerID: id,
-                    message: "Soniox 返回可恢复错误 \(errorType)；结束时自动重建请求"
+                    message: String(localized: "Soniox 返回可恢复错误 \(errorType)；结束时自动重建请求")
                 ))
             } else {
                 failActiveRequest(error, notify: !error.isRetryable)
@@ -865,7 +865,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
     private func finalizationTimedOut() {
         guard finalizeContinuation != nil else { return }
         failActiveRequest(
-            ASRProviderError.timeout("Soniox 未在 4 秒内返回完成信号"),
+            ASRProviderError.timeout(String(localized: "Soniox 未在 4 秒内返回完成信号")),
             notify: false
         )
     }
@@ -1038,14 +1038,14 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
 
     func send(_ chunk: PCM16Chunk, lease: UUID) async throws {
         guard activeLease == lease else {
-            throw ASRProviderError.invalidState("Soniox 连接已交给新的口述")
+            throw ASRProviderError.invalidState(String(localized: "Soniox 连接已交给新的口述"))
         }
         try await send(chunk)
     }
 
     func finalize(lease: UUID) async throws -> TranscriptResult {
         guard activeLease == lease else {
-            throw ASRProviderError.invalidState("Soniox 连接已交给新的口述")
+            throw ASRProviderError.invalidState(String(localized: "Soniox 连接已交给新的口述"))
         }
         return try await finalize()
     }
@@ -1105,7 +1105,7 @@ actor SonioxProvider: ASRProvider, ProviderLivenessReporting {
         ]
         let data = try JSONSerialization.data(withJSONObject: object, options: [])
         guard let json = String(data: data, encoding: .utf8) else {
-            throw ASRProviderError.invalidState("无法编码 Soniox 配置")
+            throw ASRProviderError.invalidState(String(localized: "无法编码 Soniox 配置"))
         }
         return json
     }

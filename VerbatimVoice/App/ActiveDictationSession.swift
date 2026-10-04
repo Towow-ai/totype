@@ -499,7 +499,7 @@ final class ActiveDictationSession: @unchecked Sendable {
                     .failure(
                         providerID: providerID,
                         model: model,
-                        error: ASRProviderError.unavailable("没有完整的本地兜底音频")
+                        error: ASRProviderError.unavailable(String(localized: "没有完整的本地兜底音频"))
                     )
                 },
                 provider: nil
@@ -559,7 +559,7 @@ final class ActiveDictationSession: @unchecked Sendable {
                 return .failure(
                     providerID: providerID,
                     model: model,
-                    error: ASRProviderError.timeout("本地兜底超过 \(timeoutNanoseconds / 1_000_000_000) 秒上限"),
+                    error: ASRProviderError.timeout(String(localized: "本地兜底超过 \(timeoutNanoseconds / 1_000_000_000) 秒上限")),
                     terminationReason: .quarantined
                 )
             }
@@ -607,7 +607,7 @@ final class ActiveDictationSession: @unchecked Sendable {
                 providerID: providerID,
                 model: modelFallback,
                 error: ASRProviderError.timeout(
-                    "\(providerID) 在录音结束后仍未完成发送和定稿，已停止该路转写"
+                    String(localized: "\(providerID) 在录音结束后仍未完成发送和定稿，已停止该路转写")
                 ),
                 terminationReason: .quarantined
             )
@@ -757,11 +757,16 @@ final class ActiveDictationSession: @unchecked Sendable {
         lock.unlock()
 
         for target in droppedTargets {
+            // The error text lands in the persisted provider result in the
+            // UI language at the time.
             let error = ASRProviderError.unavailable(
-                "后台 \(target.providerID) 处理速度跟不上录音，已停止该路对比；主转写继续"
+                String(localized: "后台 \(target.providerID) 处理速度跟不上录音，已停止该路对比；主转写继续")
             )
             target.continuation.finish(throwing: error)
-            eventHandler(.warning(providerID: target.providerID, message: error.localizedDescription))
+            eventHandler(.warning(
+                providerID: target.providerID,
+                message: String(localized: "后台 \(target.providerID) 处理速度跟不上录音，已停止该路对比；主转写继续")
+            ))
         }
     }
 
@@ -777,11 +782,14 @@ final class ActiveDictationSession: @unchecked Sendable {
         streamTargets.removeAll()
         lock.unlock()
 
-        let error = ASRProviderError.unavailable("音频处理速度跟不上录音，已停止本次口述以避免静默丢字")
+        let error = ASRProviderError.unavailable(String(localized: "音频处理速度跟不上录音，已停止本次口述以避免静默丢字"))
         for target in targets {
             target.continuation.finish(throwing: error)
         }
-        eventHandler(.failed(providerID: "audio-pipeline", message: error.localizedDescription))
+        eventHandler(.failed(
+            providerID: "audio-pipeline",
+            message: String(localized: "音频处理速度跟不上录音，已停止本次口述以避免静默丢字")
+        ))
     }
 }
 
