@@ -24,7 +24,7 @@ struct VerbatimVoiceApp: App {
         .menuBarExtraStyle(.window)
 
         Settings {
-            SettingsView(model: model)
+            SettingsView(model: model, initialDestination: .settings, windowLayout: .standard)
         }
     }
 

@@ -56,6 +56,8 @@ In the card, `插入当前输入框` puts the text into whatever field has focus
 
 Click the menu bar icon. The panel shows the current state with a one-line hint, the start or end button, and three facts: `主引擎` (Primary engine; `未配置` after the name means that engine is not usable yet), `插入` (Insertion; whether Accessibility works), and `麦克风` (Microphone; either recording, or `按需释放` meaning released on demand: the microphone is fully released when you are not recording, so features like Continuity are not blocked). `打开历史…` at the bottom opens the history window. The `⋯` menu holds `检查辅助功能`, `检查输入监控`, `打开数据目录` (Open data folder) and the quit item.
 
+Click Settings… in the menu panel or press ⌘, in Totype to open settings; the Settings window opens on the settings page the first time. Click Profile… to open your profile, or use the person and gear icons at the top of the window to switch between the two pages.
+
 ![Menu panel](../../images/en/menubar-panel.png)
 
 ## The history window

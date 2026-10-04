@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+- 修复通过 ⌘, 打开的 macOS 设置窗口：首次打开时直接显示设置页，顶部的“个人资料”和“设置”按钮不再被标题栏遮挡。
+- Fix the macOS Settings window opened with Command+Comma: it now shows the settings page on first open, and the title bar no longer covers the Profile and Settings buttons.
+
 ## [0.5.0] - 2026-10-04
 
 - 菜单面板新增“设置…”（⌘,）和“个人资料…”入口。单次录音默认上限从 3 分钟提高到 10 分钟，可在设置里调到 30 分钟。
