@@ -9,14 +9,21 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+/// Only the custom console has a transparent titlebar that the content can draw into.
+enum SettingsWindowLayout {
+    case standard
+    case console
+}
+
 /// Console window (screens/mac-history.png): 300pt sidebar of transcripts grouped by day,
 /// detail column on the right. Settings replace the detail column behind the gear button.
 /// With nothing selected, the detail column shows the recording state and its controls.
 struct SettingsView: View {
     @ObservedObject var model: AppModel
     @ObservedObject var settings: AppSettings
+    private let windowLayout: SettingsWindowLayout
 
-    @State private var destination: SettingsDestination = .history
+    @State private var destination: SettingsDestination
     @State private var selectedRecordID: UUID?
     @State private var searchText = ""
     @State private var sonioxAPIKey = ""
@@ -30,9 +37,15 @@ struct SettingsView: View {
     @State private var copiedRecordID: UUID?
     @State private var languageRevision = 0
 
-    init(model: AppModel) {
+    init(
+        model: AppModel,
+        initialDestination: SettingsDestination = .history,
+        windowLayout: SettingsWindowLayout = .console
+    ) {
         self.model = model
         settings = model.settings
+        self.windowLayout = windowLayout
+        _destination = State(initialValue: initialDestination)
     }
 
     @ViewBuilder private var permissionButtons: some View {
@@ -43,6 +56,7 @@ struct SettingsView: View {
 
     var body: some View {
         HistoryWindowContent(
+            windowLayout: windowLayout,
             records: model.recentHistory,
             destination: $destination,
             selectedRecordID: $selectedRecordID,
@@ -352,6 +366,7 @@ struct HistoryOverviewState {
 // MARK: - Layout (data in, closures out; no AppModel)
 
 struct HistoryWindowContent<SettingsPane: View>: View {
+    var windowLayout: SettingsWindowLayout = .console
     let records: [HistoryRecord]
     @Binding var destination: SettingsDestination
     @Binding var selectedRecordID: UUID?
@@ -372,9 +387,9 @@ struct HistoryWindowContent<SettingsPane: View>: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // The whole layout runs under the transparent titlebar; the sidebar draws
-            // the title there. The detail column starts 52pt down so its scroll view
-            // is never placed beneath the toolbar. 52 + 12 = the mockup's 64.
+            // The console draws its header in the transparent titlebar; the standard
+            // Settings scene keeps that header below the system titlebar instead.
+            // Both align the detail column below the sidebar's 52pt header.
             sidebar
                 .frame(width: VVMac.sidebarWidth)
             Hairline(vertical: true)
@@ -386,7 +401,7 @@ struct HistoryWindowContent<SettingsPane: View>: View {
         .font(.system(size: 13))
         .tracking(VVMac.menuTracking)
         .foregroundStyle(VVColor.fgPrimary)
-        .ignoresSafeArea(.container, edges: .top)
+        .ignoresSafeArea(.container, edges: windowLayout == .console ? .top : [])
         .frame(minWidth: 720, minHeight: 480)
     }
 
@@ -437,7 +452,7 @@ struct HistoryWindowContent<SettingsPane: View>: View {
                 .help("设置")
                 .accessibilityLabel("设置")
             }
-            .padding(.leading, 92)
+            .padding(.leading, windowLayout == .console ? 92 : 12)
             .padding(.trailing, 12)
             .frame(height: VVMac.titlebarHeight)
 
