@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+- 新增菜单栏图标不可见时的设置入口：在 Finder 中双击或通过 Spotlight 再次打开已运行的 Totype，会显示设置窗口；窗口已最小化时会恢复。首次启动和登录启动保持原有行为。
+- Add a way to reach settings when the menu bar icon is not visible: double-click Totype in Finder or open it through Spotlight while it is already running to show settings, restoring the window if minimized. Initial launch and launch at login keep their existing behavior.
+
 ## [0.5.0] - 2026-10-04
 
 - 菜单面板新增“设置…”（⌘,）和“个人资料…”入口。单次录音默认上限从 3 分钟提高到 10 分钟，可在设置里调到 30 分钟。

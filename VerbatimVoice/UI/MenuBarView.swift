@@ -414,6 +414,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
                 ))
             }
         }
+        if window.isMiniaturized {
+            window.deminiaturize(nil)
+        }
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()

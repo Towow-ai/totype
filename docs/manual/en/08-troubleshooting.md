@@ -4,11 +4,17 @@
 
 Most problems come from one of three places: a permission that is not in effect, a cloud key or balance problem, or a target app that will not accept insertion. Check the menu panel first; it states the current problem and the next step.
 
+## The menu bar icon is not visible
+
+Limited menu bar space, macOS menu bar display settings or a menu bar management tool may hide the icon; this does not necessarily mean Totype has quit. Check these settings, but a missing icon alone does not establish the cause.
+
+If Totype is already running, double-click it in Finder or find and open it through Spotlight to show the Settings window. A minimized window is restored. This alternative entry point does not guarantee that the menu bar icon stays visible. Initial launch and launch at login follow their existing behavior.
+
 ## Right Option does nothing
 
 1. Does the top of the menu panel say `Esc 取消不可用：需要重新授权输入监控`? Then the Input Monitoring grant has gone stale. Follow [02 First run and permissions](02-first-run.md): delete the old entry, grant again, restart the app.
 2. Does the status say Secure Input is on (`Secure Input 正在开启`)? Password fields and some apps make macOS hold keyboard events exclusively. Leave the password field or close the app that holds it.
-3. Is the app running? Look for its icon in the menu bar.
+3. Is the app running? Open Totype through Finder or Spotlight; a missing menu bar icon does not necessarily mean the app has quit.
 4. Is Right Option taken by other software, such as a key remapper or another voice input tool?
 
 ## Esc does not cancel
