@@ -139,6 +139,14 @@ enum MobileEnvironment {
             },
             regionProvider: {
                 AliyunRegion(rawValue: UserDefaults.standard.string(forKey: "aliyunRegion") ?? "") ?? .beijing
+            },
+            modelProvider: {
+                AliyunRealtimeProtocol.normalizedModel(
+                    UserDefaults.standard.string(forKey: "aliyunModel") ?? ""
+                )
+            },
+            disfluencyRemovalProvider: {
+                UserDefaults.standard.bool(forKey: "aliyunDisfluencyRemovalEnabled")
             }
         )
     }

@@ -18,7 +18,7 @@ The data folder is `~/Library/Application Support/Totype/` (early versions used 
 | `personal-secrets.json` | API keys, plain-text JSON, file mode 0600 |
 | `models/` | The downloaded local model (lite builds download it on first use) |
 
-The glossary, speaker background, transcription prompt and all switches are stored in macOS app preferences: a plist under `~/Library/Preferences/` named after the bundle ID (`ai.towow.totype.plist` by default).
+The glossary, speaker background, transcription prompt, Alibaba Cloud model, and all switches are stored in macOS app preferences: a plist under `~/Library/Preferences/` named after the bundle ID (`ai.towow.totype.plist` by default).
 
 `打开数据目录` (Open data folder), in the `⋯` menu of the menu panel or in settings, opens the folder.
 
@@ -31,6 +31,7 @@ The glossary, speaker background, transcription prompt and all switches are stor
 | Speaker background | Sent | Not sent | Not sent |
 | Transcription prompt | Sent | Sent (up to 400 characters) | Not sent |
 | Mishearing aliases | Not sent | Not sent | Not sent |
+| Bailian model ID | Not involved | Sent as a request parameter | Not involved |
 | API key | Used to authenticate | Used to authenticate | Not involved |
 
 With one cloud key, audio goes only to the engine you chose. With both keys saved, the same audio goes to both providers at once, one as primary and one as hot standby; see [04 Engines and API keys](04-engines-and-keys.md). To keep audio away from a provider, clear its key or set the primary engine to local.

@@ -32,6 +32,7 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
     public struct Engine: Codable, Equatable, Sendable {
         public var primaryProvider: String?
         public var aliyunRegion: String?
+        public var aliyunModel: String?
         /// Informational: the app currently sends a fixed zh + en hint list,
         /// so import ignores this field.
         public var languageHints: [String]?
@@ -40,11 +41,13 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
         public init(
             primaryProvider: String? = nil,
             aliyunRegion: String? = nil,
+            aliyunModel: String? = nil,
             languageHints: [String]? = nil,
             automaticLocalFallback: Bool? = nil
         ) {
             self.primaryProvider = primaryProvider
             self.aliyunRegion = aliyunRegion
+            self.aliyunModel = aliyunModel
             self.languageHints = languageHints
             self.automaticLocalFallback = automaticLocalFallback
         }
@@ -235,6 +238,7 @@ public struct PersonalProfile: Codable, Equatable, Sendable {
             let now = current.engine ?? Engine()
             appendChange(&result, String(localized: "主引擎"), now.primaryProvider, engine.primaryProvider)
             appendChange(&result, String(localized: "阿里云区域"), now.aliyunRegion, engine.aliyunRegion)
+            appendChange(&result, String(localized: "阿里云模型"), now.aliyunModel, engine.aliyunModel)
             appendChange(&result, String(localized: "云端异常时用本地模型"), now.automaticLocalFallback, engine.automaticLocalFallback)
         }
         if let insertion = incoming.insertion {

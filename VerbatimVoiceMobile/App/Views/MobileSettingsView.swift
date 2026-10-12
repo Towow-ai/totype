@@ -31,6 +31,8 @@ struct SettingsContent: Equatable {
     var sonioxStatus: String?
     var aliyunStatus: String?
     var region = ""
+    var aliyunModel = ""
+    var aliyunDisfluencyRemoval = false
     var idleTimeout = ""
     var maximumLength = ""
     var mixWithOthers = true
@@ -54,6 +56,8 @@ struct SettingsActions {
     var openAliyun: () -> Void = {}
     var openLocal: () -> Void = {}
     var regions: [(String, () -> Void)] = []
+    var setAliyunModel: (String) -> Void = { _ in }
+    var setAliyunDisfluencyRemoval: (Bool) -> Void = { _ in }
     var idleTimeouts: [(String, () -> Void)] = []
     var maximumLengths: [(String, () -> Void)] = []
     var setMixWithOthers: (Bool) -> Void = { _ in }
@@ -92,6 +96,23 @@ struct SettingsScreen: View {
                         .buttonStyle(.plain)
                         divider
                         menuCell("百炼区域", value: content.region, options: actions.regions)
+                        divider
+                        modelCell(content.aliyunModel, set: actions.setAliyunModel)
+                        divider
+                        VVCell(
+                            title: "移除语气词",
+                            subtitle: "默认关闭；仅部分百炼模型支持"
+                        ) {
+                            Toggle(
+                                "",
+                                isOn: Binding(
+                                    get: { content.aliyunDisfluencyRemoval },
+                                    set: actions.setAliyunDisfluencyRemoval
+                                )
+                            )
+                            .labelsHidden()
+                            .frame(minHeight: 31)
+                        }
                         divider
                         Button(action: actions.openLocal) {
                             VVCell(title: "本机识别", subtitle: content.localInUse ? "正在使用 · 准确率不如云端" : "两把 Key 都没有时使用") {
@@ -197,6 +218,23 @@ struct SettingsScreen: View {
         }
         .buttonStyle(.plain)
     }
+
+    private func modelCell(_ model: String, set: @escaping (String) -> Void) -> some View {
+        VVCell(title: "百炼模型") {
+            TextField(
+                "",
+                text: Binding(get: { model }, set: set),
+                prompt: Text(verbatim: AliyunRealtimeProtocol.defaultModel)
+                    .foregroundStyle(VVColor.fgTertiary)
+            )
+            .vvText(.body)
+            .multilineTextAlignment(.trailing)
+            .keyboardType(.asciiCapable)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .frame(maxWidth: 190)
+        }
+    }
 }
 
 // MARK: - Container
@@ -261,6 +299,8 @@ struct MobileSettingsView: View {
         c.sonioxStatus = connection.testing.contains(MobileEnvironment.sonioxProviderID) ? "测试中…" : connection.results[MobileEnvironment.sonioxProviderID]
         c.aliyunStatus = connection.testing.contains(MobileEnvironment.aliyunProviderID) ? "测试中…" : connection.results[MobileEnvironment.aliyunProviderID]
         c.region = SettingsFormat.region(settings.aliyunRegion)
+        c.aliyunModel = settings.aliyunModel
+        c.aliyunDisfluencyRemoval = settings.aliyunDisfluencyRemovalEnabled
         c.idleTimeout = dictation.idleTimeout.title
         c.maximumLength = SettingsFormat.minutes(settings.maximumUtteranceSeconds)
         c.mixWithOthers = dictation.mixWithOthers
@@ -273,6 +313,16 @@ struct MobileSettingsView: View {
         return c
     }
 
+    private func setAliyunModel(_ model: String) {
+        // The feature is model-specific; every model-ID edit turns it off.
+        settings.aliyunModel = model
+        settings.aliyunDisfluencyRemovalEnabled = false
+    }
+
+    private func setAliyunDisfluencyRemoval(_ enabled: Bool) {
+        settings.aliyunDisfluencyRemovalEnabled = enabled
+    }
+
     private var actions: SettingsActions {
         SettingsActions(
             back: back,
@@ -280,6 +330,8 @@ struct MobileSettingsView: View {
             openAliyun: { navigate(.key(.aliyun)) },
             openLocal: openLocal,
             regions: AliyunRegion.allCases.map { region in (region.displayName, { settings.aliyunRegion = region }) },
+            setAliyunModel: setAliyunModel,
+            setAliyunDisfluencyRemoval: setAliyunDisfluencyRemoval,
             idleTimeouts: SessionIdleTimeout.allCases.map { timeout in (timeout.title, { dictation.idleTimeout = timeout }) },
             maximumLengths: Self.maximumLengths.map { seconds in (SettingsFormat.minutes(seconds), { settings.maximumUtteranceSeconds = seconds }) },
             setMixWithOthers: { dictation.mixWithOthers = $0 },

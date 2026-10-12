@@ -1127,7 +1127,7 @@ final class AppModel: ObservableObject {
                 eventHandler: { _ in }
             )
             await probe.cancel()
-            return String(localized: "连接成功：\(settings.aliyunRegion.displayName)")
+            return String(localized: "连接成功：\(settings.aliyunRegion.displayName) · \(settings.effectiveAliyunModel)")
         } catch {
             await probe.cancel()
             return String(localized: "连接失败：\(error.localizedDescription)")
@@ -2992,6 +2992,14 @@ final class AppModel: ObservableObject {
                 AliyunRegion(
                     rawValue: UserDefaults.standard.string(forKey: "aliyunRegion") ?? ""
                 ) ?? .beijing
+            },
+            modelProvider: {
+                AliyunRealtimeProtocol.normalizedModel(
+                    UserDefaults.standard.string(forKey: "aliyunModel") ?? ""
+                )
+            },
+            disfluencyRemovalProvider: {
+                UserDefaults.standard.bool(forKey: "aliyunDisfluencyRemovalEnabled")
             }
         )
     }

@@ -31,6 +31,9 @@ extension AppSettings {
             engine: .init(
                 primaryProvider: primaryProvider.rawValue,
                 aliyunRegion: aliyunRegion.rawValue,
+                aliyunModel: effectiveAliyunModel == AliyunRealtimeProtocol.defaultModel
+                    ? nil
+                    : effectiveAliyunModel,
                 languageHints: ["zh", "en"],
                 automaticLocalFallback: automaticLocalFallback
             ),
@@ -53,6 +56,13 @@ extension AppSettings {
         if let engine = profile.engine {
             if let raw = engine.primaryProvider, let value = PrimaryTranscriptionProvider(rawValue: raw) { primaryProvider = value }
             if let raw = engine.aliyunRegion, let value = AliyunRegion(rawValue: raw) { aliyunRegion = value }
+            if let value = engine.aliyunModel {
+                let previousModel = aliyunModel
+                aliyunModel = value
+                // A profile can replace the text shown in the model field even
+                // though the TextField callback is not on this code path.
+                if value != previousModel { aliyunDisfluencyRemovalEnabled = false }
+            }
             if let value = engine.automaticLocalFallback { automaticLocalFallback = value }
         }
         if let insertion = profile.insertion {

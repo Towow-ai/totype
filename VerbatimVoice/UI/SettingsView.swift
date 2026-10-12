@@ -198,6 +198,22 @@ struct SettingsView: View {
                     Picker("阿里云区域", selection: $settings.aliyunRegion) {
                         ForEach(AliyunRegion.allCases) { Text($0.displayName).tag($0) }
                     }
+                    HStack(spacing: 8) {
+                        Text("阿里云模型")
+                        TextField(
+                            String(localized: "模型 ID"),
+                            text: Binding(
+                                get: { settings.aliyunModel },
+                                set: { setAliyunModel($0) }
+                            ),
+                            prompt: Text(verbatim: AliyunRealtimeProtocol.defaultModel)
+                                .foregroundStyle(VVColor.fgTertiary)
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        .disableAutocorrection(true)
+                    }
+                    Toggle("移除语气词", isOn: $settings.aliyunDisfluencyRemovalEnabled)
+                        .help(String(localized: "默认关闭。仅部分百炼实时识别模型支持；请确认当前模型支持该参数。"))
                     keyRow(title: "阿里云百炼", configured: model.aliyunKeyConfigured, key: $aliyunAPIKey, message: aliyunKeyMessage) {
                         do {
                             try model.saveAliyunAPIKey(aliyunAPIKey)
@@ -255,6 +271,12 @@ struct SettingsView: View {
                 .font(.system(size: 13, weight: .semibold))
             content()
         }
+    }
+
+    private func setAliyunModel(_ model: String) {
+        // The capability is model-specific; any edit to the ID turns it off.
+        settings.aliyunModel = model
+        settings.aliyunDisfluencyRemovalEnabled = false
     }
 
     private func keyRow(title: LocalizedStringKey, configured: Bool, key: Binding<String>, message: String, save: @escaping () -> Void) -> some View {

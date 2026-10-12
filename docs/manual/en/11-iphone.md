@@ -68,7 +68,7 @@ Full Access lets the keyboard exchange text and start/stop requests with the mai
 
 ## Recognition engines
 
-The app's settings take a Soniox key and an Alibaba Cloud Bailian key, as on the Mac: Soniox is the primary engine, Bailian the hot standby, and keys stay in the phone's keychain. The cloud engines are described in [04 Engines and API keys](04-engines-and-keys.md).
+The app's settings take a Soniox key and an Alibaba Cloud Bailian key, and can also change the Bailian region and model. As on the Mac, `移除语气词` (Remove filler words) is off by default and only some Bailian models support it: Soniox is the primary engine, Bailian the hot standby, and keys stay in the phone's keychain. The cloud engines are described in [04 Engines and API keys](04-engines-and-keys.md).
 
 With neither key saved, the app transcribes with the iPhone's own speech recognition. Audio stays on the phone and nothing is billed. Accuracy is clearly lower than the cloud engines, most of all for names, technical terms and mixed Chinese and English. The phone decides which system engine runs:
 

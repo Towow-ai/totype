@@ -18,6 +18,7 @@ enum ProfileEquivalenceTest {
         let patterns = loadPatterns(privateDir.appendingPathComponent("oss-scan-patterns.txt"))
 
         try await testEmptyProfile(patterns: patterns)
+        try testCustomAliyunModel()
         try await testOwnerEquivalence(privateDir: privateDir)
         print("profile equivalence test passed")
     }
@@ -85,6 +86,63 @@ enum ProfileEquivalenceTest {
         print("ok  owner profile: Soniox and Aliyun start requests are byte-identical to the pre-change capture")
     }
 
+    // MARK: Custom Aliyun model
+
+    @MainActor static func testCustomAliyunModel() throws {
+        let suite = "profile-equivalence-aliyun-model-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        let settings = AppSettings(defaults: defaults)
+        settings.aliyunDisfluencyRemovalEnabled = true
+        let profile = PersonalProfile(engine: .init(aliyunModel: "  qwen-audio-custom-asr-streaming  "))
+        let decoded = try JSONDecoder().decode(
+            PersonalProfile.self,
+            from: try JSONEncoder().encode(profile)
+        )
+        settings.apply(decoded)
+        try check(
+            defaults.string(forKey: "aliyunModel") == "qwen-audio-custom-asr-streaming",
+            "自定义百炼模型没有去空白后写入 defaults"
+        )
+        try check(
+            !settings.aliyunDisfluencyRemovalEnabled,
+            "导入不同百炼模型时没有关闭移除语气词"
+        )
+        try check(
+            settings.makeProfile(lexicon: []).engine?.aliyunModel == "qwen-audio-custom-asr-streaming",
+            "自定义百炼模型没有进入导出 profile"
+        )
+
+        let json = try AliyunRealtimeProtocol.runTaskJSON(
+            taskID: UUID(),
+            model: settings.effectiveAliyunModel,
+            context: ASRContext.personal(terms: [])
+        )
+        let object = try require(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
+        let payload = try require(object["payload"] as? [String: Any])
+        try check(payload["model"] as? String == "qwen-audio-custom-asr-streaming", "自定义百炼模型没有进入 run-task JSON")
+
+        settings.aliyunDisfluencyRemovalEnabled = true
+        let polishedJSON = try AliyunRealtimeProtocol.runTaskJSON(
+            taskID: UUID(),
+            model: settings.effectiveAliyunModel,
+            disfluencyRemovalEnabled: settings.aliyunDisfluencyRemovalEnabled,
+            context: ASRContext.personal(terms: [])
+        )
+        let polishedObject = try require(try JSONSerialization.jsonObject(with: Data(polishedJSON.utf8)) as? [String: Any])
+        let polishedPayload = try require(polishedObject["payload"] as? [String: Any])
+        let polishedParameters = try require(polishedPayload["parameters"] as? [String: Any])
+        try check(
+            polishedParameters["disfluency_removal_enabled"] as? Bool == true,
+            "移除语气词没有进入 run-task JSON"
+        )
+
+        settings.aliyunModel = " \n"
+        try check(settings.effectiveAliyunModel == AliyunRealtimeProtocol.defaultModel, "空白百炼模型没有回退默认值")
+        try check(defaults.string(forKey: "aliyunModel") == nil, "空白百炼模型没有从 defaults 删除")
+        print("ok  custom Aliyun model: profile import, defaults, and run-task JSON")
+    }
+
     // MARK: Helpers
 
     @MainActor static func freshSettings() -> AppSettings {
@@ -117,7 +175,9 @@ enum ProfileEquivalenceTest {
             let json = name == "soniox"
                 ? try SonioxProvider.configurationJSONForTesting(context: context)
                 : try AliyunRealtimeProtocol.runTaskJSON(
-                    taskID: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!, context: context)
+                    taskID: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+                    model: AliyunRealtimeProtocol.defaultModel,
+                    context: context)
             result[name] = try canonical(json)
         }
         return result

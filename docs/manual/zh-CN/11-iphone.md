@@ -68,7 +68,7 @@ Totype 的 iPhone 版由三部分组成：主 App 负责录音和识别，自定
 
 ## 识别引擎
 
-主 App 的设置页可以填 Soniox Key 和阿里云百炼 Key，和 Mac 版一样：Soniox 是主引擎，百炼是热备，Key 只存在本机钥匙串里。两个云端引擎的说明见 [04 引擎与 API Key](04-engines-and-keys.md)。
+主 App 的设置页可以填 Soniox Key 和阿里云百炼 Key，也可以修改百炼区域和模型；“移除语气词”默认关闭，仅部分百炼模型支持。和 Mac 版一样：Soniox 是主引擎，百炼是热备，Key 只存在本机钥匙串里。两个云端引擎的说明见 [04 引擎与 API Key](04-engines-and-keys.md)。
 
 两把 Key 都不填，App 就用 iPhone 自带的语音识别在本机转写，音频不离开手机，也不花钱。它的准确率明显不如云端，人名、专业术语和中英混说时尤其明显。具体用哪个系统引擎由手机决定：
 

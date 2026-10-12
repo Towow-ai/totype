@@ -8,7 +8,12 @@ struct AliyunWord: Equatable, Sendable {
 }
 
 enum AliyunRealtimeProtocol {
-    static let model = "qwen-audio-3.0-asr-flash-streaming"
+    static let defaultModel = "qwen-audio-3.0-asr-flash-streaming"
+
+    static func normalizedModel(_ value: String) -> String {
+        let model = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return model.isEmpty ? defaultModel : model
+    }
 
     enum ServerEvent: Equatable {
         case taskStarted(taskID: String?)
@@ -29,13 +34,25 @@ enum AliyunRealtimeProtocol {
         return url
     }
 
-    static func runTaskJSON(taskID: UUID, context: ASRContext) throws -> String {
+    static func runTaskJSON(
+        taskID: UUID,
+        model: String,
+        disfluencyRemovalEnabled: Bool = false,
+        context: ASRContext
+    ) throws -> String {
+        let model = normalizedModel(model)
         var parameters: [String: Any] = [
             "format": "pcm",
             "sample_rate": 16_000,
             "language_hints": Array(context.languages.prefix(4)),
             "semantic_punctuation_enabled": true
         ]
+        if disfluencyRemovalEnabled {
+            parameters["disfluency_removal_enabled"] = true
+            // Message-style models otherwise may emit only one final result,
+            // which would lose Totype's live partial text.
+            parameters["intermediate_result_enabled"] = true
+        }
 
         var vocabulary: [String: Int] = [:]
         for term in context.terms.prefix(2_000) {
@@ -146,7 +163,7 @@ enum AliyunRealtimeProtocol {
 
 actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
     nonisolated let id = "aliyun-qwen-audio-asr"
-    nonisolated let displayName = String(localized: "阿里云 qwen-audio-3.0-asr-flash-streaming")
+    nonisolated let displayName = String(localized: "阿里云百炼")
 
     private enum State {
         case disconnected
@@ -158,6 +175,8 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
 
     private let apiKeyProvider: @Sendable () throws -> String
     private let regionProvider: @Sendable () -> AliyunRegion
+    private let modelProvider: @Sendable () -> String
+    private let disfluencyRemovalProvider: @Sendable () -> Bool
 
     /// One long-lived session for every Aliyun socket (TLS/DNS reuse).
     /// Sockets are cancelled individually; the session is never invalidated.
@@ -190,6 +209,7 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
     private var finalizationContinuation: CheckedContinuation<TranscriptResult, Error>?
     private var taskID: UUID?
     private var preparedContextSignature: String?
+    private var activeModel = AliyunRealtimeProtocol.defaultModel
 
     private var eventHandler: (@Sendable (ASREvent) -> Void)?
     private var utteranceStartedAt: Date?
@@ -200,15 +220,23 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
 
     init(
         apiKeyProvider: @escaping @Sendable () throws -> String,
-        regionProvider: @escaping @Sendable () -> AliyunRegion
+        regionProvider: @escaping @Sendable () -> AliyunRegion,
+        modelProvider: @escaping @Sendable () -> String = {
+            AliyunRealtimeProtocol.defaultModel
+        },
+        disfluencyRemovalProvider: @escaping @Sendable () -> Bool = {
+            false
+        }
     ) {
         self.apiKeyProvider = apiKeyProvider
         self.regionProvider = regionProvider
+        self.modelProvider = modelProvider
+        self.disfluencyRemovalProvider = disfluencyRemovalProvider
     }
 
     func prepare(context: ASRContext) async throws {
         _ = try resolvedAPIKey()
-        let signature = contextSignature(context)
+        let signature = connectionSignature(context)
         switch state {
         case .disconnected:
             try await connectAndStart(context: context, signature: signature)
@@ -229,7 +257,7 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
     ) async throws {
         _ = utteranceID
         terminalError = nil
-        let signature = contextSignature(context)
+        let signature = connectionSignature(context)
         switch state {
         case .disconnected:
             try await connectAndStart(context: context, signature: signature)
@@ -326,9 +354,12 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
     private func connectAndStart(context: ASRContext, signature: String) async throws {
         state = .starting
         let key = try resolvedAPIKey()
+        let model = resolvedModel()
+        let disfluencyRemoval = disfluencyRemovalProvider()
         let endpoint = try AliyunRealtimeProtocol.endpoint(region: regionProvider())
         let taskID = UUID()
         self.taskID = taskID
+        activeModel = model
         preparedContextSignature = signature
 
         var request = URLRequest(url: endpoint)
@@ -358,6 +389,8 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
                 do {
                     try await socket.send(.string(try AliyunRealtimeProtocol.runTaskJSON(
                         taskID: taskID,
+                        model: model,
+                        disfluencyRemovalEnabled: disfluencyRemoval,
                         context: context
                     )))
                 } catch {
@@ -466,7 +499,7 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
         let text = joinedText(partial: nil)
         let result = TranscriptResult(
             providerID: id,
-            model: AliyunRealtimeProtocol.model,
+            model: activeModel,
             text: text,
             tokens: tokens,
             startedAt: startedAt,
@@ -551,9 +584,22 @@ actor AliyunASRProvider: ASRProvider, ProviderLivenessReporting {
         return key
     }
 
+    private func resolvedModel() -> String {
+        AliyunRealtimeProtocol.normalizedModel(modelProvider())
+    }
+
     private func contextSignature(_ context: ASRContext) -> String {
         ([context.text, String(context.hotwordWeight)] + context.languages + context.terms)
             .joined(separator: "\u{1F}")
+    }
+
+    private func connectionSignature(_ context: ASRContext) -> String {
+        [
+            resolvedModel(),
+            String(disfluencyRemovalProvider()),
+            contextSignature(context)
+        ]
+            .joined(separator: "\u{1E}")
     }
 
     private func closeConnection() {

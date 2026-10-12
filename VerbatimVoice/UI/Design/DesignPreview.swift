@@ -607,6 +607,19 @@ enum DesignPreview {
                     Picker("阿里云区域", selection: $settings.aliyunRegion) {
                         ForEach(AliyunRegion.allCases) { Text($0.displayName).tag($0) }
                     }
+                    HStack(spacing: 8) {
+                        Text("阿里云模型")
+                        TextField(
+                            String(localized: "模型 ID"),
+                            text: $settings.aliyunModel,
+                            prompt: Text(verbatim: AliyunRealtimeProtocol.defaultModel)
+                                .foregroundStyle(VVColor.fgTertiary)
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        .disableAutocorrection(true)
+                    }
+                    Toggle("移除语气词", isOn: .constant(false))
+                        .help(String(localized: "默认关闭。仅部分百炼实时识别模型支持；请确认当前模型支持该参数。"))
                     keyRow(title: String(localized: "阿里云百炼"), configured: false, key: .constant(""))
                     HStack(spacing: 8) {
                         Button("测试阿里云连接") {}.buttonStyle(VVButtonStyle()).disabled(true)

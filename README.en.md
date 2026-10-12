@@ -11,17 +11,17 @@
 
 <p align="center"><img src="docs/images/demo-en.gif" width="800" alt="Tap Right Option, speak, tap again: the text lands at the cursor."></p>
 
-Totype lives in the menu bar. Put the cursor in any app, tap Right Option to start recording, tap again, and the recognized text is inserted at the cursor. It handles Chinese, English and the two mixed in one sentence. For the cloud engine you can use the real-time models from Soniox or Alibaba Cloud Bailian; to stay offline, use the local SenseVoice engine.
+Totype lives in the menu bar. Put the cursor in any app, tap Right Option to start recording, tap again, and the recognized text is inserted at the cursor. It handles Chinese, English and the two mixed in one sentence. For cloud recognition you can use real-time models from Soniox or Alibaba Cloud Bailian, and enter a Bailian model ID by hand; to stay offline, use the local SenseVoice engine.
 
 ## Features
 
 - **Types into any app.** Right Option to start, again to stop and insert, Esc to cancel. A small overlay at the bottom of the screen shows the state. In a terminal it types the text and never presses Return.
-- **Top recognition models.** Connect Soniox (`stt-rt-v5`) or Alibaba Cloud Bailian's Qwen real-time recognition (`qwen-audio-3.0-asr-flash-streaming`) for real-time recognition: the text is ready almost as soon as you stop. Accuracy on mixed Chinese and English was our first criterion when choosing them, and cloud engines cope with embedded English terms better than the local one does.
-- **You decide how much changes.** By default the text is inserted as the engine heard it: no LLM rewriting, and repetitions, filler words and self-corrections stay. If you want it tidier, you set the level yourself: the transcription prompt (sent with the recording to a cloud engine; write down your punctuation and filler-word preferences, which the engine treats as a hint, not a command), the glossary and speaker background (help the engine spell your names and terms), mishearing aliases, dropping the final period in chat apps, a trailing space after English, and learning from your manual edits. One utterance is inserted at most once.
+- **Top recognition models.** Connect Soniox (`stt-rt-v5`) or Alibaba Cloud Bailian's Qwen real-time recognition (default `qwen-audio-3.0-asr-flash-streaming`; the model ID is editable) for real-time recognition: the text is ready almost as soon as you stop. Accuracy on mixed Chinese and English was our first criterion when choosing them, and cloud engines cope with embedded English terms better than the local one does.
+- **You decide how much changes.** By default the text is inserted as the engine heard it: no LLM rewriting, and repetitions, filler words and self-corrections stay. If you want it tidier, you set the level yourself: Bailian's optional "remove filler words" support (available only on some models), the transcription prompt (sent with the recording to a cloud engine; write down your punctuation and filler-word preferences, which the engine treats as a hint, not a command), the glossary and speaker background (help the engine spell your names and terms), mishearing aliases, dropping the final period in chat apps, a trailing space after English, and learning from your manual edits. One utterance is inserted at most once.
 - **Free local engine, optional cloud engines.** A bundled SenseVoice model runs offline with no account. For real-time recognition, add your own Soniox or Alibaba Cloud Bailian key and pay the provider by usage.
 - **Hot standby and fallback.** With two cloud keys, one engine is primary and the other listens in the background; if the primary errors out or is slow, its result is used. If the cloud fails altogether, the saved audio is transcribed locally. The overlay says which engine produced the text, and Totype never silently switches to macOS dictation.
 - **A failed recognition does not lose the recording.** Audio is written to disk before recognition starts. If recognition fails, you cancel, or you switch apps, the recording stays in history and can be transcribed again.
-- **Personal dictionary.** Glossary, speaker background, a starter word pack, and mishearing aliases: register a word an engine keeps getting wrong, and it is corrected only when a second engine heard exactly the right spelling at that spot. Export and import the whole profile as JSON, without keys, history or recordings.
+- **Personal dictionary.** Glossary, speaker background, a starter word pack, and mishearing aliases: register a word an engine keeps getting wrong, and it is corrected only when a second engine heard exactly the right spelling at that spot. Export and import the profile as JSON (including the Bailian model choice), without keys, history, or recordings.
 - **History.** Search past entries, replay the original audio, and re-transcribe with another engine; the result is saved as a new version.
 - **Undo.** After a cancel you have five seconds to undo and resume transcription.
 
@@ -33,7 +33,7 @@ Requires an Apple silicon Mac on macOS 15 or later. The interface is currently i
 
 <p align="center"><img src="docs/images/feature-engines.gif" width="720" alt="Local, Alibaba Cloud or Soniox with your own key; two clouds back each other up."></p>
 
-Pick the local engine, Alibaba Cloud Bailian or Soniox as the primary model; cloud engines use your own API key. With both clouds configured, each is the other's hot standby: if the primary errors out or is too slow, the other one's result is used, and if both fail, the saved recording is transcribed locally. The overlay tells you which engine finished the job.
+Pick the local engine, Alibaba Cloud Bailian, or Soniox as the primary engine; cloud engines use your own API key. Bailian also needs a region and accepts a model ID. With both clouds configured, each is the other's hot standby: if the primary errors out or is too slow, the other one's result is used, and if both fail, the saved recording is transcribed locally. The overlay tells you which engine finished the job.
 
 ### Mishearing correction
 
@@ -97,7 +97,7 @@ Click into any text field, tap Right Option, speak, and tap again. The overlay s
 
 | | Local (SenseVoice) | Soniox | Alibaba Cloud Bailian |
 |---|---|---|---|
-| Model | SenseVoiceSmall | `stt-rt-v5` | `qwen-audio-3.0-asr-flash-streaming` |
+| Model | SenseVoiceSmall | `stt-rt-v5` | Default `qwen-audio-3.0-asr-flash-streaming`; the model ID is editable |
 | Network | Not needed | Required | Required |
 | API key | None | Your own | Your own |
 | Real-time recognition | No; the result appears after you stop | Yes; live text shows in the menu panel | Yes; live text shows in the menu panel |

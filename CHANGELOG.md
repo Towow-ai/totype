@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+- 阿里云百炼的实时识别模型不再固定在应用里：设置页可以手动输入模型 ID，留空仍使用 `qwen-audio-3.0-asr-flash-streaming`；Mac、iPhone 和导出的个人配置都会保留这项选择。
+- 新增可选的百炼“移除语气词”：默认关闭；仅部分百炼实时识别模型支持，由用户确认当前模型兼容，不影响逐字输出。
+- The Alibaba Cloud Bailian realtime recognition model is no longer fixed in the app: Settings accepts a model ID, and leaving it empty still uses `qwen-audio-3.0-asr-flash-streaming`. The choice is kept on the Mac, iPhone, and in an exported profile.
+- Added an optional Bailian "remove filler words" switch: off by default and available only on some Bailian realtime recognition models; the user confirms model compatibility. It does not affect verbatim output.
+
 ## [0.5.0] - 2026-10-04
 
 - 菜单面板新增“设置…”（⌘,）和“个人资料…”入口。单次录音默认上限从 3 分钟提高到 10 分钟，可在设置里调到 30 分钟。

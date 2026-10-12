@@ -112,6 +112,8 @@ final class AppSettings: ObservableObject {
         static let audioQuotaMegabytes = "audioQuotaMegabytes"
         static let primaryProvider = "primaryProvider"
         static let aliyunRegion = "aliyunRegion"
+        static let aliyunModel = "aliyunModel"
+        static let aliyunDisfluencyRemovalEnabled = "aliyunDisfluencyRemovalEnabled"
         static let transcriptionPrompt = "transcriptionPrompt"
         static let automaticLocalFallback = "automaticLocalFallback"
         static let correctionCaptureEnabled = "correctionCaptureEnabled"
@@ -162,6 +164,23 @@ final class AppSettings: ObservableObject {
     }
     @Published var aliyunRegion: AliyunRegion {
         didSet { defaults.set(aliyunRegion.rawValue, forKey: Key.aliyunRegion) }
+    }
+    /// Empty means the provider's default model. The value is not a secret and
+    /// travels with an exported profile.
+    @Published var aliyunModel: String {
+        didSet {
+            let model = aliyunModel.trimmingCharacters(in: .whitespacesAndNewlines)
+            if model.isEmpty {
+                defaults.removeObject(forKey: Key.aliyunModel)
+            } else {
+                defaults.set(model, forKey: Key.aliyunModel)
+            }
+        }
+    }
+    /// Native Bailian disfluency removal. Off by default; the user is responsible
+    /// for choosing a model that supports the parameter.
+    @Published var aliyunDisfluencyRemovalEnabled: Bool {
+        didSet { defaults.set(aliyunDisfluencyRemovalEnabled, forKey: Key.aliyunDisfluencyRemovalEnabled) }
     }
     @Published var transcriptionPrompt: String {
         didSet { defaults.set(transcriptionPrompt, forKey: Key.transcriptionPrompt) }
@@ -215,6 +234,8 @@ final class AppSettings: ObservableObject {
         aliyunRegion = AliyunRegion(
             rawValue: defaults.string(forKey: Key.aliyunRegion) ?? ""
         ) ?? .beijing
+        aliyunModel = defaults.string(forKey: Key.aliyunModel) ?? ""
+        aliyunDisfluencyRemovalEnabled = defaults.bool(forKey: Key.aliyunDisfluencyRemovalEnabled)
         transcriptionPrompt = defaults.string(forKey: Key.transcriptionPrompt)
             ?? Self.defaultTranscriptionPrompt
         automaticLocalFallback = defaults.object(forKey: Key.automaticLocalFallback) as? Bool ?? true
@@ -234,6 +255,10 @@ final class AppSettings: ObservableObject {
                 guard !$0.isEmpty else { return false }
                 return seen.insert($0.lowercased()).inserted
             }
+    }
+
+    var effectiveAliyunModel: String {
+        AliyunRealtimeProtocol.normalizedModel(aliyunModel)
     }
 
     static let defaultGlossary = ""

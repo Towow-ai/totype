@@ -324,6 +324,9 @@
 "检测到麦克风未运行，正在恢复麦克风" = "Microphone is not running. Recovering.";
 "检测到麦克风没有持续音频帧，正在恢复麦克风" = "No continuous microphone audio detected. Recovering.";
 "检测到麦克风音频断流，正在恢复麦克风" = "Microphone audio stopped. Recovering.";
+"模型 ID" = "Model ID";
+"移除语气词" = "Remove filler words";
+"默认关闭。仅部分百炼实时识别模型支持；请确认当前模型支持该参数。" = "Off by default. Only some Bailian realtime recognition models support it; confirm that the current model accepts this parameter.";
 "模型文件不完整，请重试" = "The model files are incomplete. Try again.";
 "正在准备 Apple 系统听写" = "Preparing Apple dictation";
 "正在向 %@ 发送历史音频：%lld%%" = "Sending audio to %@: %lld%%";
@@ -439,7 +442,7 @@
 "这次没有完成" = "Couldn’t finish this one";
 "这项结果是空的，没有可复制内容" = "This result is empty, so there’s nothing to copy";
 "连接失败：%@" = "Connection failed: %@";
-"连接成功：%@" = "Connected: %@";
+"连接成功：%@ · %@" = "Connected: %@ · %@";
 "退出 %@" = "Quit %@";
 "退出状态 %d" = "exit status %d";
 "都准备好了" = "All set";
@@ -452,9 +455,9 @@
 "重试" = "Try again";
 "重转写" = "Retranscribed";
 "阿里云" = "Alibaba Cloud";
-"阿里云 qwen-audio-3.0-asr-flash-streaming" = "Alibaba Cloud qwen-audio-3.0-asr-flash-streaming";
 "阿里云会话正在使用" = "The Alibaba Cloud session is in use.";
 "阿里云区域" = "Alibaba Cloud region";
+"阿里云模型" = "Alibaba Cloud model";
 "阿里云千问实时语音（云端）" = "Alibaba Cloud Qwen real-time speech (cloud)";
 "阿里云口述已经在定稿" = "The Alibaba Cloud dictation is already finalizing.";
 "阿里云实时输入必须是 16 kHz 单声道 PCM" = "Alibaba Cloud realtime input must be 16 kHz mono PCM.";

@@ -42,7 +42,7 @@ What it cannot do: it is a hint to a speech recognizer, not an instruction to a 
 
 ## Export and import
 
-`导出配置…` (Export profile…) saves a JSON file (default name `verbatim-profile.json`) with: the glossary, personal lexicon and aliases, speaker background, transcription prompt, recognition and insertion preferences, and recording retention settings. It contains no API keys, history or recordings, so it is safe to carry between your own computers.
+`导出配置…` (Export profile…) saves a JSON file (default name `verbatim-profile.json`) with: the glossary, personal lexicon and aliases, speaker background, transcription prompt, primary engine, Bailian region and model, insertion preferences, and recording retention settings. It contains no API keys, history, or recordings, so it is safe to carry between your own computers. Bailian's "remove filler words" setting must be enabled again on each device; it does not travel with the file.
 
 Importing works like this:
 

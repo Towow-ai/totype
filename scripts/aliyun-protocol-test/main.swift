@@ -25,17 +25,41 @@ struct AliyunProtocolTest {
             instructions: String(repeating: "甲", count: 450),
             hotwordWeight: 4
         )
-        let object = try jsonObject(AliyunRealtimeProtocol.runTaskJSON(taskID: UUID(), context: context))
+        let object = try jsonObject(AliyunRealtimeProtocol.runTaskJSON(
+            taskID: UUID(),
+            model: "  qwen-audio-custom-asr-streaming  ",
+            context: context
+        ))
         let header = try dictionary(object["header"], "header")
         let payload = try dictionary(object["payload"], "payload")
         let parameters = try dictionary(payload["parameters"], "parameters")
         try expect(header["action"] as? String == "run-task", "wrong run action")
         try expect(header["streaming"] as? String == "duplex", "wrong streaming mode")
-        try expect(payload["model"] as? String == "qwen-audio-3.0-asr-flash-streaming", "wrong model")
+        try expect(payload["model"] as? String == "qwen-audio-custom-asr-streaming", "custom model was not trimmed and sent")
+        try expect(AliyunRealtimeProtocol.normalizedModel(" \n") == AliyunRealtimeProtocol.defaultModel, "blank model did not fall back to default")
         try expect(parameters["format"] as? String == "pcm", "wrong audio format")
         try expect(parameters["sample_rate"] as? Int == 16_000, "wrong sample rate")
         try expect(parameters["semantic_punctuation_enabled"] as? Bool == true, "semantic punctuation is off")
         try expect(parameters["language_hints"] as? [String] == ["zh", "en"], "language hints changed")
+        try expect(parameters["disfluency_removal_enabled"] == nil, "disfluency removal leaked into the default request")
+        let disfluencyObject = try jsonObject(AliyunRealtimeProtocol.runTaskJSON(
+            taskID: UUID(),
+            model: "qwen-audio-custom-asr-message",
+            disfluencyRemovalEnabled: true,
+            context: context
+        ))
+        let disfluencyParameters = try dictionary(
+            try dictionary(disfluencyObject["payload"], "payload")["parameters"],
+            "parameters"
+        )
+        try expect(
+            disfluencyParameters["disfluency_removal_enabled"] as? Bool == true,
+            "disfluency removal was not sent"
+        )
+        try expect(
+            disfluencyParameters["intermediate_result_enabled"] as? Bool == true,
+            "disfluency removal did not request intermediate results"
+        )
         let vocabulary = try dictionary(parameters["vocabulary"], "vocabulary")
         try expect(vocabulary["Claude Code"] as? Int == 4, "hotword weight changed")
 

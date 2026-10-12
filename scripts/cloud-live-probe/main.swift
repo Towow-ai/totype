@@ -69,7 +69,18 @@ struct CloudLiveProbe {
             let region = AliyunRegion(
                 rawValue: UserDefaults.standard.string(forKey: "aliyunRegion") ?? ""
             ) ?? .beijing
-            let provider = AliyunASRProvider(apiKeyProvider: { key }, regionProvider: { region })
+            let provider = AliyunASRProvider(
+                apiKeyProvider: { key },
+                regionProvider: { region },
+                modelProvider: {
+                    AliyunRealtimeProtocol.normalizedModel(
+                        UserDefaults.standard.string(forKey: "aliyunModel") ?? ""
+                    )
+                },
+                disfluencyRemovalProvider: {
+                    UserDefaults.standard.bool(forKey: "aliyunDisfluencyRemovalEnabled")
+                }
+            )
             guard CommandLine.arguments.count >= 3 else {
                 throw ProbeError("Aliyun probe requires a WAV fixture")
             }
